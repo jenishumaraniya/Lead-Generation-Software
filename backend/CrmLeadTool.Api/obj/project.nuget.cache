@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "rLr0SOSoy1I=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\hsuthar\\OneDrive - Stridely Solutions India pvt ltd\\Desktop\\CRM Lead Tool\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\hsuthar\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.11\\microsoft.aspnetcore.openapi.10.0.11.nupkg.sha512",
+    "C:\\Users\\hsuthar\\.nuget\\packages\\microsoft.openapi\\2.7.5\\microsoft.openapi.2.7.5.nupkg.sha512"
+  ],
+  "logs": []
+}
