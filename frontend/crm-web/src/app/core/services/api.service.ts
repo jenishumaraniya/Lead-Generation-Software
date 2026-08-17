@@ -1,0 +1,41 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+import { Product } from '../models/product.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ApiService {
+
+  private baseUrl = 'https://localhost:7001/api';
+
+  constructor(private http: HttpClient) {}
+
+  createVisitor(): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/visitor/create`,
+      {}
+    );
+  }
+
+  recordActivity(activity: any): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/activity`,
+      activity
+    );
+  }
+
+  getProducts(): Observable<Product[]> {
+    return this.http.get<Product[]>(
+      `${this.baseUrl}/product`
+    );
+  }
+
+  getProduct(id: number): Observable<Product> {
+    return this.http.get<Product>(
+      `${this.baseUrl}/product/${id}`
+    );
+  }
+}

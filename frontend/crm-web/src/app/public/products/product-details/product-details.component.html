@@ -1,0 +1,149 @@
+<div class="page">
+
+  <nav class="navbar">
+
+    <div class="logo" routerLink="/">
+      LeadTech
+    </div>
+
+    <div class="nav-links">
+      <a routerLink="/">Home</a>
+      <a routerLink="/products">Products</a>
+      <a routerLink="/pricing">Pricing</a>
+    </div>
+
+  </nav>
+
+
+  @if (product) {
+
+    <main class="details">
+
+      <button
+        class="back"
+        (click)="goBack()">
+
+        ← Back to Products
+
+      </button>
+
+
+      <div class="product-layout">
+
+        <div class="image-box">
+
+          <div class="product-image">
+            <img src="https://vasanthandco.in/UploadedFiles/productimages/20260711050111-Untitled-4.png">
+          </div>
+
+        </div>
+
+
+        <div class="product-info">
+
+          <span class="status">
+            {{ product.status }}
+          </span>
+
+          <h1>
+            {{ product.name }}
+          </h1>
+
+          <p class="description">
+            {{ product.description }}
+          </p>
+
+          <div class="price">
+            ₹{{ product.pricing | number }}
+          </div>
+
+
+          <h3>
+            Features
+          </h3>
+
+          <div class="feature-list">
+
+            @for (
+              feature of product.features;
+              track feature
+            ) {
+
+              <div>
+                ✓ {{ feature }}
+              </div>
+
+            }
+
+          </div>
+
+
+          <div class="buttons">
+
+            <button
+              class="primary"
+              (click)="interested()">
+
+              I'm Interested
+
+            </button>
+
+            <button
+              class="secondary"
+              (click)="compare()">
+
+              Compare Product
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <section class="specifications">
+
+        <h2>
+          Specifications
+        </h2>
+
+        <div class="spec-grid">
+
+          @for (
+            specification of product.specifications;
+            track specification
+          ) {
+
+            <div class="spec">
+              {{ specification }}
+            </div>
+
+          }
+
+        </div>
+
+      </section>
+
+    </main>
+
+  }
+
+  @else {
+
+    <div class="not-found">
+
+      <h2>
+        Product not found
+      </h2>
+
+      <button (click)="goBack()">
+        Back to Products
+      </button>
+
+    </div>
+
+  }
+
+</div>
