@@ -1,0 +1,99 @@
+<div class="page">
+
+  <nav class="navbar">
+
+    <div class="logo" routerLink="/">
+      LeadTech
+    </div>
+
+    <div class="nav-links">
+      <a routerLink="/">Home</a>
+      <a routerLink="/products">Products</a>
+      <a routerLink="/pricing">Pricing</a>
+      <a href="#contact">Contact</a>
+    </div>
+
+  </nav>
+
+
+  <section class="header">
+
+    <span>OUR PRODUCTS</span>
+
+    <h1>
+      Business Technology Products
+    </h1>
+
+    <p>
+      Explore reliable technology solutions designed
+      for modern businesses.
+    </p>
+
+  </section>
+
+
+  <section class="products">
+
+    @for (product of products; track product.productId) {
+
+      <div class="product-card">
+
+        <div class="product-icon">
+          💻
+        </div>
+
+        <span class="status">
+          {{ product.status }}
+        </span>
+
+        <h2>
+          {{ product.name }}
+        </h2>
+
+        <p>
+          {{ product.description }}
+        </p>
+
+        <div class="price">
+          ₹{{ product.pricing | number }}
+        </div>
+
+        <div class="features">
+
+          @for (feature of product.features; track feature) {
+
+            <span>
+              ✓ {{ feature }}
+            </span>
+
+          }
+
+        </div>
+
+        <button
+          (click)="viewProduct(product.productId)">
+
+          View Details
+
+        </button>
+
+      </div>
+
+    }
+
+  </section>
+
+
+  <div class="compare-section">
+
+    <h2>
+      Need to compare products?
+    </h2>
+
+    <button (click)="goToCompare()">
+      Compare Products
+    </button>
+
+  </div>
+
+</div>

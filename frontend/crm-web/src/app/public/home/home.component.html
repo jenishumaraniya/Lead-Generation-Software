@@ -1,0 +1,204 @@
+<div class="home-page">
+
+  <!-- Navbar -->
+  <nav class="navbar">
+
+    <div class="logo" routerLink="/">
+      LeadTech
+    </div>
+
+    <div class="nav-links">
+      <a routerLink="/">Home</a>
+      <a routerLink="/products">Products</a>
+      <a routerLink="/pricing">Pricing</a>
+      <a href="#contact">Contact</a>
+    </div>
+
+    <button class="nav-button" (click)="exploreProducts()">
+      Explore Products
+    </button>
+
+  </nav>
+
+
+  <!-- Hero -->
+  <section class="hero">
+
+    <div class="hero-content">
+
+      <span class="badge">
+        B2B Technology Solutions
+      </span>
+
+      <h1>
+        Technology Solutions
+        <span>Built for Business</span>
+      </h1>
+
+      <p>
+        Discover reliable laptops, desktops, servers and
+        networking solutions designed to help your business grow.
+      </p>
+
+      <div class="hero-buttons">
+
+        <button
+          class="primary-button"
+          (click)="exploreProducts()">
+
+          Explore Products
+        </button>
+
+        <button
+          class="secondary-button"
+          (click)="goToPricing()">
+
+          View Pricing
+        </button>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- Products Preview -->
+  <section class="products-section">
+
+    <div class="section-header">
+
+      <span class="section-label">
+        OUR PRODUCTS
+      </span>
+
+      <h2>
+        Solutions for Your Business
+      </h2>
+
+      <p>
+        Explore our range of business technology products.
+      </p>
+
+    </div>
+
+
+    <div class="category-grid">
+
+      <div class="category-card">
+
+        <div class="icon">💻</div>
+
+        <h3>Laptops</h3>
+
+        <p>
+          Professional laptops for modern business teams.
+        </p>
+
+        <button (click)="exploreProducts()">
+          Explore →
+        </button>
+
+      </div>
+
+
+      <div class="category-card">
+
+        <div class="icon">🖥️</div>
+
+        <h3>Desktops</h3>
+
+        <p>
+          Powerful desktops for office environments.
+        </p>
+
+        <button (click)="exploreProducts()">
+          Explore →
+        </button>
+
+      </div>
+
+
+      <div class="category-card">
+
+        <div class="icon">🗄️</div>
+
+        <h3>Servers</h3>
+
+        <p>
+          Reliable infrastructure for business workloads.
+        </p>
+
+        <button (click)="exploreProducts()">
+          Explore →
+        </button>
+
+      </div>
+
+
+      <div class="category-card">
+
+        <div class="icon">🌐</div>
+
+        <h3>Networking</h3>
+
+        <p>
+          Networking solutions for connected businesses.
+        </p>
+
+        <button (click)="exploreProducts()">
+          Explore →
+        </button>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- CTA -->
+  <section class="cta">
+
+    <div>
+
+      <h2>
+        Need the right technology for your business?
+      </h2>
+
+      <p>
+        Explore our products and find the solution that fits
+        your requirements.
+      </p>
+
+    </div>
+
+    <button
+      class="primary-button"
+      (click)="exploreProducts()">
+
+      View Products
+
+    </button>
+
+  </section>
+
+
+  <!-- Footer -->
+  <footer id="contact">
+
+    <div class="footer-logo">
+      LeadTech
+    </div>
+
+    <p>
+      B2B Technology Solutions
+    </p>
+
+    <p>
+      © 2026 LeadTech. All rights reserved.
+    </p>
+
+  </footer>
+
+</div>

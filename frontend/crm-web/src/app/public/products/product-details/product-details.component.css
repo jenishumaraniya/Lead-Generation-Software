@@ -1,0 +1,167 @@
+.page {
+  min-height: 100vh;
+  background: #f8fafc;
+  color: #172033;
+}
+
+.navbar {
+  height: 72px;
+  padding: 0 7%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.nav-links {
+  display: flex;
+  gap: 30px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #475569;
+}
+
+.details {
+  padding: 50px 7%;
+}
+
+.back {
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 30px;
+}
+
+.product-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 70px;
+  background: white;
+  padding: 50px;
+  border-radius: 18px;
+}
+
+.image-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #eff6ff;
+  border-radius: 15px;
+  min-height: 450px;
+}
+
+.product-image {
+  font-size: 150px;
+height: auto;
+width: auto;
+}
+
+.status {
+  display: inline-block;
+  background: #dcfce7;
+  color: #166534;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.product-info h1 {
+  font-size: 44px;
+  margin: 20px 0;
+}
+
+.description {
+  color: #64748b;
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.price {
+  font-size: 32px;
+  font-weight: 800;
+  margin: 25px 0;
+}
+
+.feature-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  color: #475569;
+}
+
+.buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 35px;
+}
+
+.primary,
+.secondary {
+  padding: 13px 22px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary {
+  border: none;
+  background: #2563eb;
+  color: white;
+}
+
+.secondary {
+  border: 1px solid #2563eb;
+  background: white;
+  color: #2563eb;
+}
+
+.specifications {
+  margin-top: 40px;
+  background: white;
+  padding: 40px;
+  border-radius: 18px;
+}
+
+.spec-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.spec {
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.not-found {
+  text-align: center;
+  padding: 100px;
+}
+
+@media (max-width: 800px) {
+
+  .product-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .product-info h1 {
+    font-size: 34px;
+  }
+}
