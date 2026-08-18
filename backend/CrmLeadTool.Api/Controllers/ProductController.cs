@@ -1,89 +1,43 @@
-using CrmLeadTool.Api.Data; 
+using CrmLeadTool.Api.Data;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
-using Microsoft.AspNetCore.Mvc; 
+namespace CrmLeadTool.Api.Controllers;
 
-using Microsoft.EntityFrameworkCore; 
+[ApiController]
+[Route("api/product")]
+public class ProductController : ControllerBase
+{
+    private readonly AppDbContext _context;
 
- 
+    public ProductController(AppDbContext context)
+    {
+        _context = context;
+    }
 
-namespace CrmLeadTool.Api.Controllers; 
+    [HttpGet]
+    public async Task<IActionResult> GetProducts()
+    {
+        // 🔍 TEMPORARY DEBUG: see all products (remove this line later)
+        // var all = await _context.Products.ToListAsync();
+        // return Ok(all);
 
- 
+        var products = await _context.Products
+            .Where(p => p.Status == "ACTIVE")   // Make sure status is exactly "ACTIVE"
+            .ToListAsync();
 
-[ApiController] 
+        return Ok(products);
+    }
 
-[Route("api/product")] 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetProduct(int id)
+    {
+        var product = await _context.Products
+            .FirstOrDefaultAsync(p => p.ProductId == id);
 
-public class ProductController : ControllerBase 
+        if (product == null)
+            return NotFound();
 
-{ 
-
-    private readonly AppDbContext _context; 
-
- 
-
-    public ProductController(AppDbContext context) 
-
-    { 
-
-        _context = context; 
-
-    } 
-
- 
-
-    [HttpGet] 
-
-    public async Task<IActionResult> GetProducts() 
-
-    { 
-
-        var products = 
-
-            await _context.Products 
-
-                .Where(p => p.Status == "ACTIVE") 
-
-                .ToListAsync(); 
-
- 
-
-        return Ok(products); 
-
-    } 
-
- 
-
-    [HttpGet("{id}")] 
-
-    public async Task<IActionResult> GetProduct( 
-
-        int id) 
-
-    { 
-
-        var product = 
-
-            await _context.Products 
-
-                .FirstOrDefaultAsync( 
-
-                    p => p.ProductId == id); 
-
- 
-
-        if (product == null) 
-
-        { 
-
-            return NotFound(); 
-
-        } 
-
- 
-
-        return Ok(product); 
-
-    } 
-
-} 
+        return Ok(product);
+    }
+}

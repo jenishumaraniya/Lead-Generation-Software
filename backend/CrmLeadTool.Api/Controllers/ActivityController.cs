@@ -1,111 +1,50 @@
-using CrmLeadTool.Api.Data; 
+using CrmLeadTool.Api.Data;
+using CrmLeadTool.Api.DTOs;
+using CrmLeadTool.Api.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
-using CrmLeadTool.Api.DTOs; 
+namespace CrmLeadTool.Api.Controllers;
 
-using CrmLeadTool.Api.Models; 
+[ApiController]
+[Route("api/activity")]
+public class ActivityController : ControllerBase
+{
+    private readonly AppDbContext _context;
 
-using Microsoft.AspNetCore.Mvc; 
+    public ActivityController(AppDbContext context)
+    {
+        _context = context;
+    }
 
-using Microsoft.EntityFrameworkCore; 
+    [HttpPost]
+    public async Task<IActionResult> Create(CreateActivityDto dto)
+    {
+        var visitor = await _context.Visitors
+            .FirstOrDefaultAsync(v => v.AnonymousId == dto.AnonymousId);
 
- 
+        if (visitor == null)
+            return NotFound("Visitor not found.");
 
-namespace CrmLeadTool.Api.Controllers; 
+        visitor.LastSeenAt = DateTime.UtcNow;
 
- 
+        var activity = new VisitorActivity
+        {
+            VisitorId = visitor.VisitorId,
+            ActivityType = dto.ActivityType,
+            ProductId = dto.ProductId,
+            PageUrl = dto.PageUrl,
+            Metadata = dto.Metadata,
+            Timestamp = DateTime.UtcNow
+        };
 
-[ApiController] 
+        _context.VisitorActivities.Add(activity);
+        await _context.SaveChangesAsync();
 
-[Route("api/activity")] 
-
-public class ActivityController : ControllerBase 
-
-{ 
-
-    private readonly AppDbContext _context; 
-
- 
-
-    public ActivityController(AppDbContext context) 
-
-    { 
-
-        _context = context; 
-
-    } 
-
- 
-
-    [HttpPost] 
-
-    public async Task<IActionResult> Create( 
-
-        CreateActivityDto dto) 
-
-    { 
-
-        var visitor = 
-
-            await _context.Visitors 
-
-                .FirstOrDefaultAsync( 
-
-                    x => x.AnonymousId == dto.AnonymousId); 
-
- 
-
-        if (visitor == null) 
-
-        { 
-
-            return NotFound("Visitor not found."); 
-
-        } 
-
- 
-
-        visitor.LastSeenAt = DateTime.UtcNow; 
-
- 
-
-        var activity = new VisitorActivity 
-
-        { 
-
-            VisitorId = visitor.VisitorId, 
-
-            ActivityType = dto.ActivityType, 
-
-            ProductId = dto.ProductId, 
-
-            PageUrl = dto.PageUrl, 
-
-            Metadata = dto.Metadata, 
-
-            Timestamp = DateTime.UtcNow 
-
-        }; 
-
- 
-
-        _context.VisitorActivities.Add(activity); 
-
- 
-
-        await _context.SaveChangesAsync(); 
-
- 
-
-        return Ok(new 
-
-        { 
-
-            message = "Activity recorded", 
-
-            activityId = activity.ActivityId 
-
-        }); 
-
-    } 
-
-}   
+        return Ok(new
+        {
+            message = "Activity recorded",
+            activityId = activity.ActivityId
+        });
+    }
+}

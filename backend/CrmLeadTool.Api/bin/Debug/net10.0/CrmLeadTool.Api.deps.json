@@ -9,6 +9,7 @@
       "CrmLeadTool.Api/1.0.0": {
         "dependencies": {
           "Microsoft.AspNetCore.OpenApi": "10.0.11",
+          "Microsoft.EntityFrameworkCore": "10.0.11",
           "Microsoft.EntityFrameworkCore.SqlServer": "10.0.11",
           "Microsoft.EntityFrameworkCore.Tools": "10.0.11",
           "Swashbuckle.AspNetCore": "10.2.3"

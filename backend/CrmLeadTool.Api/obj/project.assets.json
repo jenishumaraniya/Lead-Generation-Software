@@ -3625,30 +3625,33 @@
   "projectFileDependencyGroups": {
     "net10.0": [
       "Microsoft.AspNetCore.OpenApi >= 10.0.11",
+      "Microsoft.EntityFrameworkCore >= 10.0.11",
       "Microsoft.EntityFrameworkCore.SqlServer >= 10.0.11",
       "Microsoft.EntityFrameworkCore.Tools >= 10.0.11",
       "Swashbuckle.AspNetCore >= 10.2.3"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\hsuthar\\.nuget\\packages\\": {}
+    "C:\\Users\\jumaraniya\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\hsuthar\\OneDrive - Stridely Solutions India pvt ltd\\Desktop\\CRM Project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj",
+      "projectUniqueName": "D:\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj",
       "projectName": "CrmLeadTool.Api",
-      "projectPath": "C:\\Users\\hsuthar\\OneDrive - Stridely Solutions India pvt ltd\\Desktop\\CRM Project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj",
-      "packagesPath": "C:\\Users\\hsuthar\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\hsuthar\\OneDrive - Stridely Solutions India pvt ltd\\Desktop\\CRM Project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\obj\\",
+      "projectPath": "D:\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj",
+      "packagesPath": "C:\\Users\\jumaraniya\\.nuget\\packages\\",
+      "outputPath": "D:\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\hsuthar\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\jumaraniya\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -3676,6 +3679,10 @@
         "targetAlias": "net10.0",
         "dependencies": {
           "Microsoft.AspNetCore.OpenApi": {
+            "target": "Package",
+            "version": "[10.0.11, )"
+          },
+          "Microsoft.EntityFrameworkCore": {
             "target": "Package",
             "version": "[10.0.11, )"
           },
