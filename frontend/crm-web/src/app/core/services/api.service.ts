@@ -13,10 +13,14 @@ export class ApiService {
 
   constructor(private http: HttpClient) {}
 
-  createVisitor(): Observable<any> {
+  createVisitor(consentStatus?: string): Observable<any> {
+    const payload = consentStatus
+      ? { consentStatus }
+      : {};
+
     return this.http.post(
       `${this.baseUrl}/visitor/create`,
-      {}
+      payload
     );
   }
 

@@ -3631,19 +3631,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\DVithalani\\.nuget\\packages\\": {}
+    "C:\\Users\\hsuthar\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj",
+      "projectUniqueName": "C:\\Users\\hsuthar\\OneDrive - Stridely Solutions India pvt ltd\\Desktop\\CRM Project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj",
       "projectName": "CrmLeadTool.Api",
-      "projectPath": "D:\\project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj",
-      "packagesPath": "C:\\Users\\DVithalani\\.nuget\\packages\\",
-      "outputPath": "D:\\project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\obj\\",
+      "projectPath": "C:\\Users\\hsuthar\\OneDrive - Stridely Solutions India pvt ltd\\Desktop\\CRM Project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj",
+      "packagesPath": "C:\\Users\\hsuthar\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\hsuthar\\OneDrive - Stridely Solutions India pvt ltd\\Desktop\\CRM Project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\DVithalani\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\hsuthar\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
@@ -3713,7 +3713,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.302/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.303/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
