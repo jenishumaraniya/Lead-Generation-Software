@@ -1,4 +1,5 @@
 using CrmLeadTool.Api.Data;
+using CrmLeadTool.Api.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,14 +17,31 @@ public class ProductController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetProducts()
+    public async Task<IActionResult> GetProducts(int? categoryId = null)
     {
-        // 🔍 TEMPORARY DEBUG: see all products (remove this line later)
-        // var all = await _context.Products.ToListAsync();
-        // return Ok(all);
+        var query = _context.Products
+            .Where(p => p.Status == "ACTIVE");
 
-        var products = await _context.Products
-            .Where(p => p.Status == "ACTIVE")   // Make sure status is exactly "ACTIVE"
+        if (categoryId.HasValue)
+        {
+            query = query.Where(p => p.CategoryId == categoryId.Value);
+        }
+
+        var products = await query
+            .Select(p => new ProductDto
+            {
+                ProductId = p.ProductId,
+                Name = p.Name,
+                Description = p.Description,
+                Pricing = p.Pricing,
+                Features = p.Features,
+                Specifications = p.Specifications,
+                Status = p.Status,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+                CategoryId = p.CategoryId,
+                CategoryName = p.Category != null ? p.Category.CategoryName : null
+            })
             .ToListAsync();
 
         return Ok(products);
@@ -33,7 +51,22 @@ public class ProductController : ControllerBase
     public async Task<IActionResult> GetProduct(int id)
     {
         var product = await _context.Products
-            .FirstOrDefaultAsync(p => p.ProductId == id);
+            .Where(p => p.ProductId == id)
+            .Select(p => new ProductDto
+            {
+                ProductId = p.ProductId,
+                Name = p.Name,
+                Description = p.Description,
+                Pricing = p.Pricing,
+                Features = p.Features,
+                Specifications = p.Specifications,
+                Status = p.Status,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+                CategoryId = p.CategoryId,
+                CategoryName = p.Category != null ? p.Category.CategoryName : null
+            })
+            .FirstOrDefaultAsync();
 
         if (product == null)
             return NotFound();
