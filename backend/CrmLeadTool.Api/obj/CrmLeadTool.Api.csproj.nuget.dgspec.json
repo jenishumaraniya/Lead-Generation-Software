@@ -1,27 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj": {}
+    "D:\\project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj": {}
   },
   "projects": {
-    "D:\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj": {
+    "D:\\project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj",
+        "projectUniqueName": "D:\\project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj",
         "projectName": "CrmLeadTool.Api",
-        "projectPath": "D:\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj",
-        "packagesPath": "C:\\Users\\jumaraniya\\.nuget\\packages\\",
-        "outputPath": "D:\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\obj\\",
+        "projectPath": "D:\\project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj",
+        "packagesPath": "C:\\Users\\DVithalani\\.nuget\\packages\\",
+        "outputPath": "D:\\project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\jumaraniya\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\DVithalani\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -86,7 +84,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.303/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.302/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

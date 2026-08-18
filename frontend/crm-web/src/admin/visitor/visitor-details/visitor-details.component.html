@@ -1,0 +1,105 @@
+<div *ngIf="visitor"> 
+
+ 
+
+  <h1>Visitor Details</h1> 
+
+ 
+
+  <div class="visitor-info"> 
+
+ 
+
+    <p> 
+
+      <strong>Visitor ID:</strong> 
+
+      {{ visitor.anonymousId }} 
+
+    </p> 
+
+ 
+
+    <p> 
+
+      <strong>First Seen:</strong> 
+
+      {{ visitor.firstSeenAt | date:'medium' }} 
+
+    </p> 
+
+ 
+
+    <p> 
+
+      <strong>Last Seen:</strong> 
+
+      {{ visitor.lastSeenAt | date:'medium' }} 
+
+    </p> 
+
+ 
+
+  </div> 
+
+ 
+
+  <h2>Activity Timeline</h2> 
+
+ 
+
+  <div 
+
+    class="timeline" 
+
+    *ngFor="let activity of visitor.activities"> 
+
+ 
+
+    <div class="timeline-item"> 
+
+ 
+
+      <strong> 
+
+        {{ activity.activityType }} 
+
+      </strong> 
+
+ 
+
+      <p> 
+
+        {{ activity.timestamp | date:'medium' }} 
+
+      </p> 
+
+ 
+
+      <p> 
+
+        {{ activity.pageUrl }} 
+
+      </p> 
+
+ 
+
+      <p *ngIf="activity.product"> 
+
+        Product: 
+
+        {{ activity.product.name }} 
+
+      </p> 
+
+ 
+
+    </div> 
+
+ 
+
+  </div> 
+
+ 
+
+</div> 
