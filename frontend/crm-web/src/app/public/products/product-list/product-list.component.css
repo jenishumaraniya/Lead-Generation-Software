@@ -93,7 +93,7 @@
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 22px;
-  padding: 24px;
+  padding: 20px 22px 18px;
   position: relative;
   box-shadow: 0 18px 35px rgba(15, 23, 42, 0.06);
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
@@ -120,14 +120,18 @@
 
 .status {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+  margin-left: 10px;
   font-size: 0.68rem;
-  padding: 7px 10px;
+  padding: 7px 12px;
   background: #dcfce7;
   color: #166534;
   border-radius: 999px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
 .product-card h2 {
@@ -164,14 +168,22 @@
 .features span {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   padding: 6px 0;
+  position: relative;
+  padding-left: 22px;
+  color: #334155;
 }
 
 .features span::before {
   content: '✓';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
   color: #2563eb;
   font-weight: 800;
+  font-size: 0.9rem;
 }
 
 .product-card button,
