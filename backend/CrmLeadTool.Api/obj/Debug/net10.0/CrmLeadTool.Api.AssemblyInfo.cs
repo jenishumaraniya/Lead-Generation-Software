@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CrmLeadTool.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6c885427e1fecedacd18a0425d8fff4820b3880a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cdc808e898b95b055e6e9647b087ce8324714816")]
 [assembly: System.Reflection.AssemblyProductAttribute("CrmLeadTool.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CrmLeadTool.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
