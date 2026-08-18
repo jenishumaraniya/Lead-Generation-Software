@@ -10,9 +10,21 @@ export const routes: Routes = [
   { 
     path: 'products', 
     loadComponent: () => 
-      import('./public/products/product-details/product-details.component') 
-        .then(m => m.ProductDetailsComponent) 
-  }, 
+      import('./public/products/product-list/product-list.component') 
+        .then(m => m.ProductListComponent) 
+  },
+  {
+    path: 'products/:id',
+    loadComponent: () =>
+      import('./public/products/product-details/product-details.component')
+        .then(m => m.ProductDetailsComponent)
+  },
+  {
+    path: 'compare',
+    loadComponent: () =>
+      import('./public/products/compare/compare.component')
+        .then(m => m.CompareComponent)
+  },
   { 
     path: 'admin', 
     loadChildren: () => 

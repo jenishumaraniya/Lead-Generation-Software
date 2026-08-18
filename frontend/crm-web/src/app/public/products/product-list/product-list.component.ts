@@ -74,7 +74,7 @@ export class ProductListComponent {
         '2TB SSD',
         'Rack Mount'
       ],
-      status: 'ACTIVE'
+      status: 'Available'
     },
 
     {
@@ -95,7 +95,7 @@ export class ProductListComponent {
         'VPN Support',
         'Firewall'
       ],
-      status: 'ACTIVE'
+      status: 'Available'
     }
 
   ];
