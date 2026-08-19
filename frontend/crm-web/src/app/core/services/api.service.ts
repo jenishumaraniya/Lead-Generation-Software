@@ -85,9 +85,9 @@ import { Product } from '../models/product.model';
   providedIn: 'root'
 })
 export class ApiService {
- 
+
   private baseUrl = 'http://localhost:5234/api';
- 
+
   constructor(private http: HttpClient) {}
  
   createVisitor(consentStatus?: string): Observable<any> {
@@ -123,18 +123,19 @@ export class ApiService {
   }
  
   private normalizeProduct(product: any): Product {
-    return {
-      productId: product.productId ?? product.id,
-      name: product.name ?? 'Product',
-      description: product.description ?? '',
-      pricing: Number(product.pricing ?? 0),
-      features: this.parseList(product.features),
-      specifications: this.parseList(product.specifications),
-      status: product.status ?? 'Available',
-      categoryId: product.categoryId ?? null,      // <-- add if needed
-      categoryName: product.categoryName ?? null   // <-- add if needed
-    };
-  }
+
+  return {
+    productId: product.productId ?? product.id,
+    name: product.name ?? 'Product',
+    description: product.description ?? '',
+    pricing: Number(product.pricing ?? 0),
+    features: this.parseList(product.features),
+    specifications: this.parseList(product.specifications),
+    status: product.status ?? 'Available',
+    categoryId: product.categoryId ?? null,
+    categoryName: product.categoryName ?? null
+  };
+}
  
   private parseList(value: string | string[] | null | undefined): string[] {
     if (Array.isArray(value)) {
