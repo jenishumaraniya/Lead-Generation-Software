@@ -24,7 +24,8 @@ export class AppComponent implements OnInit {
       this.visitorTrackingService.initializeVisitor(
         this.visitorTrackingService.getConsentChoice() ?? 'accepted'
       );
-      this.visitorTrackingService.trackActivity('page_view');
+      // this.visitorTrackingService.trackActivity('page_view');
+      this.visitorTrackingService.trackActivity('PAGE_VIEW');
     }
   }
 

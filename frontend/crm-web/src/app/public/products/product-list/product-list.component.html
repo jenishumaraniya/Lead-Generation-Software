@@ -293,27 +293,12 @@
           </div>
 
 
-
-          <div class="features">
-
-
-            @for (
-              feature of product.features;
-              track feature
-            ) {
-
-
-              <span>
-
-                {{ feature }}
-
-              </span>
-
-
-            }
-
-
-          </div>
+  <!-- FIX: Loop through features -->
+  <div class="feature-tags">
+    @for (feature of product.features; track feature) {
+      <span class="feature-badge">{{ feature }}</span>
+    }
+  </div>
 
 
 
