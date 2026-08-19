@@ -16,7 +16,4 @@ export class HomeComponent {
     this.router.navigate(['/products']);
   }
 
-  goToPricing(): void {
-    this.router.navigate(['/pricing']);
-  }
 }

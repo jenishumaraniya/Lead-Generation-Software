@@ -14,16 +14,24 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have the 'crm-web' title`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('crm-web');
-  });
-
-  it('should render title', () => {
+  it('should display the consent popup when no decision has been stored', () => {
+    localStorage.clear();
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
+
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, crm-web');
+    expect(compiled.querySelector('.cookie-consent')?.textContent).toContain('Accept');
+    expect(compiled.querySelector('.cookie-consent')?.textContent).toContain('Reject');
+  });
+
+  it('should store a consent choice when the user accepts cookies', () => {
+    localStorage.clear();
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+
+    const button = fixture.nativeElement.querySelector('[data-testid="accept-cookie-consent"]') as HTMLButtonElement;
+    button.click();
+
+    expect(localStorage.getItem('crm_cookie_consent')).toBe('accepted');
   });
 });

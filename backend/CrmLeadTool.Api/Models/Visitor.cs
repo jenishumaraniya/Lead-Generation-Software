@@ -1,16 +1,16 @@
-namespace CrmLeadTool.Api.Models; 
-public class Visitor 
+using System.ComponentModel.DataAnnotations.Schema;
 
-{ 
-    public int VisitorId { get; set; } 
+namespace CrmLeadTool.Api.Models;
 
- 
+[Table("Visitor_CRM")]
+public class Visitor
+{
+    public int VisitorId { get; set; }
+    public Guid PublicId { get; set; }           // NEW: unique identifier
+    public string AnonymousId { get; set; } = string.Empty;
+    public string ConsentStatus { get; set; } = "UNKNOWN";
+    public DateTime FirstSeenAt { get; set; }
+    public DateTime LastSeenAt { get; set; }
 
-    public string AnonymousId { get; set; } = string.Empty; 
-    public DateTime FirstSeenAt { get; set; } 
-    public DateTime LastSeenAt { get; set; } 
-    public string ConsentStatus { get; set; } = "UNKNOWN"; 
-    public DateTime CreatedAt { get; set; } 
-    public ICollection<VisitorActivity> Activities { get; set; } = new List<VisitorActivity>(); 
-
-} 
+    public ICollection<VisitorActivity> Activities { get; set; } = new List<VisitorActivity>();
+}

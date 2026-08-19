@@ -1,13 +1,12 @@
-import { Component,OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 import { AdminApiService } from '../../../app/core/services/admin-api.services';
-import { DatePipe } from '@angular/common';
+
 @Component({ 
-
   selector: 'app-visitor-list', 
-  standalone:true,
+  standalone: true,
   templateUrl: './visitor-list.component.html', 
-  imports:[DatePipe]
-
+  imports: [CommonModule, DatePipe]
 }) 
 
 export class VisitorListComponent 
