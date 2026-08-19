@@ -1,0 +1,17 @@
+# .NET
+**/bin/
+**/obj/
+
+# Angular
+**/node_modules/
+**/dist/
+**/.angular/
+
+# Visual Studio
+.vs/
+
+# Logs
+*.log
+
+**/bin/
+**/obj/

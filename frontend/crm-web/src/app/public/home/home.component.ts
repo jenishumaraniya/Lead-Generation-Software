@@ -12,8 +12,30 @@ export class HomeComponent {
 
   constructor(private router: Router) {}
 
-  exploreProducts(): void {
-    this.router.navigate(['/products']);
+  // exploreProducts(): void {
+  //   this.router.navigate(['/products']);
+  // }
+  exploreProducts(categoryId?: number): void {
+
+  if (categoryId) {
+
+    this.router.navigate(
+      ['/products'],
+      {
+        queryParams: {
+          categoryId: categoryId
+        }
+      }
+    );
+
+  } else {
+
+    this.router.navigate(
+      ['/products']
+    );
+
   }
+
+}
 
 }
