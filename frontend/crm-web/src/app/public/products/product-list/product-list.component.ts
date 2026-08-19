@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { Product } from '../../../core/models/product.model';
+import { ApiService } from '../../../core/services/api.service';
 
 @Component({
   selector: 'app-product-list',
@@ -10,97 +11,114 @@ import { Product } from '../../../core/models/product.model';
   templateUrl: './product-list.component.html',
   styleUrl: './product-list.component.css'
 })
-export class ProductListComponent {
+export class ProductListComponent implements OnInit {
 
-  products: Product[] = [
+  products: Product[] = [];
 
-    {
-      productId: 1,
-      name: 'Business Laptop Pro',
-      description:
-        'High-performance laptop designed for modern business professionals.',
-      pricing: 65000,
-      features: [
-        '16GB RAM',
-        '512GB SSD',
-        'WiFi 6',
-        'Full HD Display'
-      ],
-      specifications: [
-        'Intel Core i5',
-        '16GB RAM',
-        '512GB SSD',
-        '14 inch Display'
-      ],
-      status: 'Available'
-    },
+  constructor(
+    private router: Router,
+    private apiService: ApiService
+  ) {}
 
-    {
-      productId: 2,
-      name: 'Business Desktop Pro',
-      description:
-        'Powerful desktop solution for office productivity and business applications.',
-      pricing: 55000,
-      features: [
-        '16GB RAM',
-        '512GB SSD',
-        'High Performance',
-        'Multiple Ports'
-      ],
-      specifications: [
-        'Intel Core i5',
-        '16GB RAM',
-        '512GB SSD',
-        'Windows 11 Pro'
-      ],
-      status: 'Available'
-    },
+  ngOnInit(): void {
+    this.loadProducts();
+  }
 
-    {
-      productId: 3,
-      name: 'Business Server X1',
-      description:
-        'Reliable server infrastructure for growing businesses.',
-      pricing: 150000,
-      features: [
-        '64GB RAM',
-        '2TB Storage',
-        'High Availability',
-        'Enterprise Security'
-      ],
-      specifications: [
-        'Intel Xeon',
-        '64GB RAM',
-        '2TB SSD',
-        'Rack Mount'
-      ],
-      status: 'Available'
-    },
+  private loadProducts(): void {
+    this.apiService.getProducts().subscribe({
+      next: (products) => {
+        this.products = products;
+      },
+      error: () => {
+        this.products = this.getFallbackProducts();
+      }
+    });
+  }
 
-    {
-      productId: 4,
-      name: 'Enterprise Network Router',
-      description:
-        'Secure and reliable networking solution for business environments.',
-      pricing: 35000,
-      features: [
-        'High Speed',
-        'Enterprise Security',
-        'VPN Support',
-        'Multiple Ports'
-      ],
-      specifications: [
-        '1Gbps Speed',
-        '8 Ethernet Ports',
-        'VPN Support',
-        'Firewall'
-      ],
-      status: 'Available'
-    }
-
-  ];
-
-  constructor(private router: Router) {}
+  private getFallbackProducts(): Product[] {
+    return [
+      {
+        productId: 1,
+        name: 'Business Laptop Pro',
+        description:
+          'High-performance laptop designed for modern business professionals.',
+        pricing: 65000,
+        features: [
+          '16GB RAM',
+          '512GB SSD',
+          'WiFi 6',
+          'Full HD Display'
+        ],
+        specifications: [
+          'Intel Core i5',
+          '16GB RAM',
+          '512GB SSD',
+          '14 inch Display'
+        ],
+        status: 'Available'
+      },
+      {
+        productId: 2,
+        name: 'Business Desktop Pro',
+        description:
+          'Powerful desktop solution for office productivity and business applications.',
+        pricing: 55000,
+        features: [
+          '16GB RAM',
+          '512GB SSD',
+          'High Performance',
+          'Multiple Ports'
+        ],
+        specifications: [
+          'Intel Core i5',
+          '16GB RAM',
+          '512GB SSD',
+          'Windows 11 Pro'
+        ],
+        status: 'Available'
+      },
+      {
+        productId: 3,
+        name: 'Business Server X1',
+        description:
+          'Reliable server infrastructure for growing businesses.',
+        pricing: 150000,
+        features: [
+          '64GB RAM',
+          '2TB Storage',
+          'High Availability',
+          'Enterprise Security'
+        ],
+        specifications: [
+          'Intel Xeon',
+          '64GB RAM',
+          '2TB SSD',
+          'Rack Mount'
+        ],
+        status: 'Available'
+      },
+      {
+        productId: 4,
+        name: 'Enterprise Network Router',
+        description:
+          'Secure and reliable networking solution for business environments.',
+        pricing: 35000,
+        features: [
+          'High Speed',
+          'Enterprise Security',
+          'VPN Support',
+          'Multiple Ports'
+        ],
+        specifications: [
+          '1Gbps Speed',
+          '8 Ethernet Ports',
+          'VPN Support',
+          'Firewall'
+        ],
+        status: 'Available'
+      }
+    ];
+  }
 
   viewProduct(productId: number): void {
     this.router.navigate(['/products', productId]);

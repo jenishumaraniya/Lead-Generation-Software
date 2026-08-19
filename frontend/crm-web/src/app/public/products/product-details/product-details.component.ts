@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { Product } from '../../../core/models/product.model';
+import { ApiService } from '../../../core/services/api.service';
 
 @Component({
   selector: 'app-product-details',
@@ -14,8 +15,7 @@ export class ProductDetailsComponent implements OnInit {
 
   product?: Product;
 
-  private products: Product[] = [
-
+  private fallbackProducts: Product[] = [
     {
       productId: 1,
       name: 'Business Laptop Pro',
@@ -36,7 +36,6 @@ export class ProductDetailsComponent implements OnInit {
       ],
       status: 'Available'
     },
-
     {
       productId: 2,
       name: 'Business Desktop Pro',
@@ -57,7 +56,6 @@ export class ProductDetailsComponent implements OnInit {
       ],
       status: 'Available'
     },
-
     {
       productId: 3,
       name: 'Business Server X1',
@@ -78,7 +76,6 @@ export class ProductDetailsComponent implements OnInit {
       ],
       status: 'Available'
     },
-
     {
       productId: 4,
       name: 'Enterprise Network Router',
@@ -99,24 +96,32 @@ export class ProductDetailsComponent implements OnInit {
       ],
       status: 'Available'
     }
-
   ];
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private apiService: ApiService
   ) {}
 
   ngOnInit(): void {
+    const id = Number(this.route.snapshot.paramMap.get('id'));
 
-    const id = Number(
-      this.route.snapshot.paramMap.get('id')
-    );
+    if (!id) {
+      this.product = this.fallbackProducts[0];
+      return;
+    }
 
-    this.product = this.products.find(
-      product => product.productId === id
-    );
-
+    this.apiService.getProduct(id).subscribe({
+      next: (product) => {
+        this.product = product;
+      },
+      error: () => {
+        this.product = this.fallbackProducts.find(
+          item => item.productId === id
+        ) ?? this.fallbackProducts[0];
+      }
+    });
   }
 
   goBack(): void {
@@ -128,11 +133,9 @@ export class ProductDetailsComponent implements OnInit {
   }
 
   interested(): void {
-
     alert(
       'Thank you for your interest. Our team will contact you soon.'
     );
-
   }
 
 }
