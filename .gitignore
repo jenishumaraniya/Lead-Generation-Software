@@ -12,3 +12,6 @@
 
 # Logs
 *.log
+
+**/bin/
+**/obj/
