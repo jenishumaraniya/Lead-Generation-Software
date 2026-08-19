@@ -140,6 +140,7 @@ import { DecimalPipe } from '@angular/common';
 
 import { Product } from '../../../core/models/product.model';
 import { ApiService } from '../../../core/services/api.service';
+import { VisitorTrackingService } from '../../../core/services/visitor-tracking.service';
 
 
 @Component({
@@ -218,7 +219,8 @@ export class ProductListComponent implements OnInit {
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private visitorTrackingService: VisitorTrackingService
   ) {}
 
 
@@ -341,10 +343,13 @@ export class ProductListComponent implements OnInit {
 
   viewProduct(productId: number): void {
 
-    this.router.navigate(
-      ['/products', productId]
-    );
-
+    
+    this.visitorTrackingService.trackActivity(
+    'PRODUCT_VIEW',
+    productId,
+    { source: 'product_list' }
+  );
+  this.router.navigate(['/products', productId]);
   }
 
 

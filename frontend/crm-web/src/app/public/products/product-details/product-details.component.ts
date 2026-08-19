@@ -3,6 +3,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { Product } from '../../../core/models/product.model';
 import { ApiService } from '../../../core/services/api.service';
+import { VisitorTrackingService } from '../../../core/services/visitor-tracking.service';
 
 @Component({
   selector: 'app-product-details',
@@ -101,41 +102,98 @@ export class ProductDetailsComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private visitorTrackingService: VisitorTrackingService   
   ) {}
 
+  // ngOnInit(): void {
+  //   const id = Number(this.route.snapshot.paramMap.get('id'));
+
+  //   if (!id) {
+  //     this.product = this.fallbackProducts[0];
+  //     return;
+  //   }
+
+  //   this.apiService.getProduct(id).subscribe({
+  //     next: (product) => {
+  //       this.product = product;
+  //     },
+  //     error: () => {
+  //       this.product = this.fallbackProducts.find(
+  //         item => item.productId === id
+  //       ) ?? this.fallbackProducts[0];
+  //     }
+  //   });
+
+  //    if (this.product) {
+  //   this.visitorTrackingService.trackActivity(
+  //     'PRODUCT_VIEW',
+  //     this.product.productId,
+  //     { productName: this.product.name }
+  //   );
+  // }
+  // }
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
+  const id = Number(this.route.snapshot.paramMap.get('id'));
 
-    if (!id) {
-      this.product = this.fallbackProducts[0];
-      return;
-    }
+  const handleProduct = (product: Product) => {
+    this.product = product;
+    this.trackProductView(product);
+  };
 
-    this.apiService.getProduct(id).subscribe({
-      next: (product) => {
-        this.product = product;
-      },
-      error: () => {
-        this.product = this.fallbackProducts.find(
-          item => item.productId === id
-        ) ?? this.fallbackProducts[0];
-      }
-    });
+  if (!id) {
+    handleProduct(this.fallbackProducts[0]);
+    return;
   }
+
+  this.apiService.getProduct(id).subscribe({
+    next: (product) => handleProduct(product),
+    error: () => {
+      const fallback = this.fallbackProducts.find(p => p.productId === id) ?? this.fallbackProducts[0];
+      handleProduct(fallback);
+    }
+  });
+}
+
+private trackProductView(product: Product): void {
+  this.visitorTrackingService.trackActivity(
+    'PRODUCT_VIEW',
+    product.productId,
+    { productName: product.name }
+  );
+}
 
   goBack(): void {
     this.router.navigate(['/products']);
   }
 
-  compare(): void {
-    this.router.navigate(['/compare']);
-  }
-
-  interested(): void {
-    alert(
-      'Thank you for your interest. Our team will contact you soon.'
+  // compare(): void {
+  //   this.router.navigate(['/compare']);
+  // }
+compare(): void {
+  if (this.product) {
+    this.visitorTrackingService.trackActivity(
+      'PRODUCT_COMPARE',
+      this.product.productId,
+      { source: 'product_details' }
     );
   }
+  this.router.navigate(['/compare']);
+}
+  // interested(): void {
+  //   alert(
+  //     'Thank you for your interest. Our team will contact you soon.'
+  //   );
+  // }
+  interested(): void {
+  if (this.product) {
+    this.visitorTrackingService.trackActivity(
+      'INTEREST_CLICK',
+      this.product.productId,
+      { source: 'product_page' }
+    );
+  }
+  alert('Thank you for your interest. Our team will contact you soon.');
+}
 
 }
