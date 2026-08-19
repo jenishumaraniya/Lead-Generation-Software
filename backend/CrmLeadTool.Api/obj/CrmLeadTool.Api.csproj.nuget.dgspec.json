@@ -1,27 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj": {}
+    "C:\\Users\\hsuthar\\OneDrive - Stridely Solutions India pvt ltd\\Desktop\\CRM Project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj": {}
   },
   "projects": {
-    "D:\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj": {
+    "C:\\Users\\hsuthar\\OneDrive - Stridely Solutions India pvt ltd\\Desktop\\CRM Project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj",
+        "projectUniqueName": "C:\\Users\\hsuthar\\OneDrive - Stridely Solutions India pvt ltd\\Desktop\\CRM Project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj",
         "projectName": "CrmLeadTool.Api",
-        "projectPath": "D:\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj",
-        "packagesPath": "C:\\Users\\jumaraniya\\.nuget\\packages\\",
-        "outputPath": "D:\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\obj\\",
+        "projectPath": "C:\\Users\\hsuthar\\OneDrive - Stridely Solutions India pvt ltd\\Desktop\\CRM Project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\CrmLeadTool.Api.csproj",
+        "packagesPath": "C:\\Users\\hsuthar\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\hsuthar\\OneDrive - Stridely Solutions India pvt ltd\\Desktop\\CRM Project\\Lead-Generation-Software\\backend\\CrmLeadTool.Api\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\jumaraniya\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\hsuthar\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
