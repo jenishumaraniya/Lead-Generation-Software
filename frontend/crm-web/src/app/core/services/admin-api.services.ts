@@ -16,7 +16,7 @@ export class AdminApiService {
 
   private baseUrl = 
 
-    'https://localhost:7001/api/admin'; 
+    'http://localhost:5234/api/admin'; 
 
  
 

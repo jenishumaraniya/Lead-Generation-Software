@@ -22,7 +22,8 @@ public class VisitorController : ControllerBase
         return Ok(new
         {
             visitorId = visitor.VisitorId,
-            anonymousId = visitor.AnonymousId
+            anonymousId = visitor.AnonymousId,
+            publicId = visitor.PublicId 
         });
     }
 }

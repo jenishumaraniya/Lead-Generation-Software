@@ -23,6 +23,7 @@ public class AdminVisitorController : ControllerBase
             {
                 v.VisitorId,
                 v.AnonymousId,
+                v.PublicId,
                 v.FirstSeenAt,
                 v.LastSeenAt,
                 Activities = v.Activities.Count,

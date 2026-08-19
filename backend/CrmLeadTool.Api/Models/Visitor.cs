@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CrmLeadTool.Api.Models;
@@ -6,7 +7,10 @@ namespace CrmLeadTool.Api.Models;
 public class Visitor
 {
     public int VisitorId { get; set; }
-    public Guid PublicId { get; set; }           // NEW: unique identifier
+
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]   // <-- important!
+    public Guid PublicId { get; set; }
+
     public string AnonymousId { get; set; } = string.Empty;
     public string ConsentStatus { get; set; } = "UNKNOWN";
     public DateTime FirstSeenAt { get; set; }
