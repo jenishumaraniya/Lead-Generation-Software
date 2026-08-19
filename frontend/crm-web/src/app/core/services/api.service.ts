@@ -100,19 +100,48 @@ export class ApiService {
   }
  
   // 🔧 Updated: accepts optional categoryId
-  getProducts(categoryId?: number): Observable<Product[]> {
-    let params = new HttpParams();
-    if (categoryId !== undefined && categoryId !== null) {
-      params = params.set('categoryId', categoryId.toString());
-    }
+  // getProducts(categoryId?: number): Observable<Product[]> {
+  //   let params = new HttpParams();
+  //   if (categoryId !== undefined && categoryId !== null) {
+  //     params = params.set('categoryId', categoryId.toString());
+  //   }
  
-    return this.http.get<any[]>(
-      `${this.baseUrl}/product`,
-      { params }   // <-- pass query parameters
-    ).pipe(
-      map(products => products.map(product => this.normalizeProduct(product)))
+  //   return this.http.get<any[]>(
+  //     `${this.baseUrl}/product`,
+  //     { params }   // <-- pass query parameters
+  //   ).pipe(
+  //     map(products => products.map(product => this.normalizeProduct(product)))
+  //   );
+  // }
+getProducts(categoryId?: number): Observable<Product[]> {
+
+  let params = new HttpParams();
+
+  if (
+    categoryId !== undefined &&
+    categoryId !== null
+  ) {
+
+    params = params.set(
+      'categoryId',
+      categoryId.toString()
     );
+
   }
+
+  return this.http.get<any[]>(
+    `${this.baseUrl}/product`,
+    { params }
+  ).pipe(
+
+    map(products =>
+      products.map(product =>
+        this.normalizeProduct(product)
+      )
+    )
+
+  );
+}
  
   getProduct(id: number): Observable<Product> {
     return this.http.get<any>(
@@ -136,6 +165,7 @@ export class ApiService {
     categoryName: product.categoryName ?? null
   };
 }
+
  
   private parseList(value: string | string[] | null | undefined): string[] {
     if (Array.isArray(value)) {
