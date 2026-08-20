@@ -1,0 +1,84 @@
+.floating-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: linear-gradient(135deg, #4a6cf7, #6a4cf7);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(74, 108, 247, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 999;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: pulse 2s infinite;
+  letter-spacing: 0.3px;
+}
+
+.floating-btn svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.floating-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 30px rgba(74, 108, 247, 0.6);
+  background: linear-gradient(135deg, #3651d4, #5a3cd4);
+}
+
+.floating-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-text {
+  display: inline-block;
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+  0% { 
+    box-shadow: 0 4px 20px rgba(74, 108, 247, 0.4); 
+  }
+  50% { 
+    box-shadow: 0 4px 30px rgba(74, 108, 247, 0.7); 
+  }
+  100% { 
+    box-shadow: 0 4px 20px rgba(74, 108, 247, 0.4); 
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .floating-btn {
+    padding: 12px 18px;
+    font-size: 14px;
+    bottom: 20px;
+    right: 20px;
+    gap: 8px;
+  }
+  
+  .floating-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .floating-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+    bottom: 16px;
+    right: 16px;
+    border-radius: 40px;
+  }
+  
+  .btn-text {
+    display: none; /* Show only icon on very small screens */
+  }
+}

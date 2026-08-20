@@ -4,6 +4,7 @@ import { DecimalPipe } from '@angular/common';
 import { Product } from '../../../core/models/product.model';
 import { ApiService } from '../../../core/services/api.service';
 import { VisitorTrackingService } from '../../../core/services/visitor-tracking.service';
+import { ContactService } from '../../../core/services/contact.service';
 
 @Component({
   selector: 'app-product-details',
@@ -103,7 +104,8 @@ export class ProductDetailsComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private apiService: ApiService,
-    private visitorTrackingService: VisitorTrackingService   
+    private visitorTrackingService: VisitorTrackingService ,
+     private contactService: ContactService  
   ) {}
 
   // ngOnInit(): void {
@@ -185,15 +187,19 @@ compare(): void {
   //     'Thank you for your interest. Our team will contact you soon.'
   //   );
   // }
+
+  
   interested(): void {
+  // Track the event
   if (this.product) {
     this.visitorTrackingService.trackActivity(
       'INTEREST_CLICK',
       this.product.productId,
       { source: 'product_page' }
     );
+    // Open the contact form with pre-selected product
+    this.contactService.openContactForm(this.product.productId);
   }
-  alert('Thank you for your interest. Our team will contact you soon.');
 }
 
 }

@@ -1,0 +1,301 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="close-btn" (click)="closeModal()" aria-label="Close form">×</button>
+    
+    <div class="modal-header">
+      <h2>Contact Us</h2>
+      <p class="subtitle">Fill in your details and we'll get back to you shortly.</p>
+    </div>
+    
+    <form #contactForm="ngForm" (ngSubmit)="onSubmit(contactForm)" novalidate>
+      
+      <!-- Company Name -->
+      <div class="form-group">
+        <label for="companyName">Company Name <span class="required">*</span></label>
+        <input 
+          type="text" 
+          id="companyName"
+          name="companyName"
+          [(ngModel)]="formData.companyName" 
+          required
+          (blur)="validateField('companyName')"
+          (input)="validateField('companyName')"
+          placeholder="Enter your company name"
+          class="form-control"
+          [class.invalid]="formErrors.companyName && (contactForm.controls['companyName']?.touched || contactForm.submitted)"
+        >
+        <div class="error-message" *ngIf="formErrors.companyName && (contactForm.controls['companyName']?.touched || contactForm.submitted)">
+          {{ formErrors.companyName }}
+        </div>
+      </div>
+
+      <!-- Full Name -->
+      <div class="form-group">
+        <label for="fullName">Full Name <span class="required">*</span></label>
+        <input 
+          type="text" 
+          id="fullName"
+          name="fullName"
+          [(ngModel)]="formData.fullName" 
+          required
+          (blur)="validateField('fullName')"
+          (input)="validateField('fullName')"
+          placeholder="Enter your full name"
+          class="form-control"
+          [class.invalid]="formErrors.fullName && (contactForm.controls['fullName']?.touched || contactForm.submitted)"
+        >
+        <div class="error-message" *ngIf="formErrors.fullName && (contactForm.controls['fullName']?.touched || contactForm.submitted)">
+          {{ formErrors.fullName }}
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">Email Address <span class="required">*</span></label>
+        <input 
+          type="email" 
+          id="email"
+          name="email"
+          [(ngModel)]="formData.email" 
+          required
+          (blur)="validateField('email')"
+          (input)="validateField('email')"
+          placeholder="Enter your email address"
+          class="form-control"
+          [class.invalid]="formErrors.email && (contactForm.controls['email']?.touched || contactForm.submitted)"
+        >
+        <div class="error-message" *ngIf="formErrors.email && (contactForm.controls['email']?.touched || contactForm.submitted)">
+          {{ formErrors.email }}
+        </div>
+      </div>
+
+      <!-- Job Title -->
+      <div class="form-group">
+        <label for="jobTitle">Job Title <span class="required">*</span></label>
+        <input 
+          type="text" 
+          id="jobTitle"
+          name="jobTitle"
+          [(ngModel)]="formData.jobTitle" 
+          required
+          (blur)="validateField('jobTitle')"
+          (input)="validateField('jobTitle')"
+          placeholder="Enter your job title"
+          class="form-control"
+          [class.invalid]="formErrors.jobTitle && (contactForm.controls['jobTitle']?.touched || contactForm.submitted)"
+        >
+        <div class="error-message" *ngIf="formErrors.jobTitle && (contactForm.controls['jobTitle']?.touched || contactForm.submitted)">
+          {{ formErrors.jobTitle }}
+        </div>
+      </div>
+
+      <!-- Domain -->
+      <div class="form-group">
+        <label for="domain">Domain <span class="required">*</span></label>
+        <input 
+          type="text" 
+          id="domain"
+          name="domain"
+          [(ngModel)]="formData.domain" 
+          required
+          (blur)="validateField('domain')"
+          (input)="validateField('domain')"
+          placeholder="e.g., Technology, Healthcare, Finance"
+          class="form-control"
+          [class.invalid]="formErrors.domain && (contactForm.controls['domain']?.touched || contactForm.submitted)"
+        >
+        <div class="error-message" *ngIf="formErrors.domain && (contactForm.controls['domain']?.touched || contactForm.submitted)">
+          {{ formErrors.domain }}
+        </div>
+      </div>
+
+      <!-- Industry -->
+      <div class="form-group">
+        <label for="industry">Industry <span class="required">*</span></label>
+        <input 
+          type="text" 
+          id="industry"
+          name="industry"
+          [(ngModel)]="formData.industry" 
+          required
+          (blur)="validateField('industry')"
+          (input)="validateField('industry')"
+          placeholder="Enter your industry"
+          class="form-control"
+          [class.invalid]="formErrors.industry && (contactForm.controls['industry']?.touched || contactForm.submitted)"
+        >
+        <div class="error-message" *ngIf="formErrors.industry && (contactForm.controls['industry']?.touched || contactForm.submitted)">
+          {{ formErrors.industry }}
+        </div>
+      </div>
+
+      <!-- Country -->
+      <div class="form-group">
+        <label for="country">Country <span class="required">*</span></label>
+        <input 
+          type="text" 
+          id="country"
+          name="country"
+          [(ngModel)]="formData.country" 
+          required
+          (blur)="validateField('country')"
+          (input)="validateField('country')"
+          placeholder="Enter your country"
+          class="form-control"
+          [class.invalid]="formErrors.country && (contactForm.controls['country']?.touched || contactForm.submitted)"
+        >
+        <div class="error-message" *ngIf="formErrors.country && (contactForm.controls['country']?.touched || contactForm.submitted)">
+          {{ formErrors.country }}
+        </div>
+      </div>
+
+      <!-- Phone -->
+      <div class="form-group">
+        <label for="phone">Phone Number <span class="required">*</span></label>
+        <input 
+          type="tel" 
+          id="phone"
+          name="phone"
+          [(ngModel)]="formData.phone" 
+          required
+          (blur)="validateField('phone')"
+          (input)="validateField('phone')"
+          placeholder="Enter your phone number"
+          class="form-control"
+          [class.invalid]="formErrors.phone && (contactForm.controls['phone']?.touched || contactForm.submitted)"
+        >
+        <div class="error-message" *ngIf="formErrors.phone && (contactForm.controls['phone']?.touched || contactForm.submitted)">
+          {{ formErrors.phone }}
+        </div>
+      </div>
+
+      <!-- Products of Interest (Multi-Select Dropdown) -->
+      <div class="form-group">
+        <label>Products of Interest <span class="required">*</span></label>
+        
+        <div class="dropdown-container" #dropdownContainer>
+          
+          <!-- Dropdown Header -->
+          <div class="dropdown-header" (click)="toggleDropdown($event)">
+            <div class="selected-products">
+              <span *ngIf="formData.products.length === 0" class="placeholder">
+                {{ selectedProductNames }}
+              </span>
+              <span *ngFor="let productId of formData.products" class="product-tag">
+                {{ getProductName(productId) }}
+                <span class="remove-tag" (click)="removeProduct(productId, $event)">×</span>
+              </span>
+            </div>
+            
+            <div class="dropdown-actions">
+              <span *ngIf="formData.products.length > 0" class="clear-all" (click)="clearAllProducts($event)">
+                Clear all
+              </span>
+              <span class="dropdown-arrow" [class.open]="isDropdownOpen">
+                ▼
+              </span>
+            </div>
+          </div>
+          
+          <!-- Dropdown Options -->
+          <div class="dropdown-options" *ngIf="isDropdownOpen">
+            <div *ngFor="let product of availableProducts" 
+                 class="dropdown-option"
+                 [class.selected]="isProductSelected(product.productId)"
+                 (click)="toggleProductSelection(product.productId, $event)">
+              <input type="checkbox" 
+                     [checked]="isProductSelected(product.productId)"
+                     (change)="toggleProductSelection(product.productId, $event)"
+                     (click)="$event.stopPropagation()">
+              <span class="product-name">{{ product.name }}</span>
+              <span class="product-price">₹{{ product.pricing | number }}</span>
+            </div>
+            
+            <div *ngIf="availableProducts.length === 0" class="no-products">
+              No products available
+            </div>
+          </div>
+          
+        </div>
+        
+        <div class="error-message" *ngIf="formErrors.products && (contactForm.submitted)">
+          {{ formErrors.products }}
+        </div>
+        <small class="hint">Click to select multiple products</small>
+      </div>
+
+      <!-- Required Quantity -->
+      <div class="form-group">
+        <label for="quantity">Required Quantity <span class="required">*</span></label>
+        <input 
+          type="number" 
+          id="quantity"
+          name="quantity"
+          [(ngModel)]="formData.quantity" 
+          required
+          min="1"
+          (blur)="validateField('quantity')"
+          (input)="validateField('quantity')"
+          placeholder="Enter quantity needed"
+          class="form-control"
+          [class.invalid]="formErrors.quantity && (contactForm.controls['quantity']?.touched || contactForm.submitted)"
+        >
+        <div class="error-message" *ngIf="formErrors.quantity && (contactForm.controls['quantity']?.touched || contactForm.submitted)">
+          {{ formErrors.quantity }}
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="form-group">
+        <label>When do you need it? <span class="required">*</span></label>
+        <div class="radio-group">
+          <label *ngFor="let option of timelineOptions" class="radio-option"
+                 [class.selected]="formData.timeline === option">
+            <input 
+              type="radio" 
+              name="timeline"
+              [value]="option"
+              [(ngModel)]="formData.timeline"
+              required
+              (change)="validateField('timeline')"
+            >
+            {{ option }}
+          </label>
+        </div>
+        <div class="error-message" *ngIf="formErrors.timeline && (contactForm.submitted)">
+          {{ formErrors.timeline }}
+        </div>
+      </div>
+
+      <!-- Business Requirement -->
+      <div class="form-group">
+        <label for="businessRequirement">Business Requirement <span class="required">*</span></label>
+        <textarea 
+          id="businessRequirement"
+          name="businessRequirement"
+          [(ngModel)]="formData.businessRequirement" 
+          required
+          rows="4"
+          (blur)="validateField('businessRequirement')"
+          (input)="validateField('businessRequirement')"
+          placeholder="Describe your business requirements (minimum 20 characters)..."
+          class="form-control"
+          [class.invalid]="formErrors.businessRequirement && (contactForm.controls['businessRequirement']?.touched || contactForm.submitted)"
+        ></textarea>
+        <div class="error-message" *ngIf="formErrors.businessRequirement && (contactForm.controls['businessRequirement']?.touched || contactForm.submitted)">
+          {{ formErrors.businessRequirement }}
+        </div>
+        <small class="hint">Minimum 20 characters required</small>
+      </div>
+
+      <button 
+        type="submit" 
+        class="submit-btn" 
+        [disabled]="isLoading"
+      >
+        <span *ngIf="!isLoading">Submit Request</span>
+        <span *ngIf="isLoading" class="spinner">Submitting...</span>
+      </button>
+    </form>
+  </div>
+</div>

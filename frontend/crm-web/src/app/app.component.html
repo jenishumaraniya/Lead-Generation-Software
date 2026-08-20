@@ -1,4 +1,16 @@
 <router-outlet></router-outlet>
+<!-- Floating Contact Button -->
+<app-floating-contact-button (openForm)="openContactForm()"></app-floating-contact-button>
+
+<!-- Contact Form Modal -->
+<app-contact-form 
+  *ngIf="showContactForm"
+  [isOpen]="showContactForm"
+  [preselectedProductId]="preselectedProductId"
+  (close)="closeContactForm()"
+  (submit)="handleFormSubmit($event)"
+></app-contact-form>
+
 
 <div *ngIf="showConsentPopup" class="cookie-consent" role="dialog" aria-live="polite" aria-label="Cookie consent popup">
   <div class="cookie-consent__panel">
