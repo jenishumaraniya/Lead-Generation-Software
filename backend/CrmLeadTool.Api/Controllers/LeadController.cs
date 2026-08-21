@@ -46,8 +46,15 @@ public class LeadController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetLeads()
     {
-        var leads = await _leadService.GetAllLeadsAsync();
-        return Ok(leads);
+        try
+        {
+            var leads = await _leadService.GetAllLeadsAsync();
+            return Ok(leads);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
     }
 
     [HttpGet("{id}")]

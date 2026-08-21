@@ -23,5 +23,5 @@ public class Prospect
     public Company? Company { get; set; }
     public Visitor? Visitor { get; set; }
     public ICollection<CampaignRecipient> CampaignRecipients { get; set; } = new List<CampaignRecipient>();
-    public ICollection<Lead> Leads { get; set; } = new List<Lead>();  // <-- NEW
+    public ICollection<Lead> Leads { get; set; } = new List<Lead>();
 }
