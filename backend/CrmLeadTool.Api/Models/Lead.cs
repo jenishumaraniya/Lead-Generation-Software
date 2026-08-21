@@ -8,7 +8,7 @@ public class Lead
 {
     public int LeadId { get; set; }
     public int? VisitorId { get; set; }
-    public int? ProspectId { get; set; }   // Added
+    public int? ProspectId { get; set; }
     public string CompanyName { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
@@ -22,11 +22,20 @@ public class Lead
     public string Timeline { get; set; } = string.Empty;
     public string BusinessRequirement { get; set; } = string.Empty;
     public string? Source { get; set; }
+    public string Status { get; set; } = "NEW";
+    public int? Score { get; set; } = 0;
+    public string? Qualification { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 
+    // Navigation
     public Visitor? Visitor { get; set; }
     public Prospect? Prospect { get; set; }
+    public ICollection<LeadActivity> Activities { get; set; } = new List<LeadActivity>();
+    public ICollection<LeadNote> Notes { get; set; } = new List<LeadNote>();
+    public ICollection<LeadStatusHistory> StatusHistory { get; set; } = new List<LeadStatusHistory>();
 
+    // Helper methods
     public int[] GetProductIdList()
     {
         if (string.IsNullOrEmpty(ProductIds)) return Array.Empty<int>();
@@ -34,7 +43,10 @@ public class Lead
         {
             return JsonSerializer.Deserialize<int[]>(ProductIds) ?? Array.Empty<int>();
         }
-        catch { return Array.Empty<int>(); }
+        catch
+        {
+            return Array.Empty<int>();
+        }
     }
 
     public void SetProductIdList(int[] productIds)
