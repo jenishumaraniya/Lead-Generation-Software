@@ -85,3 +85,200 @@
     flex: 1;
   }
 }
+
+/* ============================================ */
+/* PREMIUM NAVBAR - White & Blue Theme         */
+/* ============================================ */
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 60px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: #1a1a2e;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(74, 108, 247, 0.1);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+  animation: slideDown 0.5s ease forwards;
+}
+
+/* Logo */
+.logo {
+  font-size: 26px;
+  font-weight: 800;
+  cursor: pointer;
+  color: #1a1a2e;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+}
+
+.logo span {
+  color: #4a6cf7;
+}
+
+.logo:hover {
+  transform: scale(1.02);
+}
+
+/* Nav Links Container */
+.nav-links {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Individual Nav Links */
+.nav-links a {
+  color: #4a4a6a;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 8px 20px;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  letter-spacing: 0.3px;
+}
+
+/* Link Hover Effect - Blue underline */
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2.5px;
+  background: #4a6cf7;
+  transition: width 0.3s ease;
+  border-radius: 2px;
+}
+
+.nav-links a:hover::after {
+  width: 50%;
+}
+
+.nav-links a:hover {
+  color: #4a6cf7;
+  background: rgba(74, 108, 247, 0.06);
+  transform: translateY(-1px);
+}
+
+/* Active Link State */
+.nav-links a.active {
+  color: #4a6cf7;
+  background: rgba(74, 108, 247, 0.08);
+  font-weight: 600;
+}
+
+.nav-links a.active::after {
+  width: 50%;
+}
+
+/* Contact Button - Blue Gradient */
+.nav-links a:last-child {
+  background: linear-gradient(135deg, #4a6cf7, #6c5ce7);
+  color: white;
+  padding: 10px 28px;
+  border-radius: 50px;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(74, 108, 247, 0.3);
+  transition: all 0.3s ease;
+  margin-left: 8px;
+}
+
+.nav-links a:last-child::after {
+  display: none;
+}
+
+.nav-links a:last-child:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 30px rgba(74, 108, 247, 0.4);
+  background: linear-gradient(135deg, #5a7cf7, #7c6ce7);
+}
+
+.nav-links a:last-child:active {
+  transform: scale(0.97);
+}
+
+/* ============================================ */
+/* ANIMATIONS                                  */
+/* ============================================ */
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ============================================ */
+/* MOBILE RESPONSIVE                           */
+/* ============================================ */
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 14px 24px;
+    flex-wrap: wrap;
+  }
+
+  .logo {
+    font-size: 22px;
+  }
+
+  .nav-links {
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    padding-top: 12px;
+    border-top: 1px solid rgba(74, 108, 247, 0.08);
+  }
+
+  .nav-links a {
+    font-size: 14px;
+    padding: 6px 14px;
+  }
+
+  .nav-links a:last-child {
+    padding: 8px 20px;
+    font-size: 14px;
+    margin-left: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 12px 16px;
+  }
+
+  .logo {
+    font-size: 18px;
+  }
+
+  .nav-links {
+    gap: 2px;
+    padding-top: 10px;
+  }
+
+  .nav-links a {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+
+  .nav-links a:last-child {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+}

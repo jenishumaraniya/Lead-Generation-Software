@@ -142,6 +142,36 @@ getProducts(categoryId?: number): Observable<Product[]> {
 
   );
 }
+
+   submitLead(data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/lead/submit`, data);
+  }
+
+  getLeads(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/lead`);
+  }
+
+  getLead(id: number): Observable<any> {
+    return this.http.get(`${this.baseUrl}/lead/${id}`);
+  }
+
+  updateLead(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/lead/${id}`, data);
+  }
+
+  searchLeads(filters: any): Observable<any[]> {
+    return this.http.post<any[]>(`${this.baseUrl}/lead/search`, filters);
+  }
+
+  addLeadNote(id: number, note: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/lead/${id}/note`, note);
+  }
+
+  convertProspectToLead(prospectId: number, data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/lead/convert-prospect/${prospectId}`, data);
+  }
+
+
  
   getProduct(id: number): Observable<Product> {
     return this.http.get<any>(
