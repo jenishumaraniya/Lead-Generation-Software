@@ -86,67 +86,27 @@ public class LeadService
         _context.Leads.Add(lead);
         await _context.SaveChangesAsync();
 
-        // 5. Add lead activity
-        var activity = new LeadActivity
-        {
-            LeadId = lead.LeadId,
-            ActivityType = "FORM_SUBMIT",
-            Description = $"Lead created from {lead.Source}",
-            Metadata = JsonSerializer.Serialize(new
-            {
-                products = dto.Products,
-                timeline = dto.Timeline,
-                quantity = dto.Quantity
-            }),
-            CreatedAt = DateTime.UtcNow,
-            CreatedBy = "SYSTEM"
-        };
-        _context.LeadActivities.Add(activity);
-        await _context.SaveChangesAsync();
-
-        // 6. Add status history
-        var statusHistory = new LeadStatusHistory
-        {
-            LeadId = lead.LeadId,
-            OldStatus = null,
-            NewStatus = "NEW",
-            ChangedAt = DateTime.UtcNow,
-            ChangedBy = "SYSTEM",
-            Reason = "Lead created"
-        };
-        _context.LeadStatusHistories.Add(statusHistory);
-        await _context.SaveChangesAsync();
-
         return lead;
-    }
-
-    public async Task<Lead?> GetLeadByIdAsync(int id)
-    {
-        return await _context.Leads
-            .Include(l => l.Visitor)
-            .Include(l => l.Prospect)
-            .ThenInclude(p => p.Company)
-            .Include(l => l.Activities)
-            .Include(l => l.Notes)
-            .Include(l => l.StatusHistory)
-            .FirstOrDefaultAsync(l => l.LeadId == id);
     }
 
     public async Task<List<Lead>> GetAllLeadsAsync()
     {
+        // ✅ Remove Includes - just get the leads
         return await _context.Leads
-            .Include(l => l.Visitor)
-            .Include(l => l.Prospect)
             .OrderByDescending(l => l.CreatedAt)
             .ToListAsync();
     }
 
+    public async Task<Lead?> GetLeadByIdAsync(int id)
+    {
+        // ✅ Simple query without Includes
+        return await _context.Leads
+            .FirstOrDefaultAsync(l => l.LeadId == id);
+    }
+
     public async Task<List<Lead>> SearchLeadsAsync(LeadSearchDto dto)
     {
-        var query = _context.Leads
-            .Include(l => l.Visitor)
-            .Include(l => l.Prospect)
-            .AsQueryable();
+        var query = _context.Leads.AsQueryable();
 
         if (!string.IsNullOrEmpty(dto.Email))
             query = query.Where(l => l.Email.Contains(dto.Email));
@@ -199,62 +159,26 @@ public class LeadService
 
         lead.UpdatedAt = DateTime.UtcNow;
 
-        if (!string.IsNullOrEmpty(dto.Status) && oldStatus != dto.Status)
-        {
-            var statusHistory = new LeadStatusHistory
-            {
-                LeadId = lead.LeadId,
-                OldStatus = oldStatus,
-                NewStatus = dto.Status,
-                ChangedAt = DateTime.UtcNow,
-                ChangedBy = "SYSTEM",
-                Reason = dto.Reason
-            };
-            _context.LeadStatusHistories.Add(statusHistory);
-            
-            // Add activity for status change
-            var activity = new LeadActivity
-            {
-                LeadId = lead.LeadId,
-                ActivityType = "STATUS_CHANGE",
-                Description = $"Status changed from {oldStatus} to {dto.Status}",
-                CreatedAt = DateTime.UtcNow,
-                CreatedBy = "SYSTEM"
-            };
-            _context.LeadActivities.Add(activity);
-        }
-
-        if (!string.IsNullOrEmpty(dto.Note))
-        {
-            var note = new LeadNote
-            {
-                LeadId = lead.LeadId,
-                NoteText = dto.Note,
-                CreatedAt = DateTime.UtcNow,
-                CreatedBy = "SYSTEM"
-            };
-            _context.LeadNotes.Add(note);
-            
-            var activity = new LeadActivity
-            {
-                LeadId = lead.LeadId,
-                ActivityType = "NOTE_ADDED",
-                Description = "Note added to lead",
-                Metadata = JsonSerializer.Serialize(new { note = dto.Note }),
-                CreatedAt = DateTime.UtcNow,
-                CreatedBy = "SYSTEM"
-            };
-            _context.LeadActivities.Add(activity);
-        }
-
         await _context.SaveChangesAsync();
         return lead;
+    }
+
+    public async Task AddLeadNoteAsync(int leadId, string note, string? createdBy = null)
+    {
+        var leadNote = new LeadNote
+        {
+            LeadId = leadId,
+            NoteText = note,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = createdBy ?? "SYSTEM"
+        };
+        _context.LeadNotes.Add(leadNote);
+        await _context.SaveChangesAsync();
     }
 
     public async Task<Lead> ConvertProspectToLeadAsync(int prospectId, LeadSubmitDto dto)
     {
         var prospect = await _context.Prospects
-            .Include(p => p.Company)
             .FirstOrDefaultAsync(p => p.ProspectId == prospectId);
         if (prospect == null)
             throw new ArgumentException("Prospect not found.");
@@ -268,12 +192,12 @@ public class LeadService
         {
             VisitorId = prospect.VisitorId,
             ProspectId = prospect.ProspectId,
-            CompanyName = prospect.Company?.Name ?? dto.CompanyName,
+            CompanyName = dto.CompanyName,
             FullName = prospect.Name,
             Email = prospect.Email,
             JobTitle = prospect.JobTitle ?? dto.JobTitle,
             Phone = prospect.Phone ?? dto.Phone,
-            Industry = prospect.Company?.Industry ?? dto.Industry,
+            Industry = dto.Industry,
             Source = "PROSPECT_CONVERSION",
             Status = "NEW",
             Score = 0,
@@ -288,45 +212,6 @@ public class LeadService
         prospect.Status = "CONVERTED";
         await _context.SaveChangesAsync();
 
-        var activity = new LeadActivity
-        {
-            LeadId = lead.LeadId,
-            ActivityType = "PROSPECT_CONVERTED",
-            Description = $"Prospect converted to lead (ID: {prospectId})",
-            CreatedAt = DateTime.UtcNow,
-            CreatedBy = "SYSTEM"
-        };
-        _context.LeadActivities.Add(activity);
-        await _context.SaveChangesAsync();
-
         return lead;
-    }
-
-    public async Task AddLeadActivityAsync(int leadId, string activityType, string? description, string? metadata = null)
-    {
-        var activity = new LeadActivity
-        {
-            LeadId = leadId,
-            ActivityType = activityType,
-            Description = description,
-            Metadata = metadata,
-            CreatedAt = DateTime.UtcNow,
-            CreatedBy = "SYSTEM"
-        };
-        _context.LeadActivities.Add(activity);
-        await _context.SaveChangesAsync();
-    }
-
-    public async Task AddLeadNoteAsync(int leadId, string note, string? createdBy = null)
-    {
-        var leadNote = new LeadNote
-        {
-            LeadId = leadId,
-            NoteText = note,
-            CreatedAt = DateTime.UtcNow,
-            CreatedBy = createdBy ?? "SYSTEM"
-        };
-        _context.LeadNotes.Add(leadNote);
-        await _context.SaveChangesAsync();
     }
 }

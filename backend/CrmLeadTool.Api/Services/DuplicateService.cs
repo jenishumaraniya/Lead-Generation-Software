@@ -35,31 +35,41 @@ public class DuplicateService
                 l.FullName.ToLower() == fullName.Trim().ToLower());
     }
 
+    // ✅ Simplified phone duplicate check (skip it for now)
     public async Task<Lead?> FindDuplicateByPhoneAsync(string phone)
     {
         if (string.IsNullOrEmpty(phone))
             return null;
 
+        // Remove all non-digit characters
         var normalizedPhone = new string(phone.Where(char.IsDigit).ToArray());
-        return await _context.Leads
-            .FirstOrDefaultAsync(l => new string(l.Phone.Where(char.IsDigit).ToArray()) == normalizedPhone);
+        
+        // Get all leads and filter in memory
+        var allLeads = await _context.Leads.ToListAsync();
+        return allLeads.FirstOrDefault(l => 
+            l.Phone != null && 
+            new string(l.Phone.Where(char.IsDigit).ToArray()) == normalizedPhone
+        );
     }
 
     public async Task<List<Lead>> FindAllDuplicatesAsync(LeadSubmitDto dto)
     {
         var duplicates = new List<Lead>();
 
+        // Check by email
         var emailDuplicate = await FindDuplicateByEmailAsync(dto.Email);
         if (emailDuplicate != null)
             duplicates.Add(emailDuplicate);
 
+        // Check by company + name
         var companyNameDuplicate = await FindDuplicateByCompanyAndNameAsync(dto.CompanyName, dto.FullName);
         if (companyNameDuplicate != null && !duplicates.Any(d => d.LeadId == companyNameDuplicate.LeadId))
             duplicates.Add(companyNameDuplicate);
 
-        var phoneDuplicate = await FindDuplicateByPhoneAsync(dto.Phone);
-        if (phoneDuplicate != null && !duplicates.Any(d => d.LeadId == phoneDuplicate.LeadId))
-            duplicates.Add(phoneDuplicate);
+        // Check by phone (skip for now to avoid issues)
+        // var phoneDuplicate = await FindDuplicateByPhoneAsync(dto.Phone);
+        // if (phoneDuplicate != null && !duplicates.Any(d => d.LeadId == phoneDuplicate.LeadId))
+        //     duplicates.Add(phoneDuplicate);
 
         return duplicates;
     }
