@@ -5,28 +5,27 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Database context
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Sprint 1 services
+// Sprint 1
 builder.Services.AddScoped<VisitorService>();
 
-// Sprint 2 services
+// Sprint 2
 builder.Services.AddScoped<ProspectService>();
 builder.Services.AddScoped<CampaignService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<TrackingService>();
-
-// Background worker for scheduled email sending
 builder.Services.AddHostedService<EmailSchedulerWorker>();
 
-// CORS policy (allow any origin for development)
+// Sprint 3 (NEW)
+builder.Services.AddScoped<DuplicateService>();
+builder.Services.AddScoped<LeadService>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
@@ -39,14 +38,10 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 app.UseSwagger();
 app.UseSwaggerUI();
-
 app.UseCors("Frontend");
-
 app.UseHttpsRedirection();
-
 app.MapControllers();
 
 app.Run();

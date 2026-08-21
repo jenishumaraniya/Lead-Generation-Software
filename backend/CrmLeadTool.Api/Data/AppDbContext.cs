@@ -7,14 +7,13 @@ public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-    // Sprint 1 (existing)
+    // Sprint 1
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Visitor> Visitors => Set<Visitor>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<VisitorActivity> VisitorActivities => Set<VisitorActivity>();
-    public DbSet<Lead> Leads => Set<Lead>();  // from Sprint 1/2 (added)
 
-    // Sprint 2 (new)
+    // Sprint 2
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<Prospect> Prospects => Set<Prospect>();
     public DbSet<Campaign> Campaigns => Set<Campaign>();
@@ -23,13 +22,18 @@ public class AppDbContext : DbContext
     public DbSet<EmailMessage> EmailMessages => Set<EmailMessage>();
     public DbSet<EmailEvent> EmailEvents => Set<EmailEvent>();
 
+    // Sprint 3 (NEW)
+    public DbSet<Lead> Leads => Set<Lead>();
+    public DbSet<LeadActivity> LeadActivities => Set<LeadActivity>();
+    public DbSet<LeadNote> LeadNotes => Set<LeadNote>();
+    public DbSet<LeadStatusHistory> LeadStatusHistories => Set<LeadStatusHistory>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // ============================================================
-        // SPRINT 1 CONFIGURATIONS (keep existing)
+        // SPRINT 1 CONFIGURATIONS
         // ============================================================
 
-        // Visitor unique indexes
         modelBuilder.Entity<Visitor>()
             .HasIndex(v => v.AnonymousId)
             .IsUnique();
@@ -38,28 +42,24 @@ public class AppDbContext : DbContext
             .HasIndex(v => v.PublicId)
             .IsUnique();
 
-        // Product → Category
         modelBuilder.Entity<Product>()
             .HasOne(p => p.Category)
             .WithMany(c => c.Products)
             .HasForeignKey(p => p.CategoryId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // VisitorActivity → Visitor (CASCADE)
         modelBuilder.Entity<VisitorActivity>()
             .HasOne(a => a.Visitor)
             .WithMany(v => v.Activities)
             .HasForeignKey(a => a.VisitorId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // VisitorActivity → Product (SET NULL)
         modelBuilder.Entity<VisitorActivity>()
             .HasOne(a => a.Product)
             .WithMany(p => p.Activities)
             .HasForeignKey(a => a.ProductId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // Indexes (optional but recommended)
         modelBuilder.Entity<VisitorActivity>()
             .HasIndex(a => a.VisitorId);
 
@@ -69,83 +69,57 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Product>()
             .HasIndex(p => p.CategoryId);
 
-        // Lead → Visitor (already existed)
-        modelBuilder.Entity<Lead>()
-            .HasOne(l => l.Visitor)
-            .WithMany()
-            .HasForeignKey(l => l.VisitorId)
-            .OnDelete(DeleteBehavior.SetNull);
-
-        // Lead → Prospect (new – Sprint 2)
-        modelBuilder.Entity<Lead>()
-            .HasOne(l => l.Prospect)
-            .WithMany(p => p.Leads)
-            .HasForeignKey(l => l.ProspectId)
-            .OnDelete(DeleteBehavior.SetNull);
-
         // ============================================================
         // SPRINT 2 CONFIGURATIONS
         // ============================================================
 
-        // Company → Prospects
         modelBuilder.Entity<Prospect>()
             .HasOne(p => p.Company)
             .WithMany(c => c.Prospects)
             .HasForeignKey(p => p.CompanyId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // Prospect → Visitor (optional link)
         modelBuilder.Entity<Prospect>()
             .HasOne(p => p.Visitor)
             .WithMany()
             .HasForeignKey(p => p.VisitorId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // Campaign → SequenceSteps (cascade delete)
         modelBuilder.Entity<SequenceStep>()
             .HasOne(s => s.Campaign)
             .WithMany(c => c.Steps)
             .HasForeignKey(s => s.CampaignId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // CampaignRecipient → Campaign
         modelBuilder.Entity<CampaignRecipient>()
             .HasOne(cr => cr.Campaign)
             .WithMany(c => c.Recipients)
             .HasForeignKey(cr => cr.CampaignId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // CampaignRecipient → Prospect
         modelBuilder.Entity<CampaignRecipient>()
             .HasOne(cr => cr.Prospect)
             .WithMany(p => p.CampaignRecipients)
             .HasForeignKey(cr => cr.ProspectId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // EmailMessage → CampaignRecipient
         modelBuilder.Entity<EmailMessage>()
             .HasOne(em => em.CampaignRecipient)
             .WithMany(cr => cr.EmailMessages)
             .HasForeignKey(em => em.CampaignRecipientId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // EmailMessage → SequenceStep (restrict delete)
         modelBuilder.Entity<EmailMessage>()
             .HasOne(em => em.SequenceStep)
             .WithMany()
             .HasForeignKey(em => em.SequenceStepId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // EmailEvent → EmailMessage
         modelBuilder.Entity<EmailEvent>()
             .HasOne(e => e.EmailMessage)
             .WithMany(em => em.Events)
             .HasForeignKey(e => e.EmailMessageId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        // ============================================================
-        // ADDITIONAL INDEXES FOR PERFORMANCE
-        // ============================================================
 
         modelBuilder.Entity<Prospect>()
             .HasIndex(p => p.Email);
@@ -170,5 +144,66 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<EmailMessage>()
             .HasIndex(em => em.SentAt);
+
+        // ============================================================
+        // SPRINT 3 CONFIGURATIONS (NEW)
+        // ============================================================
+
+        // Lead → Visitor
+        modelBuilder.Entity<Lead>()
+            .HasOne(l => l.Visitor)
+            .WithMany()
+            .HasForeignKey(l => l.VisitorId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Lead → Prospect
+        modelBuilder.Entity<Lead>()
+            .HasOne(l => l.Prospect)
+            .WithMany(p => p.Leads)
+            .HasForeignKey(l => l.ProspectId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // LeadActivity → Lead
+        modelBuilder.Entity<LeadActivity>()
+            .HasOne(a => a.Lead)
+            .WithMany(l => l.Activities)
+            .HasForeignKey(a => a.LeadId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // LeadNote → Lead
+        modelBuilder.Entity<LeadNote>()
+            .HasOne(n => n.Lead)
+            .WithMany(l => l.Notes)
+            .HasForeignKey(n => n.LeadId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // LeadStatusHistory → Lead
+        modelBuilder.Entity<LeadStatusHistory>()
+            .HasOne(h => h.Lead)
+            .WithMany(l => l.StatusHistory)
+            .HasForeignKey(h => h.LeadId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Sprint 3 Indexes
+        modelBuilder.Entity<Lead>()
+            .HasIndex(l => l.Email);
+
+        modelBuilder.Entity<Lead>()
+            .HasIndex(l => l.Status);
+
+        modelBuilder.Entity<Lead>()
+            .HasIndex(l => l.Qualification);
+
+        modelBuilder.Entity<Lead>()
+            .HasIndex(l => l.CreatedAt);
+
+        modelBuilder.Entity<LeadActivity>()
+            .HasIndex(a => a.LeadId);
+
+        modelBuilder.Entity<LeadActivity>()
+            .HasIndex(a => a.ActivityType);
+
+        modelBuilder.Entity<LeadStatusHistory>()
+            .HasIndex(h => h.LeadId);
     }
 }
