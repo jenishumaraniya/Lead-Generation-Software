@@ -6,6 +6,11 @@
       <h2>Contact Us</h2>
       <p class="subtitle">Fill in your details and we'll get back to you shortly.</p>
     </div>
+
+    <!-- In the form, near the top -->
+<div *ngIf="submitError" class="alert alert-error" role="alert">
+  {{ submitError }}
+</div>
     
     <form #contactForm="ngForm" (ngSubmit)="onSubmit(contactForm)" novalidate>
       

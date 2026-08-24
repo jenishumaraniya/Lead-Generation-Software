@@ -1,5 +1,26 @@
-<!-- <router-outlet></router-outlet>
+<!-- 
+
+<nav class="navbar">
+  <div class="logo" routerLink="/">
+    Lead<span>Tech</span>
+  </div>
+  <div class="nav-links">
+    <a routerLink="/" [class.active]="isActiveRoute('/')">Home</a>
+    <a routerLink="/products" [class.active]="isActiveRoute('/products')">Products</a>
+    <a routerLink="/pricing" [class.active]="isActiveRoute('/pricing')">Pricing</a>
+    <a (click)="scrollToContact()">Contact</a>
+  </div>
+</nav>
+
+<div *ngIf="toastMessage" class="toast" [class.error]="isError">
+  {{ toastMessage }}
+  <button (click)="toastMessage = ''">×</button>
+</div>
+<router-outlet></router-outlet>
+
+
 <app-floating-contact-button (openForm)="openContactForm()"></app-floating-contact-button>
+
 
 <app-contact-form 
   *ngIf="showContactForm"
@@ -7,6 +28,7 @@
   [preselectedProductId]="preselectedProductId"
   (close)="closeContactForm()"
   (submit)="handleFormSubmit($event)"
+  (leadSubmitted)="handleLeadSubmitted($event)"
 ></app-contact-form>
 
 
@@ -18,7 +40,6 @@
         We use cookies to remember your choices, improve your experience, and understand how visitors engage with our website.
       </p>
     </div>
-
     <div class="cookie-consent__actions">
       <button type="button" class="cookie-button cookie-button--secondary" data-testid="reject-cookie-consent" (click)="rejectCookies()">
         Reject
@@ -44,6 +65,12 @@
 
 <router-outlet></router-outlet>
 
+<!-- Toast Notification -->
+<div *ngIf="toastMessage" class="toast" [class.error]="isToastError">
+  {{ toastMessage }}
+  <button (click)="toastMessage = ''">×</button>
+</div>
+
 <!-- Floating Contact Button -->
 <app-floating-contact-button (openForm)="openContactForm()"></app-floating-contact-button>
 
@@ -55,6 +82,7 @@
   (close)="closeContactForm()"
   (submit)="handleFormSubmit($event)"
   (leadSubmitted)="handleLeadSubmitted($event)"
+  (showToast)="showToastMessage($event)"
 ></app-contact-form>
 
 <!-- Cookie Consent Popup -->
