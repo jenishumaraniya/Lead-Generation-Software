@@ -1,0 +1,20 @@
+<div class="app-wrapper">
+  <aside class="sidebar">
+    <div class="logo">LeadGen <span>Sales</span></div>
+    <nav>
+      <a routerLink="/sales/dashboard" routerLinkActive="active">Dashboard</a>
+      <a routerLink="/sales/leads" routerLinkActive="active">My Leads</a>
+    </nav>
+    <div class="logout">
+      <button (click)="logout()">Logout</button>
+    </div>
+  </aside>
+  <main>
+    <header>
+  <span>{{ welcomeMessage }}</span>
+</header>
+    <div class="content">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

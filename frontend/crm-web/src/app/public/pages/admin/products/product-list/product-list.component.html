@@ -1,0 +1,54 @@
+<div class="product-list">
+  <div class="header">
+    <h2>Products</h2>
+    <button (click)="openModal()" class="btn-primary">+ Add Product</button>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Pricing</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let product of products">
+          <td>{{ product.name }}</td>
+          <td>₹{{ product.pricing }}</td>
+          <td>{{ product.status }}</td>
+          <td>
+            <button (click)="editProduct(product)" class="edit-btn">Edit</button>
+            <button (click)="deleteProduct(product.productId)" class="delete-btn">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h3>{{ isEdit ? 'Edit Product' : 'Add Product' }}</h3>
+      <div class="form-group">
+        <label>Name</label>
+        <input [(ngModel)]="formData.name" />
+      </div>
+      <div class="form-group">
+        <label>Pricing</label>
+        <input type="number" [(ngModel)]="formData.pricing" />
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea [(ngModel)]="formData.description"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select [(ngModel)]="formData.status">
+          <option value="ACTIVE">Active</option>
+          <option value="INACTIVE">Inactive</option>
+        </select>
+      </div>
+      <div class="actions">
+        <button (click)="closeModal()">Cancel</button>
+        <button (click)="saveProduct()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>

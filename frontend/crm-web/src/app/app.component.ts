@@ -21,6 +21,10 @@
 //   preselectedProductId?: number;
 //   isLoading = false;
 
+//   // Toast properties
+//   toastMessage: string = '';
+//   isToastError: boolean = false;
+
 //   constructor(
 //     private visitorTrackingService: VisitorTrackingService,
 //     public router: Router,
@@ -44,13 +48,11 @@
 //       this.visitorTrackingService.trackActivity('PAGE_VIEW');
 //     }
 
-//     // Listen for contact form open requests
 //     this.contactService.openForm$.subscribe(productId => {
 //       this.openContactForm(productId);
 //     });
 //   }
 
-//   // ✅ Add this method
 //   isActiveRoute(path: string): boolean {
 //     return this.router.url === path;
 //   }
@@ -65,21 +67,13 @@
 //     this.showConsentPopup = false;
 //   }
 
-//   // =============================================
-//   // CONTACT FORM METHODS
-//   // =============================================
-
 //   scrollToContact(): void {
-//     // Check if user has consent before showing contact form
 //     if (!this.visitorTrackingService.hasConsent()) {
 //       window.scrollTo({ top: 0, behavior: 'smooth' });
 //       return;
 //     }
    
-//     // Open the contact form
 //     this.openContactForm();
-   
-//     // Track the event
 //     this.visitorTrackingService.trackActivity(
 //       'INTEREST_CLICK',
 //       undefined,
@@ -91,7 +85,6 @@
 //     this.preselectedProductId = productId;
 //     this.showContactForm = true;
    
-//     // Track the event
 //     if (productId) {
 //       this.visitorTrackingService.trackActivity(
 //         'INTEREST_CLICK',
@@ -113,20 +106,27 @@
 //   }
 
 //   handleFormSubmit(formData: ContactFormData): void {
-//     // The actual API call is now in ContactFormComponent
-//     // We just handle the UI feedback here
 //     console.log('Form submitted:', formData);
 //   }
 
 //   handleLeadSubmitted(response: any): void {
 //     console.log('Lead created:', response);
-//     alert('Thank you for your interest! Our team will contact you soon.');
+//   }
+
+//   // Toast handler
+//   showToastMessage(message: string): void {
+//     this.toastMessage = message;
+//     this.isToastError = true;
+//     setTimeout(() => {
+//       this.toastMessage = '';
+//     }, 5000);
 //   }
 // }
 
 import { Component, OnInit } from '@angular/core';
 import { NgIf } from '@angular/common';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterOutlet, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { VisitorTrackingService } from './core/services/visitor-tracking.service';
 import { ContactService } from './core/services/contact.service';
 import { FloatingContactButtonComponent } from './components/floating-contact-button/floating-contact-button.component';
@@ -145,8 +145,8 @@ export class AppComponent implements OnInit {
   showContactForm = false;
   preselectedProductId?: number;
   isLoading = false;
+  isPublicRoute = true; // ✅ Track if current route is public
 
-  // Toast properties
   toastMessage: string = '';
   isToastError: boolean = false;
 
@@ -157,6 +157,14 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // ✅ Detect route changes to hide public elements on admin/sales
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      const url = this.router.url;
+      this.isPublicRoute = !url.startsWith('/admin') && !url.startsWith('/sales');
+    });
+
     this.showConsentPopup = this.visitorTrackingService.shouldShowConsentPopup();
 
     if (!this.visitorTrackingService.hasConsent()) {
@@ -238,7 +246,6 @@ export class AppComponent implements OnInit {
     console.log('Lead created:', response);
   }
 
-  // Toast handler
   showToastMessage(message: string): void {
     this.toastMessage = message;
     this.isToastError = true;

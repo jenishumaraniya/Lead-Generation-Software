@@ -1,0 +1,25 @@
+<div class="app-wrapper">
+  <aside class="sidebar">
+    
+    <div class="logo">LeadGen <span>Admin</span></div>
+    <nav>
+      <a routerLink="/admin/dashboard" routerLinkActive="active">Dashboard</a>
+      <a routerLink="/admin/leads" routerLinkActive="active">Leads</a>
+      <a routerLink="/admin/campaigns" routerLinkActive="active">Campaigns</a>
+      <a routerLink="/admin/products" routerLinkActive="active">Products</a>
+      <a routerLink="/admin/salespersons" routerLinkActive="active">Sales Team</a>
+      <a routerLink="/admin/categories" routerLinkActive="active">Categories</a>
+    </nav>
+    <div class="logout">
+      <button (click)="logout()">Logout</button>
+    </div>
+  </aside>
+  <main>
+    <header>
+  <span>{{ welcomeMessage }}</span>
+</header>
+    <div class="content">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

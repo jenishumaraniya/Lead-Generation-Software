@@ -1,0 +1,31 @@
+<div class="campaign-list">
+  <div class="header">
+    <h2>Campaigns</h2>
+    <a routerLink="/admin/campaigns/new" class="btn-primary">+ New Campaign</a>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Status</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let campaign of campaigns">
+          <td>{{ campaign.name }}</td>
+          <td><span class="badge" [class]="campaign.status">{{ campaign.status }}</span></td>
+          <td>{{ campaign.scheduleStartDate | date }}</td>
+          <td>{{ campaign.scheduleEndDate | date }}</td>
+          <td>
+            <a [routerLink]="['/admin/campaigns', campaign.campaignId]">Edit</a>
+            <button *ngIf="campaign.status !== 'CLOSED'" (click)="closeCampaign(campaign.campaignId)" class="close-btn">Close</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

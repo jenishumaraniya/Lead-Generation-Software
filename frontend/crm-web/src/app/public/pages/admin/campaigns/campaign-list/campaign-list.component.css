@@ -1,0 +1,11 @@
+.campaign-list { padding: 20px; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.btn-primary { background: #4a6cf7; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; }
+.table-container { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #eee; }
+th { background: #f8f9fa; font-weight: 600; }
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; background: #e3f2fd; color: #1976d2; }
+.badge.ACTIVE { background: #e8f5e9; color: #388e3c; }
+.badge.CLOSED { background: #fbe9e7; color: #c62828; }
+.close-btn { background: #e74c3c; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; margin-left: 8px; }

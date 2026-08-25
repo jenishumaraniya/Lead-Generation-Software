@@ -1,0 +1,37 @@
+<div class="dashboard">
+  <h1>Sales Dashboard</h1>
+  
+  <div class="quick-stats">
+    <div class="stat">Assigned Leads: <strong>12</strong></div>
+    <div class="stat">Pending Follow-ups: <strong>5</strong></div>
+    <div class="stat">Won This Month: <strong>3</strong></div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <h2>My Leads</h2>
+      <table class="table">
+        <thead>
+          <tr><th>Company</th><th>Status</th><th>Next Follow-up</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let lead of myLeads">
+            <td>{{ lead.name }}</td>
+            <td><span class="badge">{{ lead.status }}</span></td>
+            <td>{{ lead.nextFollowUp }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col">
+      <h2>Recent Activity</h2>
+      <div class="activity-feed">
+        <div class="activity" *ngFor="let act of recentActivities">
+          <span class="type">{{ act.type }}</span>
+          <span class="desc">{{ act.detail }}</span>
+          <span class="time">{{ act.time }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -12,11 +12,12 @@
   </div>
 </nav>
 
-<div *ngIf="toastMessage" class="toast" [class.error]="isError">
+<router-outlet></router-outlet>
+
+<div *ngIf="toastMessage" class="toast" [class.error]="isToastError">
   {{ toastMessage }}
   <button (click)="toastMessage = ''">×</button>
 </div>
-<router-outlet></router-outlet>
 
 
 <app-floating-contact-button (openForm)="openContactForm()"></app-floating-contact-button>
@@ -29,6 +30,7 @@
   (close)="closeContactForm()"
   (submit)="handleFormSubmit($event)"
   (leadSubmitted)="handleLeadSubmitted($event)"
+  (showToast)="showToastMessage($event)"
 ></app-contact-form>
 
 
@@ -51,7 +53,10 @@
   </div>
 </div> -->
 
-<nav class="navbar">
+<!-- ============================================= -->
+<!-- PUBLIC WEBSITE NAVBAR (only on public pages)  -->
+<!-- ============================================= -->
+<nav class="navbar" *ngIf="isPublicRoute">
   <div class="logo" routerLink="/">
     Lead<span>Tech</span>
   </div>
@@ -71,36 +76,41 @@
   <button (click)="toastMessage = ''">×</button>
 </div>
 
-<!-- Floating Contact Button -->
-<app-floating-contact-button (openForm)="openContactForm()"></app-floating-contact-button>
+<!-- ============================================= -->
+<!-- PUBLIC ELEMENTS (only on public pages)        -->
+<!-- ============================================= -->
+<ng-container *ngIf="isPublicRoute">
+  <!-- Floating Contact Button -->
+  <app-floating-contact-button (openForm)="openContactForm()"></app-floating-contact-button>
 
-<!-- Contact Form Modal -->
-<app-contact-form 
-  *ngIf="showContactForm"
-  [isOpen]="showContactForm"
-  [preselectedProductId]="preselectedProductId"
-  (close)="closeContactForm()"
-  (submit)="handleFormSubmit($event)"
-  (leadSubmitted)="handleLeadSubmitted($event)"
-  (showToast)="showToastMessage($event)"
-></app-contact-form>
+  <!-- Contact Form Modal -->
+  <app-contact-form 
+    *ngIf="showContactForm"
+    [isOpen]="showContactForm"
+    [preselectedProductId]="preselectedProductId"
+    (close)="closeContactForm()"
+    (submit)="handleFormSubmit($event)"
+    (leadSubmitted)="handleLeadSubmitted($event)"
+    (showToast)="showToastMessage($event)"
+  ></app-contact-form>
 
-<!-- Cookie Consent Popup -->
-<div *ngIf="showConsentPopup" class="cookie-consent" role="dialog" aria-live="polite" aria-label="Cookie consent popup">
-  <div class="cookie-consent__panel">
-    <div class="cookie-consent__text">
-      <h2>We value your privacy</h2>
-      <p>
-        We use cookies to remember your choices, improve your experience, and understand how visitors engage with our website.
-      </p>
-    </div>
-    <div class="cookie-consent__actions">
-      <button type="button" class="cookie-button cookie-button--secondary" data-testid="reject-cookie-consent" (click)="rejectCookies()">
-        Reject
-      </button>
-      <button type="button" class="cookie-button cookie-button--primary" data-testid="accept-cookie-consent" (click)="acceptCookies()">
-        Accept
-      </button>
+  <!-- Cookie Consent Popup -->
+  <div *ngIf="showConsentPopup" class="cookie-consent" role="dialog" aria-live="polite" aria-label="Cookie consent popup">
+    <div class="cookie-consent__panel">
+      <div class="cookie-consent__text">
+        <h2>We value your privacy</h2>
+        <p>
+          We use cookies to remember your choices, improve your experience, and understand how visitors engage with our website.
+        </p>
+      </div>
+      <div class="cookie-consent__actions">
+        <button type="button" class="cookie-button cookie-button--secondary" data-testid="reject-cookie-consent" (click)="rejectCookies()">
+          Reject
+        </button>
+        <button type="button" class="cookie-button cookie-button--primary" data-testid="accept-cookie-consent" (click)="acceptCookies()">
+          Accept
+        </button>
+      </div>
     </div>
   </div>
-</div>
+</ng-container>

@@ -1,0 +1,31 @@
+<div class="sales-lead-list">
+  <h2>My Leads</h2>
+  <div class="filters">
+    <select [(ngModel)]="statusFilter" (change)="applyFilters()">
+      <option value="">All Status</option>
+      <option value="NEW">New</option>
+      <option value="CONTACTED">Contacted</option>
+      <option value="QUALIFIED">Qualified</option>
+      <option value="WON">Won</option>
+      <option value="LOST">Lost</option>
+    </select>
+    <input type="text" placeholder="Search..." [(ngModel)]="searchTerm" (input)="applyFilters()" />
+  </div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Company</th><th>Email</th><th>Status</th><th>Next Follow-up</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let lead of filteredLeads">
+          <td>{{ lead.fullName }}</td>
+          <td>{{ lead.companyName }}</td>
+          <td>{{ lead.email }}</td>
+          <td><span class="badge" [class]="lead.status">{{ lead.status }}</span></td>
+          <td>{{ lead.nextFollowUpDate | date }}</td>
+          <td><a [routerLink]="['/sales/leads', lead.leadId]">View</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

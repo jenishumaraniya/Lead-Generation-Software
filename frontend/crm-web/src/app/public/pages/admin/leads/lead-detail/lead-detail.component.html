@@ -1,0 +1,74 @@
+<div class="lead-detail" *ngIf="lead">
+  <div class="header">
+    <button (click)="goBack()" class="back-btn">← Back</button>
+    <h2>{{ lead.fullName }}</h2>
+    <span class="status-badge" [class]="lead.status">{{ lead.status }}</span>
+  </div>
+
+  <div class="detail-grid">
+    <div class="info-card">
+      <h3>Contact Information</h3>
+      <p><strong>Company:</strong> {{ lead.companyName }}</p>
+      <p><strong>Email:</strong> {{ lead.email }}</p>
+      <p><strong>Phone:</strong> {{ lead.phone }}</p>
+      <p><strong>Job Title:</strong> {{ lead.jobTitle }}</p>
+      <p><strong>Domain:</strong> {{ lead.domain }}</p>
+      <p><strong>Industry:</strong> {{ lead.industry }}</p>
+      <p><strong>Country:</strong> {{ lead.country }}</p>
+    </div>
+
+    <div class="info-card">
+      <h3>Lead Status & Assignment</h3>
+      <div class="field">
+        <label>Status</label>
+        <select [(ngModel)]="lead.status" (change)="updateLead()">
+          <option value="NEW">New</option>
+          <option value="CONTACTED">Contacted</option>
+          <option value="QUALIFIED">Qualified</option>
+          <option value="WON">Won</option>
+          <option value="LOST">Lost</option>
+        </select>
+      </div>
+      <div class="field" *ngIf="isAdmin">
+        <label>Assigned To</label>
+        <select [(ngModel)]="lead.assignedTo" (change)="assignLead()">
+          <option [value]="null">Unassigned</option>
+          <option *ngFor="let emp of employees" [value]="emp.employeeId">
+            {{ emp.fullName }}
+          </option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Next Follow-up</label>
+        <input type="date" [(ngModel)]="lead.nextFollowUpDate" (change)="updateLead()" />
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea [(ngModel)]="lead.notes" (change)="updateLead()" rows="3"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="timeline">
+    <h3>Activity Timeline</h3>
+    <div class="activity-form">
+  <select [(ngModel)]="newActivity.activityType"> <!-- Changed -->
+    <option value="CALL">📞 Call</option>
+    <option value="EMAIL">✉️ Email</option>
+    <option value="MEETING">🤝 Meeting</option>
+    <option value="NOTE">📝 Note</option>
+  </select>
+  <input type="text" [(ngModel)]="newActivity.description" placeholder="Description" />
+  <button (click)="addActivity()" [disabled]="!newActivity.description">Add</button>
+</div>
+    <div class="activity-list">
+      <div class="activity" *ngFor="let act of activities">
+        <span class="type">{{ act.activityType }}</span>
+        <span class="desc">{{ act.description }}</span>
+        <span class="date">{{ act.activityDate | date:'short' }}</span>
+        <span class="by">{{ act.createdBy }}</span>
+      </div>
+      <div *ngIf="!activities.length" class="empty">No activities yet.</div>
+    </div>
+  </div>
+</div>
