@@ -1,0 +1,27 @@
+<div class="dashboard">
+  <h1>Admin Dashboard</h1>
+  
+  <div class="stats-grid">
+    <div class="stat-card" *ngFor="let stat of stats">
+      <div class="stat-icon">{{ stat.icon }}</div>
+      <div class="stat-value">{{ stat.value }}</div>
+      <div class="stat-label">{{ stat.label }}</div>
+    </div>
+  </div>
+
+  <div class="recent-section">
+    <h2>Recent Leads</h2>
+    <table class="table">
+      <thead>
+        <tr><th>Company</th><th>Email</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let lead of recentLeads">
+          <td>{{ lead.name }}</td>
+          <td>{{ lead.email }}</td>
+          <td><span class="badge">{{ lead.status }}</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

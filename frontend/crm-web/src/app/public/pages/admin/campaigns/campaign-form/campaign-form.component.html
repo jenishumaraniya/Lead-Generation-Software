@@ -1,0 +1,34 @@
+<div class="campaign-form">
+  <h2>{{ isEdit ? 'Edit Campaign' : 'New Campaign' }}</h2>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="form-group">
+      <label>Name *</label>
+      <input formControlName="name" />
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea formControlName="description" rows="3"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Start Date</label>
+        <input type="date" formControlName="scheduleStartDate" />
+      </div>
+      <div class="form-group">
+        <label>End Date</label>
+        <input type="date" formControlName="scheduleEndDate" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Status</label>
+      <select formControlName="status">
+        <option value="DRAFT">Draft</option>
+        <option value="ACTIVE">Active</option>
+      </select>
+    </div>
+    <div class="actions">
+      <button type="button" (click)="goBack()">Cancel</button>
+      <button type="submit" [disabled]="form.invalid">Save</button>
+    </div>
+  </form>
+</div>

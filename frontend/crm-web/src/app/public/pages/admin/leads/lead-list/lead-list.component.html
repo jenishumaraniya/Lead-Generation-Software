@@ -1,0 +1,47 @@
+<div class="lead-list">
+      <div class="header">
+        <h2>All Leads</h2>
+        <div class="filters">
+          <select [(ngModel)]="statusFilter" (change)="applyFilters()">
+            <option value="">All Status</option>
+            <option value="NEW">New</option>
+            <option value="CONTACTED">Contacted</option>
+            <option value="QUALIFIED">Qualified</option>
+            <option value="LOST">Lost</option>
+            <option value="WON">Won</option>
+          </select>
+          <input type="text" placeholder="Search..." [(ngModel)]="searchTerm" (input)="applyFilters()" />
+        </div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Company</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Assigned To</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let lead of filteredLeads">
+              <td>{{ lead.fullName }}</td>
+              <td>{{ lead.companyName }}</td>
+              <td>{{ lead.email }}</td>
+              <td><span class="badge" [class]="lead.status">{{ lead.status }}</span></td>
+              <td>
+                <select (change)="assignLead(lead.leadId, $event)" [disabled]="!employees.length">
+                  <option value="">Unassigned</option>
+                  <option *ngFor="let emp of employees" [value]="emp.employeeId" [selected]="lead.assignedTo === emp.employeeId">
+                    {{ emp.fullName }}
+                  </option>
+                </select>
+              </td>
+              <td><a [routerLink]="['/admin/leads', lead.leadId]">View</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>

@@ -1,0 +1,12 @@
+.sales-lead-list { padding: 20px; }
+.filters { display: flex; gap: 10px; margin-bottom: 16px; }
+.filters select, .filters input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+.table-container { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #eee; }
+th { background: #f8f9fa; }
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; background: #e3f2fd; color: #1976d2; }
+.badge.CONTACTED { background: #fff3e0; color: #f57c00; }
+.badge.QUALIFIED { background: #e8f5e9; color: #388e3c; }
+.badge.WON { background: #c8e6c9; color: #2e7d32; }
+.badge.LOST { background: #fbe9e7; color: #c62828; }

@@ -1,0 +1,21 @@
+.dashboard { padding: 20px; }
+.quick-stats {
+  display: flex;
+  gap: 30px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.quick-stats .stat { font-size: 16px; }
+.row { display: flex; gap: 30px; }
+.col { flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
+.badge { background: #4a6cf7; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; }
+.activity { padding: 10px 0; border-bottom: 1px solid #f0f0f0; display: flex; gap: 10px; align-items: center; }
+.activity .type { font-weight: 600; width: 60px; }
+.activity .desc { flex: 1; }
+.activity .time { color: #999; font-size: 13px; }
+@media (max-width: 768px) { .row { flex-direction: column; } }
