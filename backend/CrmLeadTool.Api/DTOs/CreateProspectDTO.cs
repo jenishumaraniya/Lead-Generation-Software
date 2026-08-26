@@ -11,5 +11,5 @@ public class CreateProspectDto
     public string? CompanyDomain { get; set; }
     public string? Industry { get; set; }
     public string? Source { get; set; }
-    public string? VisitorId { get; set; } // AnonymousId from Visitor_CRM
+    public string? VisitorId { get; set; }
 }

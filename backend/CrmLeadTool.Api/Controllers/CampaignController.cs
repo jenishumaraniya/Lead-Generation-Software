@@ -16,10 +16,27 @@ public class CampaignController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateCampaign(CreateCampaignDto dto)
+    public async Task<IActionResult> CreateCampaign([FromBody] CreateCampaignDto dto)
     {
-        var campaign = await _campaignService.CreateCampaignAsync(dto);
-        return CreatedAtAction(nameof(GetCampaign), new { id = campaign.CampaignId }, campaign);
+        try
+        {
+            var campaign = await _campaignService.CreateCampaignAsync(dto);
+            return CreatedAtAction(nameof(GetCampaign), new { id = campaign.CampaignId }, new
+            {
+                campaign.CampaignId,
+                campaign.Name,
+                campaign.Description,
+                campaign.Status,
+                campaign.ScheduleStartDate,
+                campaign.ScheduleEndDate,
+                campaign.CreatedAt,
+                campaign.UpdatedAt
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpGet]
@@ -34,8 +51,15 @@ public class CampaignController : ControllerBase
     {
         var campaign = await _campaignService.GetCampaignAsync(id);
         if (campaign == null)
-            return NotFound();
+            return NotFound(new { error = $"Campaign with ID {id} not found." });
         return Ok(campaign);
+    }
+
+    [HttpGet("{id}/recipients")]
+    public async Task<IActionResult> GetCampaignRecipients(int id)
+    {
+        var recipients = await _campaignService.GetCampaignRecipientsAsync(id);
+        return Ok(recipients);
     }
 
     [HttpPost("{id}/enroll")]
@@ -44,25 +68,73 @@ public class CampaignController : ControllerBase
         try
         {
             var recipient = await _campaignService.EnrollProspectAsync(id, dto.ProspectId);
-            return Ok(recipient);
+            return Ok(new
+            {
+                recipient.CampaignRecipientId,
+                recipient.CampaignId,
+                recipient.ProspectId,
+                recipient.Status,
+                recipient.CurrentStep,
+                recipient.EnrolledAt,
+                recipient.LastActivityAt,
+                recipient.CompletedAt
+            });
         }
         catch (Exception ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(new { error = ex.Message });
         }
     }
 
-    [HttpPut("{id}/status")]
-    public async Task<IActionResult> UpdateStatus(int id, [FromBody] string status)
+    [HttpPost("{id}/pause")]
+    public async Task<IActionResult> PauseCampaign(int id)
     {
         try
         {
-            await _campaignService.UpdateCampaignStatusAsync(id, status);
-            return Ok(new { message = "Status updated." });
+            var campaign = await _campaignService.PauseCampaignAsync(id);
+            return Ok(new { success = true, campaign.CampaignId, campaign.Status });
         }
-        catch (Exception ex)
+        catch (ArgumentException ex)
         {
-            return NotFound(new { message = ex.Message });
+            return NotFound(new { error = ex.Message });
         }
     }
+
+    [HttpPost("{id}/resume")]
+    public async Task<IActionResult> ResumeCampaign(int id)
+    {
+        try
+        {
+            var campaign = await _campaignService.ResumeCampaignAsync(id);
+            return Ok(new { success = true, campaign.CampaignId, campaign.Status });
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+    }
+
+    [HttpPut("recipients/{recipientId}/status")]
+    public async Task<IActionResult> UpdateRecipientStatus(int recipientId, [FromBody] UpdateRecipientStatusDto dto)
+    {
+        try
+        {
+            var recipient = await _campaignService.UpdateRecipientStatusAsync(recipientId, dto.Status);
+            return Ok(recipient);
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+    }
+}
+
+public class EnrollProspectDto
+{
+    public int ProspectId { get; set; }
+}
+
+public class UpdateRecipientStatusDto
+{
+    public string Status { get; set; } = "PAUSED";
 }

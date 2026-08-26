@@ -16,15 +16,9 @@ import { ContactService } from '../../../core/services/contact.service';
 export class ProductListComponent implements OnInit {
 
   products: Product[] = [];
+  categories: any[] = [];
   selectedCategoryId: number | null = null;
   selectedCategoryName = 'All Products';
-
-  categories = [
-    { id: 1, name: 'Laptops' },
-    { id: 2, name: 'Desktops' },
-    { id: 3, name: 'Servers' },
-    { id: 4, name: 'Networking' }
-  ];
 
   constructor(
     private router: Router,
@@ -35,21 +29,35 @@ export class ProductListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Load categories directly from database
+    this.apiService.getCategories().subscribe({
+      next: (cats) => {
+        this.categories = cats;
+        this.updateSelectedCategoryName();
+      },
+      error: (err) => console.error('Failed to load categories from database:', err)
+    });
+
     this.route.queryParamMap.subscribe(params => {
       const categoryId = params.get('categoryId');
       this.selectedCategoryId = categoryId !== null ? Number(categoryId) : null;
-
-      const selectedCategory = this.categories.find(c => c.id === this.selectedCategoryId);
-      this.selectedCategoryName = selectedCategory?.name ?? 'All Products';
-
+      this.updateSelectedCategoryName();
       this.loadProducts();
     });
+  }
+
+  private updateSelectedCategoryName(): void {
+    if (this.selectedCategoryId === null) {
+      this.selectedCategoryName = 'All Products';
+      return;
+    }
+    const selectedCategory = this.categories.find(c => (c.categoryId ?? c.id) === this.selectedCategoryId);
+    this.selectedCategoryName = selectedCategory ? (selectedCategory.categoryName ?? selectedCategory.name) : 'All Products';
   }
 
   private loadProducts(): void {
     this.apiService.getProducts(this.selectedCategoryId ?? undefined).subscribe({
       next: (products: Product[]) => {
-        // ✅ Parse features and specifications if they are JSON strings
         this.products = products.map(product => ({
           ...product,
           features: this.parseStringArray(product.features),
@@ -63,7 +71,6 @@ export class ProductListComponent implements OnInit {
     });
   }
 
-  // ✅ Helper to parse JSON strings into arrays
   private parseStringArray(value: string | string[] | null | undefined): string[] {
     if (!value) return [];
     if (Array.isArray(value)) return value;
@@ -77,16 +84,12 @@ export class ProductListComponent implements OnInit {
     return [];
   }
 
-  // ✅ Open Contact Form with pre-selected product
   openContactForm(productId: number): void {
-    // Track the event
     this.visitorTrackingService.trackActivity(
       'INTEREST_CLICK',
       productId,
       { source: 'product_list' }
     );
-    
-    // Open the contact form with pre-selected product
     this.contactService.openContactForm(productId);
   }
 
@@ -99,7 +102,6 @@ export class ProductListComponent implements OnInit {
   }
 
   viewProduct(productId: number): void {
-    // ✅ Track product view from list
     this.visitorTrackingService.trackActivity(
       'PRODUCT_VIEW',
       productId,

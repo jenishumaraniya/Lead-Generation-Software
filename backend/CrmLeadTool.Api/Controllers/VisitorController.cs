@@ -23,7 +23,12 @@ public class VisitorController : ControllerBase
         {
             visitorId = visitor.VisitorId,
             anonymousId = visitor.AnonymousId,
-            publicId = visitor.PublicId 
+            publicId = visitor.PublicId
         });
     }
+}
+
+public class CreateVisitorDto
+{
+    public string? ConsentStatus { get; set; }
 }

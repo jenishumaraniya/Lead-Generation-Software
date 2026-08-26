@@ -1,0 +1,45 @@
+<div class="visitor-page">
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">👁️ Inbound Anonymous Visitor Tracking</h2>
+      <p class="page-subtitle">Real-time session identification, consent capture, and web page activity timeline.</p>
+    </div>
+  </div>
+
+  <div class="card table-card">
+    <div class="table-container" *ngIf="visitors.length > 0; else noVisitors">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Anonymous Visitor ID</th>
+            <th>First Seen</th>
+            <th>Last Active</th>
+            <th>Activities Count</th>
+            <th>Latest Event Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let visitor of visitors">
+            <td>
+              <code>{{ visitor.anonymousId }}</code>
+            </td>
+            <td>{{ visitor.firstSeenAt | date:'medium' }}</td>
+            <td>{{ visitor.lastSeenAt | date:'medium' }}</td>
+            <td>
+              <span class="activity-badge">{{ visitor.activities }} events</span>
+            </td>
+            <td>
+              <span class="event-pill">{{ visitor.lastActivity || 'PAGE_VIEW' }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #noVisitors>
+      <div class="empty-state">
+        <p>No website visitor activity recorded yet. Browse the public website to generate visitor sessions.</p>
+      </div>
+    </ng-template>
+  </div>
+</div>

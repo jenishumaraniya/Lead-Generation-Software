@@ -1,7 +1,7 @@
 using CrmLeadTool.Api.Data;
-using CrmLeadTool.Api.DTOs;
 using CrmLeadTool.Api.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace CrmLeadTool.Api.Services;
 
@@ -14,72 +14,69 @@ public class DuplicateService
         _context = context;
     }
 
-    public async Task<Lead?> FindDuplicateByEmailAsync(string email)
-    {
-        if (string.IsNullOrEmpty(email))
-            return null;
+    public static string NormalizeEmail(string? email) => email?.Trim().ToLowerInvariant() ?? string.Empty;
 
-        var normalizedEmail = email.Trim().ToLowerInvariant();
-        return await _context.Leads
-            .FirstOrDefaultAsync(l => l.Email.ToLower() == normalizedEmail);
+    public static string NormalizePhone(string? phone) =>
+        string.IsNullOrEmpty(phone) ? string.Empty : Regex.Replace(phone, @"[^\d]", "");
+
+    public static string NormalizeText(string? text) =>
+        string.IsNullOrEmpty(text) ? string.Empty : Regex.Replace(text.Trim().ToLowerInvariant(), @"\s+", " ");
+
+    public async Task<Lead?> FindDuplicateLeadAsync(string? email, string? phone = null, string? fullName = null, string? companyName = null)
+    {
+        var normEmail = NormalizeEmail(email);
+        if (!string.IsNullOrEmpty(normEmail))
+        {
+            var byEmail = await _context.Leads.FirstOrDefaultAsync(l => l.Email.ToLower() == normEmail);
+            if (byEmail != null) return byEmail;
+        }
+
+        var normPhone = NormalizePhone(phone);
+        if (!string.IsNullOrEmpty(normPhone) && normPhone.Length >= 7)
+        {
+            var byPhone = await _context.Leads.ToListAsync();
+            var matched = byPhone.FirstOrDefault(l => NormalizePhone(l.Phone) == normPhone);
+            if (matched != null) return matched;
+        }
+
+        var normName = NormalizeText(fullName);
+        var normComp = NormalizeText(companyName);
+        if (!string.IsNullOrEmpty(normName) && !string.IsNullOrEmpty(normComp))
+        {
+            var byNameAndComp = await _context.Leads.ToListAsync();
+            var matched = byNameAndComp.FirstOrDefault(l =>
+                NormalizeText(l.FullName) == normName && NormalizeText(l.CompanyName) == normComp);
+            if (matched != null) return matched;
+        }
+
+        return null;
     }
 
-    public async Task<Lead?> FindDuplicateByCompanyAndNameAsync(string companyName, string fullName)
+    public async Task<Prospect?> FindProspectByEmailAsync(string? email)
     {
-        if (string.IsNullOrEmpty(companyName) || string.IsNullOrEmpty(fullName))
-            return null;
+        var normEmail = NormalizeEmail(email);
+        if (string.IsNullOrEmpty(normEmail)) return null;
 
-        return await _context.Leads
-            .FirstOrDefaultAsync(l =>
-                l.CompanyName.ToLower() == companyName.Trim().ToLower() &&
-                l.FullName.ToLower() == fullName.Trim().ToLower());
+        return await _context.Prospects.FirstOrDefaultAsync(p => p.Email.ToLower() == normEmail);
     }
 
-    // ✅ Simplified phone duplicate check (skip it for now)
-    public async Task<Lead?> FindDuplicateByPhoneAsync(string phone)
+    public async Task<Prospect?> FindDuplicateProspectAsync(string? email, string? phone = null, string? name = null, string? companyName = null)
     {
-        if (string.IsNullOrEmpty(phone))
-            return null;
+        var normEmail = NormalizeEmail(email);
+        if (!string.IsNullOrEmpty(normEmail))
+        {
+            var byEmail = await _context.Prospects.FirstOrDefaultAsync(p => p.Email.ToLower() == normEmail);
+            if (byEmail != null) return byEmail;
+        }
 
-        // Remove all non-digit characters
-        var normalizedPhone = new string(phone.Where(char.IsDigit).ToArray());
-        
-        // Get all leads and filter in memory
-        var allLeads = await _context.Leads.ToListAsync();
-        return allLeads.FirstOrDefault(l => 
-            l.Phone != null && 
-            new string(l.Phone.Where(char.IsDigit).ToArray()) == normalizedPhone
-        );
-    }
+        var normPhone = NormalizePhone(phone);
+        if (!string.IsNullOrEmpty(normPhone) && normPhone.Length >= 7)
+        {
+            var prospects = await _context.Prospects.ToListAsync();
+            var matched = prospects.FirstOrDefault(p => NormalizePhone(p.Phone) == normPhone);
+            if (matched != null) return matched;
+        }
 
-    public async Task<List<Lead>> FindAllDuplicatesAsync(LeadSubmitDto dto)
-    {
-        var duplicates = new List<Lead>();
-
-        // Check by email
-        var emailDuplicate = await FindDuplicateByEmailAsync(dto.Email);
-        if (emailDuplicate != null)
-            duplicates.Add(emailDuplicate);
-
-        // Check by company + name
-        var companyNameDuplicate = await FindDuplicateByCompanyAndNameAsync(dto.CompanyName, dto.FullName);
-        if (companyNameDuplicate != null && !duplicates.Any(d => d.LeadId == companyNameDuplicate.LeadId))
-            duplicates.Add(companyNameDuplicate);
-
-        // Check by phone (skip for now to avoid issues)
-        // var phoneDuplicate = await FindDuplicateByPhoneAsync(dto.Phone);
-        // if (phoneDuplicate != null && !duplicates.Any(d => d.LeadId == phoneDuplicate.LeadId))
-        //     duplicates.Add(phoneDuplicate);
-
-        return duplicates;
-    }
-
-    public async Task<Prospect?> FindProspectByEmailAsync(string email)
-    {
-        if (string.IsNullOrEmpty(email))
-            return null;
-
-        return await _context.Prospects
-            .FirstOrDefaultAsync(p => p.Email.ToLower() == email.Trim().ToLower());
+        return null;
     }
 }

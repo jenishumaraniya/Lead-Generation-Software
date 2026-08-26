@@ -27,9 +27,9 @@
           (input)="validateField('companyName')"
           placeholder="Enter your company name"
           class="form-control"
-          [class.invalid]="formErrors.companyName && (contactForm.controls['companyName']?.touched || contactForm.submitted)"
+          [class.invalid]="formErrors.companyName && (contactForm.controls['companyName'].touched || contactForm.submitted)"
         >
-        <div class="error-message" *ngIf="formErrors.companyName && (contactForm.controls['companyName']?.touched || contactForm.submitted)">
+        <div class="error-message" *ngIf="formErrors.companyName && (contactForm.controls['companyName'].touched || contactForm.submitted)">
           {{ formErrors.companyName }}
         </div>
       </div>
@@ -47,9 +47,9 @@
           (input)="validateField('fullName')"
           placeholder="Enter your full name"
           class="form-control"
-          [class.invalid]="formErrors.fullName && (contactForm.controls['fullName']?.touched || contactForm.submitted)"
+          [class.invalid]="formErrors.fullName && (contactForm.controls['fullName'].touched || contactForm.submitted)"
         >
-        <div class="error-message" *ngIf="formErrors.fullName && (contactForm.controls['fullName']?.touched || contactForm.submitted)">
+        <div class="error-message" *ngIf="formErrors.fullName && (contactForm.controls['fullName'].touched || contactForm.submitted)">
           {{ formErrors.fullName }}
         </div>
       </div>
@@ -67,9 +67,9 @@
           (input)="validateField('email')"
           placeholder="Enter your email address"
           class="form-control"
-          [class.invalid]="formErrors.email && (contactForm.controls['email']?.touched || contactForm.submitted)"
+          [class.invalid]="formErrors.email && (contactForm.controls['email'].touched || contactForm.submitted)"
         >
-        <div class="error-message" *ngIf="formErrors.email && (contactForm.controls['email']?.touched || contactForm.submitted)">
+        <div class="error-message" *ngIf="formErrors.email && (contactForm.controls['email'].touched || contactForm.submitted)">
           {{ formErrors.email }}
         </div>
       </div>
@@ -87,9 +87,9 @@
           (input)="validateField('jobTitle')"
           placeholder="Enter your job title"
           class="form-control"
-          [class.invalid]="formErrors.jobTitle && (contactForm.controls['jobTitle']?.touched || contactForm.submitted)"
+          [class.invalid]="formErrors.jobTitle && (contactForm.controls['jobTitle'].touched || contactForm.submitted)"
         >
-        <div class="error-message" *ngIf="formErrors.jobTitle && (contactForm.controls['jobTitle']?.touched || contactForm.submitted)">
+        <div class="error-message" *ngIf="formErrors.jobTitle && (contactForm.controls['jobTitle'].touched || contactForm.submitted)">
           {{ formErrors.jobTitle }}
         </div>
       </div>
@@ -107,9 +107,9 @@
           (input)="validateField('domain')"
           placeholder="e.g., Technology, Healthcare, Finance"
           class="form-control"
-          [class.invalid]="formErrors.domain && (contactForm.controls['domain']?.touched || contactForm.submitted)"
+          [class.invalid]="formErrors.domain && (contactForm.controls['domain'].touched || contactForm.submitted)"
         >
-        <div class="error-message" *ngIf="formErrors.domain && (contactForm.controls['domain']?.touched || contactForm.submitted)">
+        <div class="error-message" *ngIf="formErrors.domain && (contactForm.controls['domain'].touched || contactForm.submitted)">
           {{ formErrors.domain }}
         </div>
       </div>
@@ -127,9 +127,9 @@
           (input)="validateField('industry')"
           placeholder="Enter your industry"
           class="form-control"
-          [class.invalid]="formErrors.industry && (contactForm.controls['industry']?.touched || contactForm.submitted)"
+          [class.invalid]="formErrors.industry && (contactForm.controls['industry'].touched || contactForm.submitted)"
         >
-        <div class="error-message" *ngIf="formErrors.industry && (contactForm.controls['industry']?.touched || contactForm.submitted)">
+        <div class="error-message" *ngIf="formErrors.industry && (contactForm.controls['industry'].touched || contactForm.submitted)">
           {{ formErrors.industry }}
         </div>
       </div>
@@ -147,9 +147,9 @@
           (input)="validateField('country')"
           placeholder="Enter your country"
           class="form-control"
-          [class.invalid]="formErrors.country && (contactForm.controls['country']?.touched || contactForm.submitted)"
+          [class.invalid]="formErrors.country && (contactForm.controls['country'].touched || contactForm.submitted)"
         >
-        <div class="error-message" *ngIf="formErrors.country && (contactForm.controls['country']?.touched || contactForm.submitted)">
+        <div class="error-message" *ngIf="formErrors.country && (contactForm.controls['country'].touched || contactForm.submitted)">
           {{ formErrors.country }}
         </div>
       </div>
@@ -167,9 +167,9 @@
           (input)="validateField('phone')"
           placeholder="Enter your phone number"
           class="form-control"
-          [class.invalid]="formErrors.phone && (contactForm.controls['phone']?.touched || contactForm.submitted)"
+          [class.invalid]="formErrors.phone && (contactForm.controls['phone'].touched || contactForm.submitted)"
         >
-        <div class="error-message" *ngIf="formErrors.phone && (contactForm.controls['phone']?.touched || contactForm.submitted)">
+        <div class="error-message" *ngIf="formErrors.phone && (contactForm.controls['phone'].touched || contactForm.submitted)">
           {{ formErrors.phone }}
         </div>
       </div>
@@ -243,9 +243,9 @@
           (input)="validateField('quantity')"
           placeholder="Enter quantity needed"
           class="form-control"
-          [class.invalid]="formErrors.quantity && (contactForm.controls['quantity']?.touched || contactForm.submitted)"
+          [class.invalid]="formErrors.quantity && (contactForm.controls['quantity'].touched || contactForm.submitted)"
         >
-        <div class="error-message" *ngIf="formErrors.quantity && (contactForm.controls['quantity']?.touched || contactForm.submitted)">
+        <div class="error-message" *ngIf="formErrors.quantity && (contactForm.controls['quantity'].touched || contactForm.submitted)">
           {{ formErrors.quantity }}
         </div>
       </div>
@@ -285,9 +285,9 @@
           (input)="validateField('businessRequirement')"
           placeholder="Describe your business requirements (minimum 20 characters)..."
           class="form-control"
-          [class.invalid]="formErrors.businessRequirement && (contactForm.controls['businessRequirement']?.touched || contactForm.submitted)"
+          [class.invalid]="formErrors.businessRequirement && (contactForm.controls['businessRequirement'].touched || contactForm.submitted)"
         ></textarea>
-        <div class="error-message" *ngIf="formErrors.businessRequirement && (contactForm.controls['businessRequirement']?.touched || contactForm.submitted)">
+        <div class="error-message" *ngIf="formErrors.businessRequirement && (contactForm.controls['businessRequirement'].touched || contactForm.submitted)">
           {{ formErrors.businessRequirement }}
         </div>
         <small class="hint">Minimum 20 characters required</small>

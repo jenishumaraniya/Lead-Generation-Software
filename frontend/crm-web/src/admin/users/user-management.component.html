@@ -1,0 +1,167 @@
+<div class="page-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <div class="page-eyebrow">IDENTITY & ACCESS CONTROL</div>
+      <h2 class="page-title">Team User Management</h2>
+      <p class="page-subtitle">Manage internal employees, roles (ADMIN / SALES_REP), account status, and passwords.</p>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        ➕ Add New Team Member
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter & Search Bar -->
+  <div class="filter-card">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="applyFilter()"
+        placeholder="Search users by name or email..."
+        class="form-control"
+      />
+    </div>
+
+    <div class="role-filters">
+      <button class="filter-chip" [class.active]="roleFilter === 'ALL'" (click)="roleFilter = 'ALL'; applyFilter()">All ({{ users.length }})</button>
+      <button class="filter-chip" [class.active]="roleFilter === 'ADMIN'" (click)="roleFilter = 'ADMIN'; applyFilter()">👑 Admins</button>
+      <button class="filter-chip" [class.active]="roleFilter === 'SALES_REP'" (click)="roleFilter = 'SALES_REP'; applyFilter()">💼 Sales Reps</button>
+    </div>
+  </div>
+
+  <!-- Users Table Card -->
+  <div class="table-card">
+    <div class="table-responsive" *ngIf="filteredUsers.length > 0; else noUsers">
+      <table class="app-table">
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Role</th>
+            <th>Account Status</th>
+            <th>Created Date</th>
+            <th>Last Active</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of filteredUsers">
+            <td>
+              <div class="user-cell">
+                <div class="avatar" [class.avatar-admin]="user.role === 'ADMIN'">
+                  {{ user.fullName ? user.fullName.charAt(0) : 'U' }}
+                </div>
+                <div>
+                  <strong>{{ user.fullName }}</strong>
+                  <span class="email-sub">{{ user.email }}</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="user.role === 'ADMIN' ? 'badge-admin' : 'badge-sales'">
+                {{ user.role === 'ADMIN' ? '👑 ADMIN' : '💼 SALES_REP' }}
+              </span>
+            </td>
+            <td>
+              <button class="status-toggle-btn" [class.status-active]="user.isActive" (click)="toggleStatus(user)">
+                {{ user.isActive ? '🟢 Active' : '🔴 Deactivated' }}
+              </button>
+            </td>
+            <td>
+              <span class="date-text">{{ user.createdAt | date:'mediumDate' }}</span>
+            </td>
+            <td>
+              <span class="date-text">{{ user.lastLoginAt ? (user.lastLoginAt | date:'short') : 'Never' }}</span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn-action btn-reset" (click)="openResetPasswordModal(user)" title="Admin Password Reset">
+                  🔑 Reset PWD
+                </button>
+                <button class="btn-action btn-delete" (click)="deleteUser(user)" title="Delete User">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #noUsers>
+      <div class="empty-state">
+        <div class="empty-icon">👥</div>
+        <h3>No Users Found</h3>
+        <p>No team members matching your search criteria.</p>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Create User Modal -->
+  <div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>➕ Add New Team Member</h3>
+        <button class="close-btn" (click)="closeCreateModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" [(ngModel)]="userForm.fullName" class="form-control" placeholder="e.g. Sarah Connor" />
+        </div>
+
+        <div class="form-group">
+          <label>Corporate Email *</label>
+          <input type="email" [(ngModel)]="userForm.email" class="form-control" placeholder="e.g. sarah@company.com" />
+        </div>
+
+        <div class="form-group">
+          <label>Role Assignment *</label>
+          <select [(ngModel)]="userForm.role" class="form-control">
+            <option value="SALES_REP">💼 SALES_REP (Prospecting, Leads, Sequences, Handoffs)</option>
+            <option value="ADMIN">👑 ADMIN (Full Platform & Catalog Control, User Mgmt, Audit)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Initial Password *</label>
+          <input type="password" [(ngModel)]="userForm.password" class="form-control" placeholder="Minimum 6 characters" />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeCreateModal()">Cancel</button>
+        <button class="btn btn-primary" (click)="createUser()">Create User Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Reset Password Modal -->
+  <div class="modal-overlay" *ngIf="showResetPasswordModal" (click)="closeResetPasswordModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>🔑 Reset Password for {{ selectedUserForReset?.fullName }}</h3>
+        <button class="close-btn" (click)="closeResetPasswordModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-desc">Enter a new secure password for <strong>{{ selectedUserForReset?.email }}</strong>. All active sessions on their other devices will be revoked.</p>
+
+        <div class="form-group">
+          <label>New Password *</label>
+          <input type="password" [(ngModel)]="newPasswordToSet" class="form-control" placeholder="Minimum 6 characters" />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeResetPasswordModal()">Cancel</button>
+        <button class="btn btn-primary" (click)="submitPasswordReset()">Confirm Password Reset</button>
+      </div>
+    </div>
+  </div>
+</div>

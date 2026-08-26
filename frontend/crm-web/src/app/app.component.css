@@ -183,6 +183,20 @@
 }
 
 /* Contact Button - Blue Gradient */
+.nav-links a.nav-admin-link {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  padding: 8px 18px;
+  border-radius: 50px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.nav-links a.nav-admin-link:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+}
+
 .nav-links a:last-child {
   background: linear-gradient(135deg, #4a6cf7, #6c5ce7);
   color: white;
@@ -194,7 +208,8 @@
   margin-left: 8px;
 }
 
-.nav-links a:last-child::after {
+.nav-links a:last-child::after,
+.nav-links a.nav-admin-link::after {
   display: none;
 }
 

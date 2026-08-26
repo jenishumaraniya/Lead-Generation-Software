@@ -1,0 +1,90 @@
+<div class="login-page">
+  <div class="login-container">
+    
+    <!-- Branding Header -->
+    <div class="brand-header">
+      <div class="logo">Lead<span>Tech</span></div>
+      <h2>Enterprise Engine Portal</h2>
+      <p>Secure sign-in for Lead Generation, Scoring & Sales CRM workflows</p>
+    </div>
+
+    <!-- Login Card -->
+    <div class="login-card">
+      <form (ngSubmit)="onSubmit()" class="login-form">
+        
+        <div class="error-alert" *ngIf="errorMessage">
+          <span>⚠️ {{ errorMessage }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Corporate Email</label>
+          <div class="input-wrapper">
+            <span class="input-icon">✉️</span>
+            <input
+              type="email"
+              id="email"
+              [(ngModel)]="credentials.email"
+              name="email"
+              placeholder="e.g. name@company.com"
+              required
+              class="form-control"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔒</span>
+            <input
+              type="password"
+              id="password"
+              [(ngModel)]="credentials.password"
+              name="password"
+              placeholder="••••••••••••"
+              required
+              class="form-control"
+            />
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit" [disabled]="isLoading">
+          <span *ngIf="!isLoading">Sign In to Workspace 🚀</span>
+          <span *ngIf="isLoading" class="spinner">Verifying credentials...</span>
+        </button>
+      </form>
+
+      <!-- Quick Fill Role Presets for Easy Demo/Testing -->
+      <div class="quick-login-section">
+        <div class="divider">
+          <span>1-CLICK DEMO ACCOUNTS</span>
+        </div>
+
+        <div class="quick-buttons">
+          <button type="button" class="btn-demo btn-demo-admin" (click)="fillAdmin()">
+            <span class="role-icon">👑</span>
+            <div class="demo-info">
+              <strong>Admin Account</strong>
+              <small>admin&#64;leadgen.com</small>
+            </div>
+          </button>
+
+          <button type="button" class="btn-demo btn-demo-sales" (click)="fillSales()">
+            <span class="role-icon">💼</span>
+            <div class="demo-info">
+              <strong>Sales Representative</strong>
+              <small>sales&#64;leadgen.com</small>
+            </div>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer Back Link -->
+    <div class="login-footer">
+      <a routerLink="/" class="back-link">← Return to Public Website</a>
+    </div>
+
+  </div>
+</div>

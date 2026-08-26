@@ -7,13 +7,11 @@ namespace CrmLeadTool.Api.Models;
 public class Lead
 {
     public int LeadId { get; set; }
-
-    [Column("VisitorId")]
     public int? VisitorId { get; set; }
-
-    [Column("ProspectId")]
     public int? ProspectId { get; set; }
-
+    //public int? CreatedBy { get; set; }
+    //public int? AssignedTo { get; set; }
+    //public int? UpdatedBy { get; set; }
     public string CompanyName { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
@@ -33,12 +31,11 @@ public class Lead
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
-    // Navigation properties (mapped to existing tables)
     public Visitor? Visitor { get; set; }
     public Prospect? Prospect { get; set; }
-    public ICollection<LeadActivity> Activities { get; set; } = new List<LeadActivity>();
-    public ICollection<LeadNote> Notes { get; set; } = new List<LeadNote>();
-    public ICollection<LeadStatusHistory> StatusHistory { get; set; } = new List<LeadStatusHistory>();
+    public string? PriorityLevel { get; set; }
+    public ICollection<LeadScoreHistory> ScoreHistories { get; set; } = new List<LeadScoreHistory>();
+    public ICollection<LeadHandoff> Handoffs { get; set; } = new List<LeadHandoff>();
 
     public int[] GetProductIdList()
     {

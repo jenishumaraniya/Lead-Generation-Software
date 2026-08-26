@@ -1,0 +1,162 @@
+<div class="admin-wrapper">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <!-- Logo Branding -->
+    <div class="sidebar-header" routerLink="/">
+      <div class="logo">Lead<span>Tech</span></div>
+      <span class="platform-pill">ENGINE 2.0</span>
+    </div>
+
+    <!-- User Profile Badge Card -->
+    <div class="user-profile-card">
+      <div class="user-avatar" [class.avatar-admin]="authService.isAdmin()">
+        {{ currentUser?.fullName ? currentUser?.fullName?.charAt(0) : 'U' }}
+      </div>
+      <div class="user-meta">
+        <strong class="user-name">{{ currentUser?.fullName || 'Authenticated User' }}</strong>
+        <span class="user-role-badge" [ngClass]="authService.isAdmin() ? 'role-admin' : 'role-sales'">
+          {{ authService.isAdmin() ? '👑 ADMIN' : '💼 SALES_REP' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Navigation Groups -->
+    <nav class="sidebar-nav">
+      
+      <div class="nav-section-title">CORE PIPELINE</div>
+      <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">📊</span>
+        <span>Dashboard</span>
+      </a>
+      <a routerLink="/admin/prospects" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">🎯</span>
+        <span>Prospects & LinkedIn</span>
+      </a>
+      <a routerLink="/admin/campaigns" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">✉️</span>
+        <span>Outbound Campaigns</span>
+      </a>
+      <a routerLink="/admin/leads" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">🔥</span>
+        <span>Leads & Qualification</span>
+      </a>
+      <a routerLink="/admin/handoff" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">🚀</span>
+        <span>CRM Handoff Center</span>
+      </a>
+      <a routerLink="/admin/visitors" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">👁️</span>
+        <span>Visitor Tracking</span>
+      </a>
+
+      <div class="nav-section-title">CATALOG INVENTORY</div>
+      <a routerLink="/admin/products" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">📦</span>
+        <span>Products Catalog</span>
+        <small class="read-only-tag" *ngIf="!authService.isAdmin()">View</small>
+      </a>
+      <a routerLink="/admin/categories" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">🏷️</span>
+        <span>Categories</span>
+        <small class="read-only-tag" *ngIf="!authService.isAdmin()">View</small>
+      </a>
+
+      <!-- ADMIN-ONLY GOVERNANCE SECTION -->
+      <ng-container *ngIf="authService.isAdmin()">
+        <div class="nav-section-title">ADMINISTRATION</div>
+        <a routerLink="/admin/scoring" routerLinkActive="active" class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          <span>Scoring Rules Engine</span>
+        </a>
+        <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
+          <span class="nav-icon">👥</span>
+          <span>Team User Accounts</span>
+        </a>
+        <a routerLink="/admin/audit-logs" routerLinkActive="active" class="nav-item">
+          <span class="nav-icon">📜</span>
+          <span>Audit Logs</span>
+        </a>
+      </ng-container>
+
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+      <button class="btn-sidebar-action" (click)="openChangePassword()">
+        <span>🔒 Change Password</span>
+      </button>
+      <button class="btn-sidebar-action btn-logout" (click)="logout()">
+        <span>🚪 Sign Out</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <!-- Top Bar Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <a routerLink="/" class="website-pill">🌐 View Public Website</a>
+      </div>
+
+      <div class="header-right">
+        <!-- Quick Demo Switcher -->
+        <button class="btn-switch-role" (click)="quickSwitchRole()">
+          <span>🔄 Switch to {{ authService.isAdmin() ? 'Sales Rep' : 'Admin' }}</span>
+        </button>
+
+        <div class="role-pill-status" [ngClass]="authService.isAdmin() ? 'pill-admin' : 'pill-sales'">
+          <span>{{ authService.isAdmin() ? '👑 Administrator Mode' : '💼 Sales Representative Mode' }}</span>
+        </div>
+
+        <button class="btn-top-logout" (click)="logout()" title="Sign Out">
+          Sign Out
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Body Outlet -->
+    <main class="content-body">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div class="modal-overlay" *ngIf="showChangePasswordModal" (click)="closeChangePassword()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>🔒 Change Account Password</h3>
+        <button class="close-btn" (click)="closeChangePassword()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="alert alert-error" *ngIf="changePasswordError">
+          {{ changePasswordError }}
+        </div>
+        <div class="alert alert-success" *ngIf="changePasswordSuccess">
+          {{ changePasswordSuccess }}
+        </div>
+
+        <div class="form-group">
+          <label>Current Password *</label>
+          <input type="password" [(ngModel)]="changePasswordData.currentPassword" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label>New Password (min 6 characters) *</label>
+          <input type="password" [(ngModel)]="changePasswordData.newPassword" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label>Confirm New Password *</label>
+          <input type="password" [(ngModel)]="changePasswordData.confirmPassword" class="form-control" />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeChangePassword()">Cancel</button>
+        <button class="btn btn-primary" (click)="submitChangePassword()">Update Password</button>
+      </div>
+    </div>
+  </div>
+</div>

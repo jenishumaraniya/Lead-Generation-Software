@@ -9,14 +9,21 @@ namespace CrmLeadTool.Api.Controllers;
 public class ProspectController : ControllerBase
 {
     private readonly ProspectService _prospectService;
+    private readonly ProspectDiscoveryService _discoveryService;
+    private readonly LinkedInEnrichmentService _enrichmentService;
 
-    public ProspectController(ProspectService prospectService)
+    public ProspectController(
+        ProspectService prospectService,
+        ProspectDiscoveryService discoveryService,
+        LinkedInEnrichmentService enrichmentService)
     {
         _prospectService = prospectService;
+        _discoveryService = discoveryService;
+        _enrichmentService = enrichmentService;
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateProspect(CreateProspectDto dto)
+    public async Task<IActionResult> CreateProspect([FromBody] CreateProspectDto dto)
     {
         try
         {
@@ -25,7 +32,25 @@ public class ProspectController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(new { message = ex.Message });
+            return Conflict(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpPost("discover")]
+    public async Task<IActionResult> DiscoverProspects([FromBody] DiscoveryCriteria criteria)
+    {
+        try
+        {
+            var result = await _discoveryService.DiscoverProspectsAsync(criteria);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
         }
     }
 
@@ -41,12 +66,46 @@ public class ProspectController : ControllerBase
     {
         var prospect = await _prospectService.GetProspectAsync(id);
         if (prospect == null)
-            return NotFound();
+            return NotFound(new { error = $"Prospect with ID {id} not found." });
         return Ok(prospect);
     }
 
+    [HttpPost("{id}/enrichment")]
+    public async Task<IActionResult> TriggerEnrichment(int id)
+    {
+        try
+        {
+            var run = await _enrichmentService.StartEnrichmentAsync(id);
+            return Ok(new
+            {
+                success = true,
+                enrichmentRunId = run.EnrichmentRunId,
+                status = run.Status,
+                startedAt = run.StartedAt,
+                completedAt = run.CompletedAt
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpGet("{id}/enrichment")]
+    public async Task<IActionResult> GetEnrichment(int id)
+    {
+        var details = await _enrichmentService.GetProspectEnrichmentDetailsAsync(id);
+        if (details == null)
+            return NotFound(new { error = $"Prospect with ID {id} not found." });
+        return Ok(details);
+    }
+
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateProspect(int id, UpdateProspectDto dto)
+    public async Task<IActionResult> UpdateProspect(int id, [FromBody] UpdateProspectDto dto)
     {
         try
         {
@@ -55,7 +114,29 @@ public class ProspectController : ControllerBase
         }
         catch (ArgumentException ex)
         {
-            return NotFound(new { message = ex.Message });
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteProspect(int id)
+    {
+        try
+        {
+            await _prospectService.DeleteProspectAsync(id);
+            return Ok(new { message = "Prospect deleted successfully." });
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
         }
     }
 }

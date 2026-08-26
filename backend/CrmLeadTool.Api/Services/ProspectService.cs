@@ -16,13 +16,11 @@ public class ProspectService
 
     public async Task<Prospect> CreateProspectAsync(CreateProspectDto dto)
     {
-        // Check duplicate by email
         var existing = await _context.Prospects
             .FirstOrDefaultAsync(p => p.Email == dto.Email);
         if (existing != null)
             throw new InvalidOperationException("Prospect with this email already exists.");
 
-        // Find or create company
         Company? company = null;
         if (!string.IsNullOrEmpty(dto.CompanyName))
         {
@@ -42,19 +40,19 @@ public class ProspectService
             }
         }
 
-        // Find visitor by AnonymousId if provided
-        int? visitorId = null;
+        Guid? publicId = null;
         if (!string.IsNullOrEmpty(dto.VisitorId))
         {
             var visitor = await _context.Visitors
                 .FirstOrDefaultAsync(v => v.AnonymousId == dto.VisitorId);
-            visitorId = visitor?.VisitorId;
+            if (visitor != null)
+                publicId = visitor.PublicId;
         }
 
         var prospect = new Prospect
         {
             CompanyId = company?.CompanyId,
-            VisitorId = visitorId,
+            PublicId = publicId,
             Email = dto.Email,
             Name = dto.Name,
             JobTitle = dto.JobTitle,
@@ -71,21 +69,76 @@ public class ProspectService
         return prospect;
     }
 
-    public async Task<List<Prospect>> GetAllProspectsAsync()
+    public async Task<List<object>> GetAllProspectsAsync()
     {
         return await _context.Prospects
             .Include(p => p.Company)
             .OrderByDescending(p => p.CreatedAt)
-            .ToListAsync();
+            .Select(p => new
+            {
+                p.ProspectId,
+                p.CompanyId,
+                p.PublicId,
+                p.Email,
+                p.Name,
+                p.JobTitle,
+                p.Phone,
+                p.LinkedInUrl,
+                p.Source,
+                p.Status,
+                p.Score,
+                p.Qualification,
+                p.CreatedAt,
+                p.UpdatedAt,
+                Company = p.Company != null ? new
+                {
+                    p.Company.CompanyId,
+                    p.Company.Name,
+                    p.Company.Domain,
+                    p.Company.Industry,
+                    p.Company.Size,
+                    p.Company.Location,
+                    p.Company.Description,
+                    p.Company.CreatedAt
+                } : null
+            })
+            .ToListAsync<object>();
     }
 
-    public async Task<Prospect?> GetProspectAsync(int id)
+    public async Task<object?> GetProspectAsync(int id)
     {
         return await _context.Prospects
             .Include(p => p.Company)
-            .Include(p => p.CampaignRecipients)
-                .ThenInclude(cr => cr.Campaign)
-            .FirstOrDefaultAsync(p => p.ProspectId == id);
+            .Where(p => p.ProspectId == id)
+            .Select(p => new
+            {
+                p.ProspectId,
+                p.CompanyId,
+                p.PublicId,
+                p.Email,
+                p.Name,
+                p.JobTitle,
+                p.Phone,
+                p.LinkedInUrl,
+                p.Source,
+                p.Status,
+                p.Score,
+                p.Qualification,
+                p.CreatedAt,
+                p.UpdatedAt,
+                Company = p.Company != null ? new
+                {
+                    p.Company.CompanyId,
+                    p.Company.Name,
+                    p.Company.Domain,
+                    p.Company.Industry,
+                    p.Company.Size,
+                    p.Company.Location,
+                    p.Company.Description,
+                    p.Company.CreatedAt
+                } : null
+            })
+            .FirstOrDefaultAsync();
     }
 
     public async Task<Prospect> UpdateProspectAsync(int id, UpdateProspectDto dto)
@@ -102,5 +155,16 @@ public class ProspectService
 
         await _context.SaveChangesAsync();
         return prospect;
+    }
+
+    public async Task DeleteProspectAsync(int id)
+    {
+        var prospect = await _context.Prospects.FindAsync(id);
+        if (prospect == null)
+            throw new ArgumentException("Prospect not found.");
+
+        prospect.Status = "INACTIVE";
+        prospect.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
     }
 }

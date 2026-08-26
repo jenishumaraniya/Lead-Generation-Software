@@ -208,123 +208,43 @@
 
 
   <div class="category-grid">
-
-
-    <!-- ============================= -->
-    <!-- LAPTOP -->
-    <!-- ============================= -->
-
-    <div class="category-card">
-
-      <div class="icon">
-        💻
+    @if (categories.length > 0) {
+      @for (cat of categories; track cat.categoryId) {
+        <div class="category-card">
+          <div class="icon">
+            {{ getCategoryIcon(cat.categoryName) }}
+          </div>
+          <h3>{{ cat.categoryName }}</h3>
+          <p>{{ cat.productsCount || 0 }} Solutions & Products Available</p>
+          <button (click)="exploreProducts(cat.categoryId)">Explore →</button>
+        </div>
+      }
+    } @else {
+      <div class="category-card">
+        <div class="icon">💻</div>
+        <h3>Laptops</h3>
+        <p>Professional laptops for modern business teams.</p>
+        <button (click)="exploreProducts(1)">Explore →</button>
       </div>
-
-      <h3>
-        Laptops
-      </h3>
-
-      <p>
-        Professional laptops for modern business teams.
-      </p>
-
-      <button
-        (click)="exploreProducts(1)">
-
-        Explore →
-
-      </button>
-
-    </div>
-
-
-
-    <!-- ============================= -->
-    <!-- DESKTOP -->
-    <!-- ============================= -->
-
-    <div class="category-card">
-
-      <div class="icon">
-        🖥️
+      <div class="category-card">
+        <div class="icon">🖥️</div>
+        <h3>Desktops</h3>
+        <p>Powerful desktops for office environments.</p>
+        <button (click)="exploreProducts(2)">Explore →</button>
       </div>
-
-      <h3>
-        Desktops
-      </h3>
-
-      <p>
-        Powerful desktops for office environments.
-      </p>
-
-      <button
-        (click)="exploreProducts(2)">
-
-        Explore →
-
-      </button>
-
-    </div>
-
-
-
-    <!-- ============================= -->
-    <!-- SERVER -->
-    <!-- ============================= -->
-
-    <div class="category-card">
-
-      <div class="icon">
-        🗄️
+      <div class="category-card">
+        <div class="icon">🗄️</div>
+        <h3>Servers</h3>
+        <p>Reliable infrastructure for business workloads.</p>
+        <button (click)="exploreProducts(3)">Explore →</button>
       </div>
-
-      <h3>
-        Servers
-      </h3>
-
-      <p>
-        Reliable infrastructure for business workloads.
-      </p>
-
-      <button
-        (click)="exploreProducts(3)">
-
-        Explore →
-
-      </button>
-
-    </div>
-
-
-
-    <!-- ============================= -->
-    <!-- NETWORKING -->
-    <!-- ============================= -->
-
-    <div class="category-card">
-
-      <div class="icon">
-        🌐
+      <div class="category-card">
+        <div class="icon">🌐</div>
+        <h3>Networking</h3>
+        <p>Networking solutions for connected businesses.</p>
+        <button (click)="exploreProducts(4)">Explore →</button>
       </div>
-
-      <h3>
-        Networking
-      </h3>
-
-      <p>
-        Networking solutions for connected businesses.
-      </p>
-
-      <button
-        (click)="exploreProducts(4)">
-
-        Explore →
-
-      </button>
-
-    </div>
-
-
+    }
   </div>
 
 </section>

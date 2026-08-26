@@ -9,10 +9,17 @@ namespace CrmLeadTool.Api.Controllers;
 public class LeadController : ControllerBase
 {
     private readonly LeadService _leadService;
+    private readonly QualificationService _qualificationService;
+    private readonly ScoringService _scoringService;
 
-    public LeadController(LeadService leadService)
+    public LeadController(
+        LeadService leadService,
+        QualificationService qualificationService,
+        ScoringService scoringService)
     {
         _leadService = leadService;
+        _qualificationService = qualificationService;
+        _scoringService = scoringService;
     }
 
     [HttpPost("submit")]
@@ -24,37 +31,23 @@ public class LeadController : ControllerBase
             return Ok(new
             {
                 leadId = lead.LeadId,
-                message = "Lead created successfully.",
-                isDuplicate = false
-            });
-        }
-        catch (DuplicateLeadException ex)
-        {
-            return Conflict(new
-            {
-                message = ex.Message,
-                duplicateLeadIds = ex.DuplicateLeadIds,
-                isDuplicate = true
+                message = "Lead processed successfully.",
+                qualification = lead.Qualification,
+                score = lead.Score,
+                status = lead.Status
             });
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = ex.Message });
+            return BadRequest(new { error = ex.Message });
         }
     }
 
     [HttpGet]
     public async Task<IActionResult> GetLeads()
     {
-        try
-        {
-            var leads = await _leadService.GetAllLeadsAsync();
-            return Ok(leads);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = ex.Message });
-        }
+        var leads = await _leadService.GetAllLeadsAsync();
+        return Ok(leads);
     }
 
     [HttpGet("{id}")]
@@ -62,15 +55,33 @@ public class LeadController : ControllerBase
     {
         var lead = await _leadService.GetLeadByIdAsync(id);
         if (lead == null)
-            return NotFound(new { message = "Lead not found." });
+            return NotFound();
         return Ok(lead);
     }
 
-    [HttpPost("search")]
-    public async Task<IActionResult> SearchLeads([FromBody] LeadSearchDto dto)
+    [HttpPost("{id}/qualify")]
+    public async Task<IActionResult> QualifyLead(int id)
     {
-        var leads = await _leadService.SearchLeadsAsync(dto);
-        return Ok(leads);
+        try
+        {
+            var result = await _qualificationService.EvaluateQualificationAsync(id);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpGet("{id}/score-history")]
+    public async Task<IActionResult> GetScoreHistory(int id)
+    {
+        var history = await _scoringService.GetScoreHistoryAsync(id);
+        return Ok(history);
     }
 
     [HttpPut("{id}")]
@@ -84,50 +95,12 @@ public class LeadController : ControllerBase
                 leadId = lead.LeadId,
                 status = lead.Status,
                 qualification = lead.Qualification,
-                score = lead.Score,
-                message = "Lead updated successfully."
+                score = lead.Score
             });
         }
         catch (ArgumentException ex)
         {
-            return NotFound(new { message = ex.Message });
-        }
-    }
-
-    [HttpPost("{id}/note")]
-    public async Task<IActionResult> AddNote(int id, [FromBody] string note)
-    {
-        try
-        {
-            await _leadService.AddLeadNoteAsync(id, note);
-            return Ok(new { message = "Note added successfully." });
-        }
-        catch (ArgumentException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-    }
-
-    [HttpPost("convert-prospect/{prospectId}")]
-    public async Task<IActionResult> ConvertProspect(int prospectId, [FromBody] LeadSubmitDto? dto)
-    {
-        try
-        {
-            dto ??= new LeadSubmitDto();
-            var lead = await _leadService.ConvertProspectToLeadAsync(prospectId, dto);
-            return Ok(new
-            {
-                leadId = lead.LeadId,
-                message = "Prospect converted to lead successfully."
-            });
-        }
-        catch (ArgumentException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
+            return NotFound(new { error = ex.Message });
         }
     }
 }

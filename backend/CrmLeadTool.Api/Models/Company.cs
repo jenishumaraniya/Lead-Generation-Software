@@ -14,5 +14,6 @@ public class Company
     public string? Description { get; set; }
     public DateTime CreatedAt { get; set; }
 
+    public CompanyEnrichment? Enrichment { get; set; }
     public ICollection<Prospect> Prospects { get; set; } = new List<Prospect>();
 }

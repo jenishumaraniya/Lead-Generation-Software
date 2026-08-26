@@ -1,125 +1,167 @@
-// 
-
-
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, of, tap, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, tap, of } from 'rxjs';
 import { Router } from '@angular/router';
-import { User } from '../models/user.model';
-import { AuthResponse } from '../models/auth-response.model';
+
+export interface UserProfile {
+  userId?: number;
+  employeeId?: number;
+  fullName: string;
+  email: string;
+  role: 'ADMIN' | 'SALES_REP' | 'SALES';
+  isActive?: boolean;
+  createdAt?: string;
+  lastLoginAt?: string;
+  token?: string;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn?: number;
+  token?: string;
+  role?: string;
+  fullName?: string;
+  email?: string;
+  employeeId?: number;
+  user: UserProfile;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private baseUrl = 'http://localhost:5234/api/auth';
-  private userSubject = new BehaviorSubject<User | null>(null);
-  user$ = this.userSubject.asObservable();
+  private apiUrl = 'http://localhost:5234/api/auth';
+  private currentUserSubject = new BehaviorSubject<UserProfile | null>(null);
+  public currentUser$ = this.currentUserSubject.asObservable();
+  public user$ = this.currentUser$;
 
-  // ✅ Mock users for testing
-  private mockUsers = [
-    {
-      email: 'admin@leadgen.com',
-      password: 'admin123',
-      role: 'ADMIN',
-      fullName: 'Admin User',
-      employeeId: 1
-    },
-    {
-      email: 'sales@leadgen.com',
-      password: 'sales123',
-      role: 'SALES',
-      fullName: 'Sales User',
-      employeeId: 2
-    }
-  ];
+  private ACCESS_TOKEN_KEY = 'crm_access_token';
+  private REFRESH_TOKEN_KEY = 'crm_refresh_token';
+  private USER_KEY = 'crm_user_profile';
 
   constructor(private http: HttpClient, private router: Router) {
-    this.loadUserFromStorage();
+    this.loadStoredUser();
   }
 
-  private loadUserFromStorage(): void {
-    const userData = localStorage.getItem('user');
-    if (userData) {
+  private loadStoredUser(): void {
+    const userJson = localStorage.getItem(this.USER_KEY);
+    if (userJson) {
       try {
-        const user = JSON.parse(userData);
-        this.userSubject.next(user);
-      } catch {
-        this.logout();
+        const user = JSON.parse(userJson);
+        this.currentUserSubject.next(user);
+      } catch (e) {
+        this.clearStorage();
       }
     }
   }
 
-  // ✅ Login with Mock or Real Backend
-  login(email: string, password: string): Observable<AuthResponse> {
-    // Check if mock user exists
-    const mockUser = this.mockUsers.find(
-      u => u.email === email && u.password === password
-    );
+  public get currentUserValue(): UserProfile | null {
+    return this.currentUserSubject.value;
+  }
 
-    if (mockUser) {
-      // Return mock response
-      const response: AuthResponse = {
-        token: 'mock-jwt-token-' + Date.now(),
-        role: mockUser.role,
-        fullName: mockUser.fullName,
-        email: mockUser.email,
-        employeeId: mockUser.employeeId
-      };
+  public getCurrentUser(): UserProfile | null {
+    return this.currentUserSubject.value;
+  }
 
-      const user: User = {
-        employeeId: response.employeeId,
-        fullName: response.fullName,
-        email: response.email,
-        role: response.role as 'ADMIN' | 'SALES',
-        token: response.token
-      };
+  public isAuthenticated(): boolean {
+    return !!this.getAccessToken() && !!this.currentUserValue;
+  }
 
-      localStorage.setItem('user', JSON.stringify(user));
-      this.userSubject.next(user);
+  public isAdmin(): boolean {
+    return this.currentUserValue?.role === 'ADMIN';
+  }
 
-      return of(response);
+  public isSalesRep(): boolean {
+    return this.currentUserValue?.role === 'SALES_REP' || this.currentUserValue?.role === 'SALES';
+  }
+
+  public isSales(): boolean {
+    return this.isSalesRep();
+  }
+
+  public hasRole(role: string): boolean {
+    if (!this.currentUserValue) return false;
+    if (role === 'SALES' || role === 'SALES_REP') {
+      return this.currentUserValue.role === 'SALES' || this.currentUserValue.role === 'SALES_REP';
     }
+    return this.currentUserValue.role === role;
+  }
 
-    // If not mock, try real backend (optional)
-    // return this.http.post<AuthResponse>(`${this.baseUrl}/login`, { email, password })
-    //   .pipe(tap(response => { ... }));
+  public getAccessToken(): string | null {
+    return localStorage.getItem(this.ACCESS_TOKEN_KEY);
+  }
 
-    // If no mock and no backend, return error
-    return throwError(() => ({
-      status: 401,
-      error: { message: 'Invalid email or password. Try admin@leadgen.com / admin123' }
-    }));
+  public getToken(): string | null {
+    return this.getAccessToken();
+  }
+
+  public getRefreshToken(): string | null {
+    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
+  }
+
+  login(credentialsOrEmail: any, password?: string): Observable<AuthResponse> {
+    const creds = typeof credentialsOrEmail === 'string'
+      ? { email: credentialsOrEmail, password: password || '' }
+      : credentialsOrEmail;
+
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, creds).pipe(
+      tap(res => this.handleAuthResponse(res))
+    );
+  }
+
+  refreshToken(): Observable<AuthResponse> {
+    const refresh = this.getRefreshToken();
+    return this.http.post<AuthResponse>(`${this.apiUrl}/refresh`, { refreshToken: refresh }).pipe(
+      tap(res => this.handleAuthResponse(res))
+    );
+  }
+
+  changePassword(data: { currentPassword: string; newPassword: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/change-password`, data);
   }
 
   logout(): void {
+    const refresh = this.getRefreshToken();
+    if (refresh) {
+      this.http.post(`${this.apiUrl}/logout`, { refreshToken: refresh }).subscribe({
+        error: () => {}
+      });
+    }
+    this.clearStorage();
+    this.currentUserSubject.next(null);
+    this.router.navigate(['/admin/login']);
+  }
+
+  logoutAll(): void {
+    this.http.post(`${this.apiUrl}/logout-all`, {}).subscribe({
+      error: () => {}
+    });
+    this.clearStorage();
+    this.currentUserSubject.next(null);
+    this.router.navigate(['/admin/login']);
+  }
+
+  private handleAuthResponse(res: AuthResponse): void {
+    const token = res.accessToken || res.token || '';
+    const userProfile = res.user || {
+      fullName: res.fullName || 'User',
+      email: res.email || '',
+      role: (res.role as any) || 'SALES_REP'
+    };
+
+    localStorage.setItem(this.ACCESS_TOKEN_KEY, token);
+    if (res.refreshToken) {
+      localStorage.setItem(this.REFRESH_TOKEN_KEY, res.refreshToken);
+    }
+    localStorage.setItem(this.USER_KEY, JSON.stringify(userProfile));
+    this.currentUserSubject.next(userProfile);
+  }
+
+  private clearStorage(): void {
+    localStorage.removeItem(this.ACCESS_TOKEN_KEY);
+    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+    localStorage.removeItem(this.USER_KEY);
     localStorage.removeItem('user');
-    this.userSubject.next(null);
-    this.router.navigate(['/login']);
-  }
-
-  getCurrentUser(): User | null {
-    return this.userSubject.value;
-  }
-
-  isAuthenticated(): boolean {
-    return this.userSubject.value !== null;
-  }
-
-  hasRole(role: 'ADMIN' | 'SALES'): boolean {
-    const user = this.userSubject.value;
-    return user ? user.role === role : false;
-  }
-
-  isAdmin(): boolean {
-    return this.hasRole('ADMIN');
-  }
-
-  isSales(): boolean {
-    return this.hasRole('SALES');
-  }
-
-  getToken(): string | null {
-    return this.userSubject.value?.token || null;
   }
 }

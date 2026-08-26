@@ -113,7 +113,11 @@ export class ApiService {
   //     map(products => products.map(product => this.normalizeProduct(product)))
   //   );
   // }
-getProducts(categoryId?: number): Observable<Product[]> {
+  getCategories(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/categories`);
+  }
+
+  getProducts(categoryId?: number): Observable<Product[]> {
 
   let params = new HttpParams();
 
