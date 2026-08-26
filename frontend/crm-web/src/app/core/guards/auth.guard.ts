@@ -10,7 +10,7 @@ export const authGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  router.navigate(['/admin/login'], { queryParams: { returnUrl: state.url } });
+  router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
   return false;
 };
 
@@ -25,15 +25,28 @@ export class AuthGuard implements CanActivate {
     const expectedRole = route.data['role'] as 'ADMIN' | 'SALES_REP' | 'SALES' | undefined;
 
     if (!this.authService.isAuthenticated()) {
-      this.router.navigate(['/admin/login'], { queryParams: { returnUrl: state.url } });
+      this.router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
       return false;
     }
 
-    if (expectedRole && !this.authService.hasRole(expectedRole)) {
+    if (expectedRole) {
       if (this.authService.isAdmin()) {
         return true;
       }
-      this.router.navigate(['/admin/dashboard']);
+      if ((expectedRole === 'SALES' || expectedRole === 'SALES_REP') && this.authService.isSalesRep()) {
+        return true;
+      }
+      if (this.authService.hasRole(expectedRole)) {
+        return true;
+      }
+
+      // If user is sales rep trying to access admin
+      if (this.authService.isSalesRep()) {
+        this.router.navigate(['/sales/dashboard']);
+        return false;
+      }
+
+      this.router.navigate(['/login']);
       return false;
     }
 

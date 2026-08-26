@@ -11,6 +11,8 @@ namespace CrmLeadTool.Api.Controllers;
 
 [ApiController]
 [Route("api/users")]
+[Route("api/employee")]
+[Route("api/user")]
 public class UserController : ControllerBase
 {
     private readonly AppDbContext _context;

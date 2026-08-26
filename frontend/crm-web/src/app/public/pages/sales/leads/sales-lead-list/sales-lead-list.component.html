@@ -1,1 +1,88 @@
-<p>sales-lead-list works!</p>
+<div class="sales-lead-container">
+  <div class="header-section">
+    <div>
+      <h2>💼 Assigned Sales Leads</h2>
+      <p class="subtitle">Manage prospect pipelines, follow-ups, and customer engagement</p>
+    </div>
+    <div class="filter-controls">
+      <div class="search-box">
+        <input 
+          type="text" 
+          placeholder="Search by name, company, or email..." 
+          [(ngModel)]="searchTerm" 
+          (input)="applyFilters()" 
+        />
+      </div>
+      <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="status-select">
+        <option value="">All Statuses</option>
+        <option value="NEW">New</option>
+        <option value="CONTACTED">Contacted</option>
+        <option value="QUALIFIED">Qualified</option>
+        <option value="WON">Won</option>
+        <option value="LOST">Lost</option>
+      </select>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    Loading leads...
+  </div>
+
+  <div *ngIf="!loading && filteredLeads.length === 0" class="empty-state">
+    <div class="empty-icon">📭</div>
+    <h3>No leads found</h3>
+    <p>Try clearing your filters or check back when new inquiries are submitted.</p>
+  </div>
+
+  <div *ngIf="!loading && filteredLeads.length > 0" class="table-card">
+    <table class="leads-table">
+      <thead>
+        <tr>
+          <th>Lead Name</th>
+          <th>Company</th>
+          <th>Contact</th>
+          <th>Score & Intent</th>
+          <th>Status</th>
+          <th>Update Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let lead of filteredLeads">
+          <td class="lead-name">
+            <strong>{{ lead.fullName }}</strong>
+            <span class="job-title" *ngIf="lead.jobTitle">{{ lead.jobTitle }}</span>
+          </td>
+          <td>
+            <strong>{{ lead.companyName }}</strong>
+            <span class="industry-tag" *ngIf="lead.industry">{{ lead.industry }}</span>
+          </td>
+          <td>
+            <div class="contact-line">📧 {{ lead.email }}</div>
+            <div class="contact-line" *ngIf="lead.phone">📞 {{ lead.phone }}</div>
+          </td>
+          <td>
+            <span class="score-badge" [class.high-score]="(lead.score || 0) >= 40">
+              ⚡ {{ lead.score || 0 }} pts
+            </span>
+          </td>
+          <td>
+            <span class="badge" [class]="lead.status">{{ lead.status }}</span>
+          </td>
+          <td>
+            <select class="quick-status-select" [value]="lead.status" (change)="updateLeadStatus(lead, $event)">
+              <option value="NEW">NEW</option>
+              <option value="CONTACTED">CONTACTED</option>
+              <option value="QUALIFIED">QUALIFIED</option>
+              <option value="WON">WON</option>
+              <option value="LOST">LOST</option>
+            </select>
+          </td>
+          <td>
+            <a [routerLink]="['/sales/leads', lead.leadId]" class="view-btn">View Details →</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

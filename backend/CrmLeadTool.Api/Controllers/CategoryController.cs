@@ -10,6 +10,7 @@ namespace CrmLeadTool.Api.Controllers;
 
 [ApiController]
 [Route("api/categories")]
+[Route("api/category")]
 public class CategoryController : ControllerBase
 {
     private readonly AppDbContext _context;

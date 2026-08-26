@@ -72,6 +72,9 @@ export const routes: Routes = [
   // AUTHENTICATION
   // =============================================
   { path: 'login', component: LoginComponent },
+  { path: 'admin/login', redirectTo: 'login', pathMatch: 'full' },
+  { path: 'sales/login', redirectTo: 'login', pathMatch: 'full' },
+  { path: 'pricing', redirectTo: 'products', pathMatch: 'full' },
 
   // =============================================
   // ADMIN ROUTES (protected)

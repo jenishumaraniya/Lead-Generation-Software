@@ -228,4 +228,59 @@ public class CampaignService
         await _context.SaveChangesAsync();
         return recipient;
     }
+
+    public async Task<Campaign> UpdateCampaignAsync(int campaignId, CreateCampaignDto dto)
+    {
+        var campaign = await _context.Campaigns.Include(c => c.Steps).FirstOrDefaultAsync(c => c.CampaignId == campaignId);
+        if (campaign == null) throw new ArgumentException("Campaign not found.");
+
+        if (!string.IsNullOrEmpty(dto.Name)) campaign.Name = dto.Name;
+        if (dto.Description != null) campaign.Description = dto.Description;
+        if (!string.IsNullOrEmpty(dto.Status)) campaign.Status = dto.Status;
+        if (dto.ScheduleStartDate.HasValue) campaign.ScheduleStartDate = dto.ScheduleStartDate;
+        if (dto.ScheduleEndDate.HasValue) campaign.ScheduleEndDate = dto.ScheduleEndDate;
+        campaign.UpdatedAt = DateTime.UtcNow;
+
+        if (dto.Steps != null && dto.Steps.Any())
+        {
+            _context.SequenceSteps.RemoveRange(campaign.Steps);
+            foreach (var stepDto in dto.Steps.OrderBy(s => s.StepNumber))
+            {
+                campaign.Steps.Add(new SequenceStep
+                {
+                    CampaignId = campaign.CampaignId,
+                    StepNumber = stepDto.StepNumber,
+                    Name = stepDto.Name,
+                    Subject = stepDto.Subject,
+                    Body = stepDto.Body,
+                    DelayDays = stepDto.DelayDays,
+                    DelayHours = stepDto.DelayHours,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+        }
+
+        await _context.SaveChangesAsync();
+        return campaign;
+    }
+
+    public async Task<Campaign> CloseCampaignAsync(int campaignId)
+    {
+        var campaign = await _context.Campaigns.FindAsync(campaignId);
+        if (campaign == null) throw new ArgumentException("Campaign not found.");
+
+        campaign.Status = "COMPLETED";
+        campaign.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        return campaign;
+    }
+
+    public async Task DeleteCampaignAsync(int campaignId)
+    {
+        var campaign = await _context.Campaigns.FindAsync(campaignId);
+        if (campaign == null) throw new ArgumentException("Campaign not found.");
+
+        _context.Campaigns.Remove(campaign);
+        await _context.SaveChangesAsync();
+    }
 }

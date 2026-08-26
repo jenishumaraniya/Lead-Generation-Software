@@ -157,22 +157,19 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // ✅ Detect route changes to hide public elements on admin/sales
+    const updateRouteStatus = (url: string) => {
+      this.isPublicRoute = !url.startsWith('/admin') && !url.startsWith('/sales') && !url.startsWith('/login');
+    };
+
+    updateRouteStatus(this.router.url);
+
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
-    ).subscribe(() => {
-      const url = this.router.url;
-      this.isPublicRoute = !url.startsWith('/admin') && !url.startsWith('/sales');
+    ).subscribe((event: any) => {
+      updateRouteStatus(event.urlAfterRedirects || this.router.url);
     });
 
     this.showConsentPopup = this.visitorTrackingService.shouldShowConsentPopup();
-
-    if (!this.visitorTrackingService.hasConsent()) {
-      const currentUrl = this.router.url;
-      if (currentUrl !== '/') {
-        this.router.navigate(['/']);
-      }
-    }
 
     if (this.visitorTrackingService.hasConsent()) {
       this.visitorTrackingService.initializeVisitor(

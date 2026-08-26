@@ -1,25 +1,52 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { Lead, LeadService } from '../../../../core/services/lead.service';
 
 @Component({
   selector: 'app-sales-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
 export class SalesDashboardComponent implements OnInit {
-  myLeads = [
-    { name: 'ABC Corp', status: 'NEW', nextFollowUp: '2024-08-30' },
-    { name: 'XYZ Ltd', status: 'CONTACTED', nextFollowUp: '2024-09-02' }
-  ];
+  leads: any[] = [];
+  stats = {
+    total: 0,
+    newLeads: 0,
+    contacted: 0,
+    qualified: 0,
+    won: 0
+  };
+  loading = false;
 
-  recentActivities = [
-    { type: '📞 Call', detail: 'Spoke with John about pricing', time: '2 hours ago' },
-    { type: '✉️ Email', detail: 'Sent proposal to Jane', time: '1 day ago' }
-  ];
+  constructor(private leadService: LeadService) {}
 
-  ngOnInit() {
-    // TODO: Fetch real data from API
+  ngOnInit(): void {
+    this.loadDashboardData();
+  }
+
+  loadDashboardData(): void {
+    this.loading = true;
+    this.leadService.getLeads().subscribe({
+      next: (data: Lead[]) => {
+        this.leads = data || [];
+        this.computeStats();
+        this.loading = false;
+      },
+      error: () => {
+        this.leads = [];
+        this.loading = false;
+      }
+    });
+  }
+
+  computeStats(): void {
+    this.stats.total = this.leads.length;
+    this.stats.newLeads = this.leads.filter(l => l.status === 'NEW').length;
+    this.stats.contacted = this.leads.filter(l => l.status === 'CONTACTED').length;
+    this.stats.qualified = this.leads.filter(l => l.status === 'QUALIFIED').length;
+    this.stats.won = this.leads.filter(l => l.status === 'WON').length;
   }
 }

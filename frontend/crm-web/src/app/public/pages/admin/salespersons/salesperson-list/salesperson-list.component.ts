@@ -8,8 +8,8 @@ import { Lead, LeadService } from '../../../../../core/services/lead.service';
   selector: 'app-sales-lead-list',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
-  templateUrl: './sales-lead-list.component.html',
-  styleUrls: ['./sales-lead-list.component.css']
+  templateUrl: './salesperson-list.component.html',
+  styleUrls: ['./salesperson-list.component.css']
 })
 export class SalesLeadListComponent implements OnInit {
   leads: Lead[] = [];

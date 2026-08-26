@@ -13,6 +13,8 @@ export interface Lead {
   country: string;
   phone: string;
   status: string; // NEW, CONTACTED, QUALIFIED, LOST, WON
+  score?: number;
+  qualification?: string;
   assignedTo: number | null;
   assignedEmployee?: { employeeId: number; fullName: string };
   createdAt: string;

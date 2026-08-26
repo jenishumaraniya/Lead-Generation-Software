@@ -1,4 +1,4 @@
-<ng-container *ngIf="!router.url.startsWith('/admin')">
+<ng-container *ngIf="isPublicRoute">
   <nav class="navbar">
     <div class="logo" routerLink="/">
       Lead<span>Tech</span>
@@ -8,14 +8,16 @@
       <a routerLink="/products" [class.active]="isActiveRoute('/products')">Products</a>
       <a routerLink="/pricing" [class.active]="isActiveRoute('/pricing')">Pricing</a>
       <a (click)="scrollToContact()">Contact</a>
-      <a routerLink="/admin" class="nav-admin-link">⚡ Platform Engine</a>
+      <a routerLink="/sales" class="nav-sales-link">💼 Sales Portal</a>
+      <a routerLink="/admin" class="nav-admin-link">⚡ Admin Engine</a>
+      <a routerLink="/login" class="nav-login-btn">🔑 Sign In</a>
     </div>
   </nav>
 </ng-container>
 
 <router-outlet></router-outlet>
 
-<ng-container *ngIf="!router.url.startsWith('/admin')">
+<ng-container *ngIf="isPublicRoute">
   <!-- Floating Contact Button -->
   <app-floating-contact-button (openForm)="openContactForm()"></app-floating-contact-button>
 

@@ -10,11 +10,18 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrls: ['./sales-layout.component.css']
 })
 export class SalesLayoutComponent {
-  user = this.authService.getCurrentUser();
   constructor(private authService: AuthService) {}
-  logout() { this.authService.logout(); }
-  get welcomeMessage(): string {
-    return `Welcome, ${this.user?.fullName}`;
-  }
   
+  get user() {
+    return this.authService.getCurrentUser();
+  }
+
+  logout() { 
+    this.authService.logout(); 
+  }
+
+  get welcomeMessage(): string {
+    const name = this.user?.fullName || 'Sales Representative';
+    return `Welcome, ${name}`;
+  }
 }

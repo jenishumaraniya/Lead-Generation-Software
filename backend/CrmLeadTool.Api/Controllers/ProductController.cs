@@ -10,6 +10,7 @@ namespace CrmLeadTool.Api.Controllers;
 
 [ApiController]
 [Route("api/product")]
+[Route("api/products")]
 public class ProductController : ControllerBase
 {
     private readonly AppDbContext _context;

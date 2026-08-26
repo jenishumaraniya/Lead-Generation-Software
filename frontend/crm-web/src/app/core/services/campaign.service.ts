@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class CampaignService {
-  private base = 'http://localhost:5234/api/campaign';
+  private base = 'http://localhost:5234/api/campaigns';
   constructor(private http: HttpClient) {}
 
   getCampaigns(): Observable<any[]> { return this.http.get<any[]>(this.base); }
@@ -12,4 +12,5 @@ export class CampaignService {
   createCampaign(data: any): Observable<any> { return this.http.post(this.base, data); }
   updateCampaign(id: number, data: any): Observable<any> { return this.http.put(`${this.base}/${id}`, data); }
   closeCampaign(id: number): Observable<any> { return this.http.post(`${this.base}/${id}/close`, {}); }
+  deleteCampaign(id: number): Observable<any> { return this.http.delete(`${this.base}/${id}`); }
 }

@@ -1,35 +1,117 @@
-<div class="dashboard">
-  <h1>Sales Dashboard</h1>
+<div class="dashboard-wrapper">
+  <div class="header-row">
+    <div>
+      <h1>💼 Sales Executive Overview</h1>
+      <p class="subtitle">Real-time pipeline analytics, lead stages, and active opportunities</p>
+    </div>
+    <a routerLink="/sales/leads" class="primary-action-btn">
+      View All Leads →
+    </a>
+  </div>
   
-  <div class="quick-stats">
-    <div class="stat">Assigned Leads: <strong>12</strong></div>
-    <div class="stat">Pending Follow-ups: <strong>5</strong></div>
-    <div class="stat">Won This Month: <strong>3</strong></div>
+  <div class="metrics-grid">
+    <div class="metric-card total-card">
+      <div class="metric-icon">👥</div>
+      <div class="metric-info">
+        <span class="metric-label">Total Leads</span>
+        <strong class="metric-value">{{ stats.total }}</strong>
+      </div>
+    </div>
+    <div class="metric-card new-card">
+      <div class="metric-icon">🆕</div>
+      <div class="metric-info">
+        <span class="metric-label">New Inbound</span>
+        <strong class="metric-value">{{ stats.newLeads }}</strong>
+      </div>
+    </div>
+    <div class="metric-card contacted-card">
+      <div class="metric-icon">💬</div>
+      <div class="metric-info">
+        <span class="metric-label">In Contact</span>
+        <strong class="metric-value">{{ stats.contacted }}</strong>
+      </div>
+    </div>
+    <div class="metric-card qualified-card">
+      <div class="metric-icon">⭐</div>
+      <div class="metric-info">
+        <span class="metric-label">Qualified (MQL/SQL)</span>
+        <strong class="metric-value">{{ stats.qualified }}</strong>
+      </div>
+    </div>
+    <div class="metric-card won-card">
+      <div class="metric-icon">🏆</div>
+      <div class="metric-info">
+        <span class="metric-label">Deals Won</span>
+        <strong class="metric-value">{{ stats.won }}</strong>
+      </div>
+    </div>
   </div>
 
-  <div class="row">
-    <div class="col">
-      <h2>My Leads</h2>
-      <table class="table">
+  <div class="content-grid">
+    <div class="card leads-summary-card">
+      <div class="card-header">
+        <h2>🔥 Priority Leads</h2>
+        <a routerLink="/sales/leads" class="sub-link">See all ({{ leads.length }})</a>
+      </div>
+
+      <div *ngIf="leads.length === 0" class="empty-msg">
+        No active leads found in pipeline.
+      </div>
+
+      <table class="summary-table" *ngIf="leads.length > 0">
         <thead>
-          <tr><th>Company</th><th>Status</th><th>Next Follow-up</th></tr>
+          <tr>
+            <th>Lead</th>
+            <th>Company</th>
+            <th>Score</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let lead of myLeads">
-            <td>{{ lead.name }}</td>
-            <td><span class="badge">{{ lead.status }}</span></td>
-            <td>{{ lead.nextFollowUp }}</td>
+          <tr *ngFor="let lead of leads.slice(0, 6)">
+            <td>
+              <strong>{{ lead.fullName }}</strong>
+              <small>{{ lead.email }}</small>
+            </td>
+            <td>{{ lead.companyName }}</td>
+            <td>
+              <span class="score-pill">⚡ {{ lead.score || 0 }} pts</span>
+            </td>
+            <td>
+              <span class="badge" [class]="lead.status">{{ lead.status }}</span>
+            </td>
+            <td>
+              <a [routerLink]="['/sales/leads', lead.leadId]" class="lead-link">Open →</a>
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <div class="col">
-      <h2>Recent Activity</h2>
-      <div class="activity-feed">
-        <div class="activity" *ngFor="let act of recentActivities">
-          <span class="type">{{ act.type }}</span>
-          <span class="desc">{{ act.detail }}</span>
-          <span class="time">{{ act.time }}</span>
+
+    <div class="card quick-tips-card">
+      <h2>💡 Sales Playbook & Actions</h2>
+      <div class="tips-list">
+        <div class="tip-item">
+          <div class="tip-icon">⚡</div>
+          <div>
+            <strong>Prioritize High Score Leads</strong>
+            <p>Leads above 40 points have visited high-value pages and matched decision maker roles.</p>
+          </div>
+        </div>
+        <div class="tip-item">
+          <div class="tip-icon">📞</div>
+          <div>
+            <strong>Log Every Touchpoint</strong>
+            <p>Use the activity logger on each lead page to document calls, emails, and meetings.</p>
+          </div>
+        </div>
+        <div class="tip-item">
+          <div class="tip-icon">🎯</div>
+          <div>
+            <strong>Track Conversion Stages</strong>
+            <p>Update status from NEW → CONTACTED → QUALIFIED → WON to track conversion velocity.</p>
+          </div>
         </div>
       </div>
     </div>

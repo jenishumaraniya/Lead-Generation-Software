@@ -6,6 +6,7 @@ namespace CrmLeadTool.Api.Controllers;
 
 [ApiController]
 [Route("api/campaigns")]
+[Route("api/campaign")]
 public class CampaignController : ControllerBase
 {
     private readonly CampaignService _campaignService;
@@ -53,6 +54,52 @@ public class CampaignController : ControllerBase
         if (campaign == null)
             return NotFound(new { error = $"Campaign with ID {id} not found." });
         return Ok(campaign);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateCampaign(int id, [FromBody] CreateCampaignDto dto)
+    {
+        try
+        {
+            var campaign = await _campaignService.UpdateCampaignAsync(id, dto);
+            return Ok(campaign);
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpPost("{id}/close")]
+    public async Task<IActionResult> CloseCampaign(int id)
+    {
+        try
+        {
+            var campaign = await _campaignService.CloseCampaignAsync(id);
+            return Ok(new { success = true, campaign.CampaignId, campaign.Status });
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteCampaign(int id)
+    {
+        try
+        {
+            await _campaignService.DeleteCampaignAsync(id);
+            return Ok(new { success = true, message = "Campaign deleted" });
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
     }
 
     [HttpGet("{id}/recipients")]
