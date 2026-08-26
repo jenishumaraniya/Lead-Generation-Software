@@ -1,85 +1,21 @@
-<!-- 
-
-<nav class="navbar">
-  <div class="logo" routerLink="/">
-    Lead<span>Tech</span>
-  </div>
-  <div class="nav-links">
-    <a routerLink="/" [class.active]="isActiveRoute('/')">Home</a>
-    <a routerLink="/products" [class.active]="isActiveRoute('/products')">Products</a>
-    <a routerLink="/pricing" [class.active]="isActiveRoute('/pricing')">Pricing</a>
-    <a (click)="scrollToContact()">Contact</a>
-  </div>
-</nav>
+<ng-container *ngIf="!router.url.startsWith('/admin')">
+  <nav class="navbar">
+    <div class="logo" routerLink="/">
+      Lead<span>Tech</span>
+    </div>
+    <div class="nav-links">
+      <a routerLink="/" [class.active]="isActiveRoute('/')">Home</a>
+      <a routerLink="/products" [class.active]="isActiveRoute('/products')">Products</a>
+      <a routerLink="/pricing" [class.active]="isActiveRoute('/pricing')">Pricing</a>
+      <a (click)="scrollToContact()">Contact</a>
+      <a routerLink="/admin" class="nav-admin-link">⚡ Platform Engine</a>
+    </div>
+  </nav>
+</ng-container>
 
 <router-outlet></router-outlet>
 
-<div *ngIf="toastMessage" class="toast" [class.error]="isToastError">
-  {{ toastMessage }}
-  <button (click)="toastMessage = ''">×</button>
-</div>
-
-
-<app-floating-contact-button (openForm)="openContactForm()"></app-floating-contact-button>
-
-
-<app-contact-form 
-  *ngIf="showContactForm"
-  [isOpen]="showContactForm"
-  [preselectedProductId]="preselectedProductId"
-  (close)="closeContactForm()"
-  (submit)="handleFormSubmit($event)"
-  (leadSubmitted)="handleLeadSubmitted($event)"
-  (showToast)="showToastMessage($event)"
-></app-contact-form>
-
-
-<div *ngIf="showConsentPopup" class="cookie-consent" role="dialog" aria-live="polite" aria-label="Cookie consent popup">
-  <div class="cookie-consent__panel">
-    <div class="cookie-consent__text">
-      <h2>We value your privacy</h2>
-      <p>
-        We use cookies to remember your choices, improve your experience, and understand how visitors engage with our website.
-      </p>
-    </div>
-    <div class="cookie-consent__actions">
-      <button type="button" class="cookie-button cookie-button--secondary" data-testid="reject-cookie-consent" (click)="rejectCookies()">
-        Reject
-      </button>
-      <button type="button" class="cookie-button cookie-button--primary" data-testid="accept-cookie-consent" (click)="acceptCookies()">
-        Accept
-      </button>
-    </div>
-  </div>
-</div> -->
-
-<!-- ============================================= -->
-<!-- PUBLIC WEBSITE NAVBAR (only on public pages)  -->
-<!-- ============================================= -->
-<nav class="navbar" *ngIf="isPublicRoute">
-  <div class="logo" routerLink="/">
-    Lead<span>Tech</span>
-  </div>
-  <div class="nav-links">
-    <a routerLink="/" [class.active]="isActiveRoute('/')">Home</a>
-    <a routerLink="/products" [class.active]="isActiveRoute('/products')">Products</a>
-    <a routerLink="/pricing" [class.active]="isActiveRoute('/pricing')">Pricing</a>
-    <a (click)="scrollToContact()">Contact</a>
-  </div>
-</nav>
-
-<router-outlet></router-outlet>
-
-<!-- Toast Notification -->
-<div *ngIf="toastMessage" class="toast" [class.error]="isToastError">
-  {{ toastMessage }}
-  <button (click)="toastMessage = ''">×</button>
-</div>
-
-<!-- ============================================= -->
-<!-- PUBLIC ELEMENTS (only on public pages)        -->
-<!-- ============================================= -->
-<ng-container *ngIf="isPublicRoute">
+<ng-container *ngIf="!router.url.startsWith('/admin')">
   <!-- Floating Contact Button -->
   <app-floating-contact-button (openForm)="openContactForm()"></app-floating-contact-button>
 
@@ -91,7 +27,6 @@
     (close)="closeContactForm()"
     (submit)="handleFormSubmit($event)"
     (leadSubmitted)="handleLeadSubmitted($event)"
-    (showToast)="showToastMessage($event)"
   ></app-contact-form>
 
   <!-- Cookie Consent Popup -->

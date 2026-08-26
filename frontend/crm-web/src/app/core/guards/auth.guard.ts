@@ -1,6 +1,18 @@
-import { Injectable } from '@angular/core';
-import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
+import { inject, Injectable } from '@angular/core';
+import { CanActivateFn, CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+
+export const authGuard: CanActivateFn = (route, state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.isAuthenticated()) {
+    return true;
+  }
+
+  router.navigate(['/admin/login'], { queryParams: { returnUrl: state.url } });
+  return false;
+};
 
 @Injectable({
   providedIn: 'root'
@@ -10,20 +22,18 @@ export class AuthGuard implements CanActivate {
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
     const user = this.authService.getCurrentUser();
-    const expectedRole = route.data['role'] as 'ADMIN' | 'SALES' | undefined;
+    const expectedRole = route.data['role'] as 'ADMIN' | 'SALES_REP' | 'SALES' | undefined;
 
-    if (!user) {
-      this.router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/admin/login'], { queryParams: { returnUrl: state.url } });
       return false;
     }
 
-    // If route requires a specific role
-    if (expectedRole && user.role !== expectedRole) {
-      // If admin, can access everything; but if expected is SALES, and user is ADMIN, allow too.
-      if (user.role === 'ADMIN') {
+    if (expectedRole && !this.authService.hasRole(expectedRole)) {
+      if (this.authService.isAdmin()) {
         return true;
       }
-      this.router.navigate(['/']);
+      this.router.navigate(['/admin/dashboard']);
       return false;
     }
 

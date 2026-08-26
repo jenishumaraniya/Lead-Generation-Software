@@ -37,9 +37,9 @@
     </button>
 
     <!-- CATEGORY BUTTONS -->
-    @for (category of categories; track category.id) {
-      <button [class.active]="selectedCategoryId === category.id" (click)="selectCategory(category.id)">
-        {{ category.name }}
+    @for (category of categories; track category.categoryId) {
+      <button [class.active]="selectedCategoryId === category.categoryId" (click)="selectCategory(category.categoryId)">
+        {{ category.categoryName }}
       </button>
     }
   </section>

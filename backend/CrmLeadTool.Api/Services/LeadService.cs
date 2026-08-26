@@ -2,64 +2,70 @@ using CrmLeadTool.Api.Data;
 using CrmLeadTool.Api.DTOs;
 using CrmLeadTool.Api.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
 
 namespace CrmLeadTool.Api.Services;
-
-public class DuplicateLeadException : Exception
-{
-    public List<int> DuplicateLeadIds { get; }
-
-    public DuplicateLeadException(string message, List<int> duplicateLeadIds)
-        : base(message)
-    {
-        DuplicateLeadIds = duplicateLeadIds;
-    }
-}
 
 public class LeadService
 {
     private readonly AppDbContext _context;
     private readonly DuplicateService _duplicateService;
+    private readonly ScoringService _scoringService;
+    private readonly QualificationService _qualificationService;
+    private readonly ILogger<LeadService> _logger;
 
-    public LeadService(AppDbContext context, DuplicateService duplicateService)
+    public LeadService(
+        AppDbContext context,
+        DuplicateService duplicateService,
+        ScoringService scoringService,
+        QualificationService qualificationService,
+        ILogger<LeadService> logger)
     {
         _context = context;
         _duplicateService = duplicateService;
+        _scoringService = scoringService;
+        _qualificationService = qualificationService;
+        _logger = logger;
     }
 
     public async Task<Lead> CreateLeadFromFormAsync(LeadSubmitDto dto)
     {
-        // 1. Check for duplicates
-        var duplicates = await _duplicateService.FindAllDuplicatesAsync(dto);
-        if (duplicates.Any())
+        // 1. Multi-key deduplication
+        var existing = await _duplicateService.FindDuplicateLeadAsync(dto.Email, dto.Phone, dto.FullName, dto.CompanyName);
+        if (existing != null)
         {
-            throw new DuplicateLeadException(
-                "Lead already exists.",
-                duplicates.Select(d => d.LeadId).ToList()
-            );
+            // Update existing lead context and append requirement
+            existing.BusinessRequirement = $"{existing.BusinessRequirement} | [Update {DateTime.UtcNow:g}]: {dto.BusinessRequirement}";
+            if (!string.IsNullOrEmpty(dto.Timeline)) existing.Timeline = dto.Timeline;
+            if (dto.Quantity.HasValue) existing.Quantity = dto.Quantity;
+            existing.UpdatedAt = DateTime.UtcNow;
+
+            await _scoringService.ApplyScoreEventAsync(existing.LeadId, "REPEAT_VISIT", "Returning lead submitted additional inquiry", 15);
+            await _qualificationService.EvaluateQualificationAsync(existing.LeadId);
+            await _context.SaveChangesAsync();
+            return existing;
         }
 
-        // 2. Find Visitor by AnonymousId
+        // 2. Link Visitor and Prospect if available
         int? visitorId = null;
         if (!string.IsNullOrEmpty(dto.VisitorId))
         {
-            var visitor = await _context.Visitors
-                .FirstOrDefaultAsync(v => v.AnonymousId == dto.VisitorId);
+            var visitor = await _context.Visitors.FirstOrDefaultAsync(v => v.AnonymousId == dto.VisitorId);
             if (visitor != null)
+            {
                 visitorId = visitor.VisitorId;
+                visitor.LastSeenAt = DateTime.UtcNow;
+            }
         }
 
-        // 3. Find Prospect by Email
         int? prospectId = null;
-        if (!string.IsNullOrEmpty(dto.ProspectEmail))
+        if (!string.IsNullOrEmpty(dto.ProspectEmail) || !string.IsNullOrEmpty(dto.Email))
         {
-            var prospect = await _duplicateService.FindProspectByEmailAsync(dto.ProspectEmail);
-            if (prospect != null)
-                prospectId = prospect.ProspectId;
+            var searchEmail = string.IsNullOrEmpty(dto.ProspectEmail) ? dto.Email : dto.ProspectEmail;
+            var prospect = await _duplicateService.FindProspectByEmailAsync(searchEmail);
+            if (prospect != null) prospectId = prospect.ProspectId;
         }
 
-        // 4. Create Lead
+        // 3. Create lead record
         var lead = new Lead
         {
             VisitorId = visitorId,
@@ -86,132 +92,176 @@ public class LeadService
         _context.Leads.Add(lead);
         await _context.SaveChangesAsync();
 
+        // 4. Initial scoring & qualification evaluation
+        await _scoringService.ApplyScoreEventAsync(lead.LeadId, "FORM_SUBMIT", "Inbound form submitted with commercial requirement");
+
+        var titleLower = (dto.JobTitle ?? "").ToLower();
+        if (titleLower.Contains("vp") || titleLower.Contains("director") || titleLower.Contains("head") || titleLower.Contains("chief") || titleLower.Contains("manager"))
+        {
+            await _scoringService.ApplyScoreEventAsync(lead.LeadId, "ROLE_MATCH", $"Target decision maker role identified: {dto.JobTitle}");
+        }
+
+        await _qualificationService.EvaluateQualificationAsync(lead.LeadId);
+
         return lead;
     }
 
-    public async Task<List<Lead>> GetAllLeadsAsync()
+    public async Task<List<object>> GetAllLeadsAsync()
     {
-        // ✅ Remove Includes - just get the leads
         return await _context.Leads
+            .Include(l => l.Visitor)
+            .Include(l => l.Prospect)
+            .Include(l => l.ScoreHistories)
             .OrderByDescending(l => l.CreatedAt)
-            .ToListAsync();
+            .Select(l => new
+            {
+                l.LeadId,
+                l.FullName,
+                l.Email,
+                l.CompanyName,
+                l.JobTitle,
+                l.Domain,
+                l.Industry,
+                l.Country,
+                l.Phone,
+                l.Quantity,
+                l.Timeline,
+                l.BusinessRequirement,
+                l.Source,
+                l.Status,
+                l.Score,
+                l.Qualification,
+                l.CreatedAt,
+                l.UpdatedAt,
+                ProductIds = l.GetProductIdList(),
+                Visitor = l.Visitor != null ? new
+                {
+                    l.Visitor.AnonymousId,
+                    l.Visitor.FirstSeenAt,
+                    l.Visitor.LastSeenAt
+                } : null,
+                Prospect = l.Prospect != null ? new
+                {
+                    l.Prospect.ProspectId,
+                    l.Prospect.Name,
+                    l.Prospect.Email,
+                    l.Prospect.Status
+                } : null
+            })
+            .ToListAsync<object>();
     }
 
-    public async Task<Lead?> GetLeadByIdAsync(int id)
+    public async Task<object?> GetLeadByIdAsync(int id)
     {
-        // ✅ Simple query without Includes
-        return await _context.Leads
+        var lead = await _context.Leads
+            .Include(l => l.Visitor)
+                .ThenInclude(v => v!.Activities)
+            .Include(l => l.Prospect)
+                .ThenInclude(p => p!.ProfessionalProfile)
+            .Include(l => l.Prospect)
+                .ThenInclude(p => p!.Company)
+                    .ThenInclude(c => c!.Enrichment)
+            .Include(l => l.ScoreHistories)
+            .Include(l => l.Handoffs)
             .FirstOrDefaultAsync(l => l.LeadId == id);
-    }
 
-    public async Task<List<Lead>> SearchLeadsAsync(LeadSearchDto dto)
-    {
-        var query = _context.Leads.AsQueryable();
+        if (lead == null) return null;
 
-        if (!string.IsNullOrEmpty(dto.Email))
-            query = query.Where(l => l.Email.Contains(dto.Email));
-
-        if (!string.IsNullOrEmpty(dto.CompanyName))
-            query = query.Where(l => l.CompanyName.Contains(dto.CompanyName));
-
-        if (!string.IsNullOrEmpty(dto.FullName))
-            query = query.Where(l => l.FullName.Contains(dto.FullName));
-
-        if (!string.IsNullOrEmpty(dto.Status))
-            query = query.Where(l => l.Status == dto.Status);
-
-        if (!string.IsNullOrEmpty(dto.Qualification))
-            query = query.Where(l => l.Qualification == dto.Qualification);
-
-        if (dto.MinScore.HasValue)
-            query = query.Where(l => l.Score >= dto.MinScore);
-
-        if (dto.MaxScore.HasValue)
-            query = query.Where(l => l.Score <= dto.MaxScore);
-
-        if (dto.FromDate.HasValue)
-            query = query.Where(l => l.CreatedAt >= dto.FromDate);
-
-        if (dto.ToDate.HasValue)
-            query = query.Where(l => l.CreatedAt <= dto.ToDate);
-
-        return await query
-            .OrderByDescending(l => l.CreatedAt)
-            .ToListAsync();
+        return new
+        {
+            lead.LeadId,
+            lead.FullName,
+            lead.Email,
+            lead.CompanyName,
+            lead.JobTitle,
+            lead.Domain,
+            lead.Industry,
+            lead.Country,
+            lead.Phone,
+            lead.Quantity,
+            lead.Timeline,
+            lead.BusinessRequirement,
+            lead.Source,
+            lead.Status,
+            lead.Score,
+            lead.Qualification,
+            lead.CreatedAt,
+            lead.UpdatedAt,
+            ProductIds = lead.GetProductIdList(),
+            Visitor = lead.Visitor != null ? new
+            {
+                lead.Visitor.AnonymousId,
+                lead.Visitor.FirstSeenAt,
+                lead.Visitor.LastSeenAt,
+                Activities = lead.Visitor.Activities.OrderByDescending(a => a.Timestamp).Select(a => new
+                {
+                    a.ActivityId,
+                    a.ActivityType,
+                    a.PageUrl,
+                    a.Timestamp
+                })
+            } : null,
+            Prospect = lead.Prospect != null ? new
+            {
+                lead.Prospect.ProspectId,
+                lead.Prospect.Name,
+                lead.Prospect.Email,
+                lead.Prospect.JobTitle,
+                lead.Prospect.LinkedInUrl,
+                ProfessionalProfile = lead.Prospect.ProfessionalProfile != null ? new
+                {
+                    lead.Prospect.ProfessionalProfile.Title,
+                    lead.Prospect.ProfessionalProfile.Seniority,
+                    lead.Prospect.ProfessionalProfile.Function,
+                    lead.Prospect.ProfessionalProfile.Location,
+                    lead.Prospect.ProfessionalProfile.Summary
+                } : null,
+                Company = lead.Prospect.Company != null ? new
+                {
+                    lead.Prospect.Company.Name,
+                    lead.Prospect.Company.Domain,
+                    lead.Prospect.Company.Industry,
+                    lead.Prospect.Company.Size,
+                    Enrichment = lead.Prospect.Company.Enrichment != null ? new
+                    {
+                        lead.Prospect.Company.Enrichment.Growth,
+                        lead.Prospect.Company.Enrichment.PublicSignals
+                    } : null
+                } : null
+            } : null,
+            ScoreHistories = lead.ScoreHistories.OrderByDescending(sh => sh.Timestamp).Select(sh => new
+            {
+                sh.LeadScoreHistoryId,
+                sh.RuleName,
+                sh.EventType,
+                sh.Delta,
+                sh.TotalScore,
+                sh.Reason,
+                sh.Timestamp
+            }),
+            Handoffs = lead.Handoffs.OrderByDescending(h => h.CreatedAt).Select(h => new
+            {
+                h.LeadHandoffId,
+                h.Destination,
+                h.Status,
+                h.HandedOffAt,
+                h.Retries,
+                h.ErrorMessage
+            })
+        };
     }
 
     public async Task<Lead> UpdateLeadAsync(int id, LeadUpdateDto dto)
     {
         var lead = await _context.Leads.FindAsync(id);
-        if (lead == null)
-            throw new ArgumentException("Lead not found.");
+        if (lead == null) throw new ArgumentException("Lead not found.");
 
-        var oldStatus = lead.Status;
-
-        if (!string.IsNullOrEmpty(dto.Status))
-            lead.Status = dto.Status;
-
-        if (!string.IsNullOrEmpty(dto.Qualification))
-            lead.Qualification = dto.Qualification;
-
-        if (dto.Score.HasValue)
-            lead.Score = dto.Score;
+        if (!string.IsNullOrEmpty(dto.Status)) lead.Status = dto.Status;
+        if (!string.IsNullOrEmpty(dto.Qualification)) lead.Qualification = dto.Qualification;
+        if (dto.Score.HasValue) lead.Score = dto.Score;
 
         lead.UpdatedAt = DateTime.UtcNow;
-
         await _context.SaveChangesAsync();
-        return lead;
-    }
-
-    public async Task AddLeadNoteAsync(int leadId, string note, string? createdBy = null)
-    {
-        var leadNote = new LeadNote
-        {
-            LeadId = leadId,
-            NoteText = note,
-            CreatedAt = DateTime.UtcNow,
-            CreatedBy = createdBy ?? "SYSTEM"
-        };
-        _context.LeadNotes.Add(leadNote);
-        await _context.SaveChangesAsync();
-    }
-
-    public async Task<Lead> ConvertProspectToLeadAsync(int prospectId, LeadSubmitDto dto)
-    {
-        var prospect = await _context.Prospects
-            .FirstOrDefaultAsync(p => p.ProspectId == prospectId);
-        if (prospect == null)
-            throw new ArgumentException("Prospect not found.");
-
-        var existingLead = await _context.Leads
-            .FirstOrDefaultAsync(l => l.ProspectId == prospectId);
-        if (existingLead != null)
-            throw new InvalidOperationException("Lead already exists for this prospect.");
-
-        var lead = new Lead
-        {
-            VisitorId = prospect.VisitorId,
-            ProspectId = prospect.ProspectId,
-            CompanyName = dto.CompanyName,
-            FullName = prospect.Name,
-            Email = prospect.Email,
-            JobTitle = prospect.JobTitle ?? dto.JobTitle,
-            Phone = prospect.Phone ?? dto.Phone,
-            Industry = dto.Industry,
-            Source = "PROSPECT_CONVERSION",
-            Status = "NEW",
-            Score = 0,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-        lead.SetProductIdList(dto.Products ?? Array.Empty<int>());
-
-        _context.Leads.Add(lead);
-        await _context.SaveChangesAsync();
-
-        prospect.Status = "CONVERTED";
-        await _context.SaveChangesAsync();
-
         return lead;
     }
 }

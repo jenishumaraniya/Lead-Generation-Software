@@ -23,7 +23,7 @@ public class EmailSchedulerWorker : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             await ProcessScheduledEmails(stoppingToken);
-            await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken); // check every 5 minutes
+            await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
         }
     }
 
@@ -33,7 +33,6 @@ public class EmailSchedulerWorker : BackgroundService
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var emailService = scope.ServiceProvider.GetRequiredService<EmailService>();
 
-        // Find recipients that are ENROLLED or IN_PROGRESS and have a next step due
         var recipients = await context.CampaignRecipients
             .Include(cr => cr.Campaign)
                 .ThenInclude(c => c.Steps)
@@ -43,20 +42,15 @@ public class EmailSchedulerWorker : BackgroundService
 
         foreach (var recipient in recipients)
         {
-            // Check if we should send the next email
-            var lastEmail = recipient.EmailMessages
-                .OrderByDescending(e => e.SentAt)
-                .FirstOrDefault();
+            var lastEmail = recipient.EmailMessages.OrderByDescending(e => e.SentAt).FirstOrDefault();
+
             if (lastEmail != null)
             {
                 var currentStep = recipient.CurrentStep ?? 1;
-                var step = recipient.Campaign.Steps
-                    .FirstOrDefault(s => s.StepNumber == currentStep);
+                var step = recipient.Campaign.Steps.FirstOrDefault(s => s.StepNumber == currentStep);
                 if (step == null) continue;
 
-                var dueTime = lastEmail.SentAt
-                    .AddDays(step.DelayDays)
-                    .AddHours(step.DelayHours);
+                var dueTime = lastEmail.SentAt.AddDays(step.DelayDays).AddHours(step.DelayHours);
                 if (DateTime.UtcNow >= dueTime && recipient.Status != "COMPLETED")
                 {
                     try
@@ -72,10 +66,7 @@ public class EmailSchedulerWorker : BackgroundService
             }
             else
             {
-                // No email sent yet – send the first step
-                var firstStep = recipient.Campaign.Steps
-                    .OrderBy(s => s.StepNumber)
-                    .FirstOrDefault();
+                var firstStep = recipient.Campaign.Steps.OrderBy(s => s.StepNumber).FirstOrDefault();
                 if (firstStep != null)
                 {
                     try

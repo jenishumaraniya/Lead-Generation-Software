@@ -11,6 +11,4 @@ public class LeadSearchDto
     public int? MaxScore { get; set; }
     public DateTime? FromDate { get; set; }
     public DateTime? ToDate { get; set; }
-    public int? Page { get; set; }
-    public int? PageSize { get; set; }
 }

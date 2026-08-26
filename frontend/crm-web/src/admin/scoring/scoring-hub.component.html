@@ -1,0 +1,84 @@
+<div class="scoring-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">⚙️ Configurable Lead Scoring Engine Rules</h2>
+      <p class="page-subtitle">Adjust positive and negative point weights for behavioral signals, intent triggers, and profile fit.</p>
+    </div>
+  </div>
+
+  <!-- Category Filter Chips -->
+  <div class="category-chips">
+    <button
+      *ngFor="let cat of categories"
+      class="cat-chip"
+      [class.active]="selectedCategory === cat"
+      (click)="selectedCategory = cat"
+    >
+      {{ cat }}
+    </button>
+  </div>
+
+  <!-- Rules Table Card -->
+  <div class="card table-card">
+    <div class="table-container" *ngIf="filteredRules.length > 0; else noRules">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Rule Name</th>
+            <th>Event Signal</th>
+            <th>Category</th>
+            <th>Impact</th>
+            <th>Score Delta (Points)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let rule of filteredRules" [class.row-disabled]="!rule.isActive">
+            <td>
+              <div class="rule-name-cell">
+                <strong>{{ rule.name }}</strong>
+                <small class="rule-desc">{{ rule.description }}</small>
+              </div>
+            </td>
+            <td>
+              <code>{{ rule.eventType }}</code>
+            </td>
+            <td>
+              <span class="category-pill">{{ rule.category }}</span>
+            </td>
+            <td>
+              <span class="impact-badge" [class.impact-pos]="rule.direction === 'POSITIVE'" [class.impact-neg]="rule.direction === 'NEGATIVE'">
+                {{ rule.direction }}
+              </span>
+            </td>
+            <td>
+              <div class="points-control">
+                <button class="btn-step" (click)="adjustPoints(rule, -5)">-</button>
+                <input
+                  type="number"
+                  [(ngModel)]="rule.points"
+                  (change)="updateRule(rule)"
+                  class="points-input"
+                />
+                <button class="btn-step" (click)="adjustPoints(rule, 5)">+</button>
+              </div>
+            </td>
+            <td>
+              <label class="switch">
+                <input type="checkbox" [checked]="rule.isActive" (change)="toggleActive(rule)" />
+                <span class="slider"></span>
+              </label>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #noRules>
+      <div class="empty-state">
+        <p>No scoring rules found for this category.</p>
+      </div>
+    </ng-template>
+  </div>
+</div>

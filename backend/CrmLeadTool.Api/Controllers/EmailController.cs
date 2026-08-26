@@ -1,6 +1,8 @@
 using CrmLeadTool.Api.DTOs;
 using CrmLeadTool.Api.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Text;
+using System.Text.Json;
 
 namespace CrmLeadTool.Api.Controllers;
 
@@ -9,16 +11,16 @@ namespace CrmLeadTool.Api.Controllers;
 public class EmailController : ControllerBase
 {
     private readonly EmailService _emailService;
-    private readonly TrackingService _trackingService;
+    private readonly IConfiguration _config;
 
-    public EmailController(EmailService emailService, TrackingService trackingService)
+    public EmailController(EmailService emailService, IConfiguration config)
     {
         _emailService = emailService;
-        _trackingService = trackingService;
+        _config = config;
     }
 
     [HttpPost("send")]
-    public async Task<IActionResult> SendEmail(EmailSendDto dto)
+    public async Task<IActionResult> SendEmail([FromBody] EmailSendDto dto)
     {
         try
         {
@@ -36,57 +38,127 @@ public class EmailController : ControllerBase
         }
     }
 
-    // Webhook endpoint for Mailtrap (or other provider) events
+[HttpPost("test")]
+public async Task<IActionResult> TestEmail([FromBody] string toEmail)
+{
+    try
+    {
+        var apiKey = _config["Mailtrap:ApiKey"];
+        var fromEmail = _config["Email:From"];
+        var fromName = _config["Mailtrap:FromName"] ?? "CRM System";
+
+        // Validate API key
+        if (string.IsNullOrEmpty(apiKey) || apiKey == "YOUR_MAILTRAP_API_KEY_HERE")
+        {
+            return BadRequest(new { 
+                success = false, 
+                error = "Mailtrap API key is not configured. Please add your API key to appsettings.json" 
+            });
+        }
+
+        // Validate from email
+        if (string.IsNullOrEmpty(fromEmail) || fromEmail == "noreply@yourdomain.com")
+        {
+            return BadRequest(new { 
+                success = false, 
+                error = "From email is not configured. Please add a verified domain email to appsettings.json" 
+            });
+        }
+
+        using var httpClient = new HttpClient();
+        var payload = new
+        {
+            from = new { email = fromEmail, name = fromName },
+            to = new[] { new { email = toEmail } },
+            subject = "✅ Test Email from CRM",
+            html = $@"
+                <h1>✅ Test Successful!</h1>
+                <p>Your Mailtrap integration is working correctly.</p>
+                <p>Sent at: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC</p>
+                <hr>
+                <p><strong>To:</strong> {toEmail}</p>
+                <p><strong>From:</strong> {fromEmail}</p>
+                <p><strong>API Key:</strong> {apiKey.Substring(0, 8)}...{apiKey.Substring(apiKey.Length - 4)}</p>
+            ",
+            text = $"Test Successful! Sent at {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC"
+        };
+
+        var json = System.Text.Json.JsonSerializer.Serialize(payload);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        httpClient.DefaultRequestHeaders.Clear();
+        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+
+        var response = await httpClient.PostAsync(
+            "https://send.api.mailtrap.io/api/send",
+            content
+        );
+
+        var responseBody = await response.Content.ReadAsStringAsync();
+
+        // Log the full response for debugging
+        Console.WriteLine($"Mailtrap Response Status: {response.StatusCode}");
+        Console.WriteLine($"Mailtrap Response Body: {responseBody}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            return Ok(new
+            {
+                success = true,
+                message = "Email sent successfully!",
+                to = toEmail,
+                from = fromEmail,
+                response = responseBody
+            });
+        }
+        else
+        {
+            // Try to parse the error
+            string errorMessage = responseBody;
+            try
+            {
+                using var doc = JsonDocument.Parse(responseBody);
+                if (doc.RootElement.TryGetProperty("errors", out var errors))
+                {
+                    var errorList = new List<string>();
+                    foreach (var error in errors.EnumerateArray())
+                    {
+                        errorList.Add(error.GetString() ?? "Unknown error");
+                    }
+                    errorMessage = string.Join(", ", errorList);
+                }
+            }
+            catch { }
+
+            return StatusCode((int)response.StatusCode, new
+            {
+                success = false,
+                statusCode = (int)response.StatusCode,
+                error = errorMessage,
+                fullResponse = responseBody
+            });
+        }
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { 
+            success = false, 
+            error = ex.Message,
+            stackTrace = ex.StackTrace 
+        });
+    }
+}
     [HttpPost("webhook")]
-    public async Task<IActionResult> Webhook([FromBody] MailtrapWebhookDto dto)
+    public async Task<IActionResult> Webhook([FromBody] EmailEventWebhookDto dto)
     {
         try
         {
-            // Map Mailtrap event to our internal format
-            var eventDto = new EmailEventWebhookDto
-            {
-                EventType = dto.Event.ToUpper(),
-                ProviderMessageId = dto.Message.Message_Id,
-                RecipientEmail = dto.Recipient,
-                ClickUrl = dto.Url,
-                UserAgent = dto.User_Agent,
-                IpAddress = dto.Ip,
-                Timestamp = dto.Timestamp,
-                ProviderEventId = $"{dto.Message.Message_Id}_{dto.Event}"
-            };
-
-            await _emailService.ProcessEmailEventAsync(eventDto);
+            await _emailService.ProcessEmailEventAsync(dto);
             return Ok();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            // Log error but return 200 to prevent retries
             return Ok();
         }
-    }
-
-    // Tracking pixel endpoint (for opens)
-    [HttpGet("tracking/open")]
-    public async Task<IActionResult> TrackOpen([FromQuery] string tid)
-    {
-        var userAgent = Request.Headers["User-Agent"].ToString();
-        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-
-        await _trackingService.TrackOpenAsync(tid, userAgent, ipAddress);
-
-        // Return 1x1 transparent GIF
-        var pixel = new byte[] { 0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x01, 0x00, 0x01, 0x00, 0x80, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x21, 0xF9, 0x04, 0x01, 0x00, 0x00, 0x00, 0x00, 0x2C, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x02, 0x02, 0x44, 0x01, 0x00, 0x3B };
-        return File(pixel, "image/gif");
-    }
-
-    // Click redirect endpoint
-    [HttpGet("tracking/click")]
-    public async Task<IActionResult> TrackClick([FromQuery] string tid, [FromQuery] string url)
-    {
-        var userAgent = Request.Headers["User-Agent"].ToString();
-        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-
-        await _trackingService.TrackClickAsync(tid, url, userAgent, ipAddress);
-        return Redirect(url);
     }
 }

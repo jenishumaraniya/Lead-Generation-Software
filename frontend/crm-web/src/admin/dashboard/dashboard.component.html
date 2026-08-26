@@ -1,0 +1,165 @@
+<div class="dashboard-page">
+  <!-- Top Banner / Header -->
+  <div class="dash-hero">
+    <div>
+      <h2 class="dash-title">B2B Lead Generation Engine Overview</h2>
+      <p class="dash-subtitle">Inbound website tracking + Outbound targeted prospecting + Automated LinkedIn enrichment.</p>
+    </div>
+    <div class="dash-actions">
+      <a routerLink="/admin/prospects" class="btn btn-primary">🎯 Target Discovery</a>
+      <a routerLink="/admin/campaigns" class="btn btn-secondary">✉️ Launch Sequence</a>
+    </div>
+  </div>
+
+  <!-- KPI Cards Grid -->
+  <div class="kpi-grid">
+    <div class="kpi-card card-purple">
+      <div class="kpi-icon">👁️</div>
+      <div class="kpi-content">
+        <span class="kpi-label">Inbound Visitors</span>
+        <span class="kpi-value">{{ stats.totalVisitors }}</span>
+        <span class="kpi-hint">Anonymous & tracked</span>
+      </div>
+    </div>
+
+    <div class="kpi-card card-blue">
+      <div class="kpi-icon">🎯</div>
+      <div class="kpi-content">
+        <span class="kpi-label">Discovered Prospects</span>
+        <span class="kpi-value">{{ stats.totalProspects }}</span>
+        <span class="kpi-hint">LinkedIn & ICP matched</span>
+      </div>
+    </div>
+
+    <div class="kpi-card card-emerald">
+      <div class="kpi-icon">⚡</div>
+      <div class="kpi-content">
+        <span class="kpi-label">Marketing Qualified (MQL)</span>
+        <span class="kpi-value">{{ stats.mqlCount }}</span>
+        <span class="kpi-hint">Active intent & engagement</span>
+      </div>
+    </div>
+
+    <div class="kpi-card card-rose">
+      <div class="kpi-icon">🔥</div>
+      <div class="kpi-content">
+        <span class="kpi-label">Sales Qualified (SQL / Hot)</span>
+        <span class="kpi-value">{{ stats.sqlCount }}</span>
+        <span class="kpi-hint">Verified need & decision maker</span>
+      </div>
+    </div>
+
+    <div class="kpi-card card-amber">
+      <div class="kpi-icon">🚀</div>
+      <div class="kpi-content">
+        <span class="kpi-label">CRM Handoffs</span>
+        <span class="kpi-value">{{ stats.handoffCount }}</span>
+        <span class="kpi-hint">Dispatched to Sales CRM</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Pipeline Sections -->
+  <div class="dash-split">
+    <!-- Recent High-Value Leads -->
+    <div class="dash-card">
+      <div class="card-header">
+        <div class="card-header-title">
+          <span>🔥</span>
+          <h3>Recent Generated Leads & Qualification</h3>
+        </div>
+        <a routerLink="/admin/leads" class="view-all">View All →</a>
+      </div>
+
+      <div class="table-container" *ngIf="recentLeads.length > 0; else noLeads">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Lead Name</th>
+              <th>Company</th>
+              <th>Stage</th>
+              <th>Score</th>
+              <th>Timeline</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let lead of recentLeads">
+              <td>
+                <div class="lead-name-cell">
+                  <strong>{{ lead.fullName }}</strong>
+                  <span class="lead-sub">{{ lead.email }}</span>
+                </div>
+              </td>
+              <td>{{ lead.companyName }}</td>
+              <td>
+                <span class="badge" [ngClass]="{
+                  'badge-sql': lead.qualification === 'SQL' || lead.qualification === 'HOT',
+                  'badge-mql': lead.qualification === 'MQL',
+                  'badge-cold': lead.qualification === 'COLD' || !lead.qualification
+                }">
+                  {{ lead.qualification || 'COLD' }}
+                </span>
+              </td>
+              <td>
+                <span class="score-pill">{{ lead.score || 0 }} pts</span>
+              </td>
+              <td><span class="lead-meta">{{ lead.timeline || 'Immediate' }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #noLeads>
+        <div class="empty-state">
+          <p>No leads captured yet. Submit a form from the public website or run discovery.</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Targeted Prospects Stream -->
+    <div class="dash-card">
+      <div class="card-header">
+        <div class="card-header-title">
+          <span>🎯</span>
+          <h3>Target Prospects & Enrichment</h3>
+        </div>
+        <a routerLink="/admin/prospects" class="view-all">View All →</a>
+      </div>
+
+      <div class="table-container" *ngIf="recentProspects.length > 0; else noProspects">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Prospect</th>
+              <th>Role</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let prospect of recentProspects">
+              <td>
+                <div class="lead-name-cell">
+                  <strong>{{ prospect.name }}</strong>
+                  <span class="lead-sub">{{ prospect.email }}</span>
+                </div>
+              </td>
+              <td><span class="lead-sub">{{ prospect.jobTitle || 'Executive' }}</span></td>
+              <td>
+                <span class="badge badge-status" [ngClass]="{
+                  'badge-enriched': prospect.status === 'ENRICHED',
+                  'badge-discovered': prospect.status === 'DISCOVERED'
+                }">
+                  {{ prospect.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #noProspects>
+        <div class="empty-state">
+          <p>No prospects found. Click "Target Discovery" to generate targeted prospects.</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,89 @@
+<div class="handoff-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">🚀 Qualified Lead CRM Handoffs & Audit Log</h2>
+      <p class="page-subtitle">Track and inspect structured lead payloads exported and dispatched to downstream Sales/CRM pipelines.</p>
+    </div>
+  </div>
+
+  <!-- Handoff Table -->
+  <div class="card table-card">
+    <div class="table-container" *ngIf="handoffLogs.length > 0; else noLogs">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Qualified Lead</th>
+            <th>Company</th>
+            <th>Destination</th>
+            <th>Stage & Score</th>
+            <th>Status</th>
+            <th>Handed Off Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of handoffLogs">
+            <td>
+              <div class="lead-cell">
+                <strong>{{ log.leadName }}</strong>
+                <span class="email-sub">{{ log.leadEmail }}</span>
+              </div>
+            </td>
+            <td>{{ log.companyName || 'Enterprise Corp' }}</td>
+            <td><span class="dest-badge">{{ log.destination }}</span></td>
+            <td>
+              <span class="badge badge-sql">{{ log.qualification }}</span>
+              <span class="score-sub">{{ log.score }} pts</span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="{
+                'badge-success': log.status === 'SUCCESS',
+                'badge-failed': log.status === 'FAILED',
+                'badge-pending': log.status === 'PENDING'
+              }">
+                {{ log.status }}
+              </span>
+            </td>
+            <td>{{ (log.handedOffAt || log.createdAt) | date:'medium' }}</td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn-inspect" (click)="viewPayload(log)">
+                  📋 View Payload
+                </button>
+                <button class="btn-retry" *ngIf="log.status === 'FAILED'" (click)="retryHandoff(log, $event)">
+                  🔄 Retry
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #noLogs>
+      <div class="empty-state">
+        <div class="empty-icon">🚀</div>
+        <h3>No Qualified Leads Handed Off Yet</h3>
+        <p>Go to the "Leads & Qualification" tab, select an SQL lead, and click "Handoff to CRM" to dispatch structured payloads.</p>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- JSON Payload Viewer Modal -->
+  <div class="modal-overlay" *ngIf="selectedPayload" (click)="closePayloadModal()">
+    <div class="modal-card modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>📋 CRM Integration Handoff Payload — {{ selectedLeadName }}</h3>
+        <button class="close-btn" (click)="closePayloadModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">Standardized B2B CRM Payload including Verified identity, LinkedIn provenance, scoring breakdown, and AI insights.</p>
+        <pre class="json-viewer">{{ selectedPayload }}</pre>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" (click)="closePayloadModal()">Close Inspector</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,6 +1,5 @@
 using CrmLeadTool.Api.Data;
 using CrmLeadTool.Api.Models;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace CrmLeadTool.Api.Services;
@@ -22,7 +21,7 @@ public class TrackingService
     public async Task<string> TrackClickAsync(string trackingId, string url, string userAgent, string ipAddress)
     {
         await TrackEventAsync(trackingId, "CLICK", userAgent, ipAddress, url);
-        return url; // return the original URL for redirect
+        return url;
     }
 
     private async Task TrackEventAsync(string trackingId, string eventType, string userAgent, string ipAddress, string? url)
@@ -31,7 +30,6 @@ public class TrackingService
         if (parts.Length < 2 || !int.TryParse(parts[0], out int recipientId))
             return;
 
-        // Find the most recent email for this recipient
         var emailMessage = await _context.EmailMessages
             .Where(em => em.CampaignRecipientId == recipientId)
             .OrderByDescending(em => em.SentAt)
@@ -51,7 +49,6 @@ public class TrackingService
         };
         _context.EmailEvents.Add(emailEvent);
 
-        // Update EmailMessage status
         if (eventType == "OPEN")
             emailMessage.OpenedAt = emailEvent.EventTimestamp;
         else if (eventType == "CLICK")

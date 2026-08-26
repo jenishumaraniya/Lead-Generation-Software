@@ -2,7 +2,7 @@ namespace CrmLeadTool.Api.DTOs;
 
 public class EmailEventWebhookDto
 {
-    public string EventType { get; set; } = string.Empty; // OPEN, CLICK, REPLY, BOUNCE, etc.
+    public string EventType { get; set; } = string.Empty;
     public string? ProviderMessageId { get; set; }
     public string? RecipientEmail { get; set; }
     public string? ClickUrl { get; set; }

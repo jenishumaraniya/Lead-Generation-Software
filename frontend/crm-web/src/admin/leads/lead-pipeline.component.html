@@ -1,0 +1,244 @@
+<div class="lead-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">🔥 Leads & Multi-Factor Qualification Pipeline</h2>
+      <p class="page-subtitle">Unified inbound/outbound leads, explainable lead scoring history, and qualification stages.</p>
+    </div>
+  </div>
+
+  <!-- Stage Filters & Search -->
+  <div class="filter-bar">
+    <div class="stage-tabs">
+      <button class="stage-tab" [class.active]="selectedStage === 'ALL'" (click)="setStage('ALL')">
+        All Leads ({{ leads.length }})
+      </button>
+      <button class="stage-tab tab-cold" [class.active]="selectedStage === 'COLD'" (click)="setStage('COLD')">
+        ❄️ Cold
+      </button>
+      <button class="stage-tab tab-mql" [class.active]="selectedStage === 'MQL'" (click)="setStage('MQL')">
+        ⚡ MQL (Marketing Qualified)
+      </button>
+      <button class="stage-tab tab-sql" [class.active]="selectedStage === 'SQL'" (click)="setStage('SQL')">
+        🔥 SQL (Sales Qualified / Hot)
+      </button>
+      <button class="stage-tab tab-disq" [class.active]="selectedStage === 'DISQUALIFIED'" (click)="setStage('DISQUALIFIED')">
+        ⛔ Disqualified
+      </button>
+    </div>
+
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="applyFilter()"
+        placeholder="Filter by name, company, email..."
+        class="search-input"
+      />
+    </div>
+  </div>
+
+  <!-- Leads Table -->
+  <div class="card table-card">
+    <div class="table-container" *ngIf="filteredLeads.length > 0; else noLeads">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Lead Name</th>
+            <th>Company & Domain</th>
+            <th>Role</th>
+            <th>Score</th>
+            <th>Stage</th>
+            <th>Timeline</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let lead of filteredLeads" (click)="openLeadDetails(lead)" class="clickable-row">
+            <td>
+              <div class="lead-cell">
+                <strong>{{ lead.fullName }}</strong>
+                <span class="email-sub">{{ lead.email }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="company-cell">
+                <strong>{{ lead.companyName }}</strong>
+                <span class="email-sub">{{ lead.domain || 'N/A' }}</span>
+              </div>
+            </td>
+            <td><span class="role-badge">{{ lead.jobTitle || 'Decision Maker' }}</span></td>
+            <td>
+              <span class="score-pill">{{ lead.score || 0 }} pts</span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="{
+                'badge-sql': lead.qualification === 'SQL' || lead.qualification === 'HOT',
+                'badge-mql': lead.qualification === 'MQL',
+                'badge-cold': lead.qualification === 'COLD' || !lead.qualification,
+                'badge-disq': lead.qualification === 'DISQUALIFIED'
+              }">
+                {{ lead.qualification || 'COLD' }}
+              </span>
+            </td>
+            <td><span class="lead-meta">{{ lead.timeline || 'Immediate' }}</span></td>
+            <td>
+              <span class="status-tag" [class.status-handoff]="lead.status === 'QUALIFIED_HANDOFF'">
+                {{ lead.status }}
+              </span>
+            </td>
+            <td>
+              <button class="btn-inspect" (click)="openLeadDetails(lead); $event.stopPropagation()">
+                🔍 Review & Insights
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #noLeads>
+      <div class="empty-state">
+        <p>No leads found matching the selected stage and search criteria.</p>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Lead Detail & AI Copilot Drawer -->
+  <div class="drawer-overlay" *ngIf="showLeadDrawer" (click)="closeDrawer()">
+    <div class="drawer-content" (click)="$event.stopPropagation()">
+      <div class="drawer-header">
+        <div>
+          <span class="drawer-badge">LEAD QUALIFICATION DOSSIER</span>
+          <h3>{{ selectedLead?.fullName || 'Lead Details' }}</h3>
+          <span class="drawer-sub">{{ selectedLead?.email }} • {{ selectedLead?.companyName }}</span>
+        </div>
+        <button class="close-btn" (click)="closeDrawer()">×</button>
+      </div>
+
+      <div class="drawer-body" *ngIf="selectedLead; else leadLoading">
+        <!-- Lead Actions Toolbar -->
+        <div class="lead-actions-bar">
+          <button class="btn btn-qualify" (click)="triggerQualify()">
+            🔄 Re-Evaluate Qualification
+          </button>
+          <button class="btn btn-ai" [disabled]="isAnalyzingAI" (click)="triggerAIAnalysis()">
+            🤖 {{ isAnalyzingAI ? 'Generating AI Brief...' : 'AI Lead Insights' }}
+          </button>
+          <button
+            class="btn btn-handoff"
+            [disabled]="isHandingOff || selectedLead.status === 'QUALIFIED_HANDOFF'"
+            (click)="handoffToCRM()"
+          >
+            🚀 {{ selectedLead.status === 'QUALIFIED_HANDOFF' ? 'Handed Off to CRM' : 'Handoff to CRM' }}
+          </button>
+        </div>
+
+        <!-- Qualification & Score Hero Card -->
+        <div class="info-card">
+          <div class="hero-score-grid">
+            <div class="hero-score-box">
+              <span class="score-title">Current Score</span>
+              <span class="score-large">{{ selectedLead.score || 0 }}</span>
+              <span class="score-denom">points</span>
+            </div>
+            <div class="hero-stage-box">
+              <span class="score-title">Qualification Stage</span>
+              <span class="stage-large" [ngClass]="{
+                'text-rose': selectedLead.qualification === 'SQL' || selectedLead.qualification === 'HOT',
+                'text-emerald': selectedLead.qualification === 'MQL',
+                'text-slate': selectedLead.qualification === 'COLD'
+              }">
+                {{ selectedLead.qualification || 'COLD' }}
+              </span>
+              <span class="score-denom">{{ selectedLead.status }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Business Requirement Intent -->
+        <div class="info-card">
+          <h4>📝 Commercial Requirement Intent</h4>
+          <div class="intent-text-box">
+            {{ selectedLead.businessRequirement || 'No specific requirement provided.' }}
+          </div>
+          <div class="intent-meta-grid">
+            <div><span class="meta-k">Timeline:</span> {{ selectedLead.timeline }}</div>
+            <div><span class="meta-k">Quantity:</span> {{ selectedLead.quantity || 1 }} units</div>
+            <div><span class="meta-k">Country:</span> {{ selectedLead.country || 'Global' }}</div>
+            <div><span class="meta-k">Phone:</span> {{ selectedLead.phone || 'N/A' }}</div>
+          </div>
+        </div>
+
+        <!-- AI Insights & Actionable Brief (TDD Section 27) -->
+        <div class="info-card" *ngIf="selectedLeadAI">
+          <div class="ai-header">
+            <h4>🤖 AI Sales Intelligence & Actionable Brief</h4>
+            <span class="ai-badge">Groq / AI Copilot</span>
+          </div>
+
+          <div class="ai-section">
+            <div class="ai-k">Intent & Priority:</div>
+            <p><strong>Intent:</strong> {{ selectedLeadAI.intent }} | <strong>Priority:</strong> {{ selectedLeadAI.priorityRecommendation }}</p>
+          </div>
+
+          <div class="ai-section">
+            <div class="ai-k">Lead Summary:</div>
+            <p>{{ selectedLeadAI.leadSummary }}</p>
+          </div>
+
+          <div class="ai-section" *ngIf="selectedLeadAI.recommendedNextAction">
+            <div class="ai-k">Recommended Next Action:</div>
+            <p class="text-emerald font-semibold">{{ selectedLeadAI.recommendedNextAction }}</p>
+          </div>
+
+          <div class="insights-chips-grid" *ngIf="selectedLeadAI.insights?.length">
+            <div *ngFor="let insight of selectedLeadAI.insights" class="insight-pill">
+              <span class="insight-type">{{ insight.insightType }}:</span>
+              <span class="insight-text">{{ insight.insightText }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Explainable Lead Scoring History (TDD Section 19) -->
+        <div class="info-card">
+          <h4>📊 Explainable Score History Audit Log</h4>
+          <table class="score-history-table" *ngIf="scoreHistory.length > 0; else noHistory">
+            <thead>
+              <tr>
+                <th>Event / Rule</th>
+                <th>Delta</th>
+                <th>Total</th>
+                <th>Reason</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let h of scoreHistory">
+                <td><strong>{{ h.ruleName || h.eventType }}</strong></td>
+                <td>
+                  <span class="delta-badge" [class.delta-pos]="h.delta > 0" [class.delta-neg]="h.delta < 0">
+                    {{ h.delta > 0 ? '+' : '' }}{{ h.delta }}
+                  </span>
+                </td>
+                <td>{{ h.totalScore }} pts</td>
+                <td><small>{{ h.reason }}</small></td>
+                <td><small>{{ h.timestamp | date:'shortTime' }}</small></td>
+              </tr>
+            </tbody>
+          </table>
+          <ng-template #noHistory>
+            <p class="empty-sub">No scoring events logged yet for this lead.</p>
+          </ng-template>
+        </div>
+
+      </div>
+
+      <ng-template #leadLoading>
+        <div class="drawer-loading">Loading lead dossier and scoring history...</div>
+      </ng-template>
+    </div>
+  </div>
+</div>

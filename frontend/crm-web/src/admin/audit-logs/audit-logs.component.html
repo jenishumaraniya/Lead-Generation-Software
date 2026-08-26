@@ -1,0 +1,79 @@
+<div class="page-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <div class="page-eyebrow">GOVERNANCE & AUDIT</div>
+      <h2 class="page-title">Administrative Audit Logs</h2>
+      <p class="page-subtitle">Immutable chronological record of user actions, catalog changes, and auth events.</p>
+    </div>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="filter-card">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
+        placeholder="Filter logs by user email, action, entity, details..."
+        class="form-control"
+      />
+    </div>
+  </div>
+
+  <!-- Audit Table Card -->
+  <div class="table-card">
+    <div class="table-responsive" *ngIf="logs.length > 0; else noLogs">
+      <table class="app-table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Initiator</th>
+            <th>Action</th>
+            <th>Entity</th>
+            <th>Details & Metadata</th>
+            <th>IP Address</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of logs">
+            <td>
+              <span class="date-text">{{ log.timestamp | date:'medium' }}</span>
+            </td>
+            <td>
+              <strong>{{ log.userEmail }}</strong>
+            </td>
+            <td>
+              <span class="action-pill" [ngClass]="{
+                'action-create': log.action.includes('CREATE'),
+                'action-update': log.action.includes('UPDATE') || log.action.includes('RESET'),
+                'action-delete': log.action.includes('DELETE'),
+                'action-auth': log.action.includes('LOGIN') || log.action.includes('LOGOUT')
+              }">
+                {{ log.action }}
+              </span>
+            </td>
+            <td>
+              <span class="entity-tag">{{ log.entityName }} #{{ log.entityId || '-' }}</span>
+            </td>
+            <td>
+              <span class="details-text">{{ log.details || '-' }}</span>
+            </td>
+            <td>
+              <small class="ip-text">{{ log.ipAddress || 'Internal' }}</small>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #noLogs>
+      <div class="empty-state">
+        <div class="empty-icon">📜</div>
+        <h3>No Audit Logs Found</h3>
+        <p>Administrative activities will be logged here automatically.</p>
+      </div>
+    </ng-template>
+  </div>
+</div>

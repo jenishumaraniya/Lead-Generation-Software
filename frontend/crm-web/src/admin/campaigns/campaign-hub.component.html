@@ -1,0 +1,239 @@
+<div class="campaign-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">✉️ Outbound Campaigns & Multi-Step Sequences</h2>
+      <p class="page-subtitle">Design multi-step email cadence, configure delays and tags, and track automated sequence status.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        ➕ New Campaign Sequence
+      </button>
+    </div>
+  </div>
+
+  <div class="campaign-layout">
+    <!-- Left Column: Campaigns List -->
+    <div class="campaign-list-col">
+      <div class="card">
+        <div class="card-header">
+          <h3>Campaigns ({{ campaigns.length }})</h3>
+        </div>
+
+        <div class="campaign-cards" *ngIf="campaigns.length > 0; else noCampaigns">
+          <div
+            *ngFor="let camp of campaigns"
+            class="camp-item"
+            [class.selected]="selectedCampaign?.campaignId === camp.campaignId"
+            (click)="viewCampaign(camp.campaignId)"
+          >
+            <div class="camp-item-top">
+              <span class="camp-name">{{ camp.name }}</span>
+              <span class="badge" [class.badge-active]="camp.status === 'ACTIVE'" [class.badge-paused]="camp.status === 'PAUSED'">
+                {{ camp.status }}
+              </span>
+            </div>
+            <p class="camp-desc">{{ camp.description || 'No description provided' }}</p>
+            <div class="camp-stats">
+              <span>📅 {{ camp.stepsCount || camp.steps?.length || 0 }} Steps</span>
+              <span>👥 {{ camp.recipientsCount || camp.recipients?.length || 0 }} Enrolled</span>
+            </div>
+            <div class="camp-controls">
+              <button class="btn-ctrl" (click)="togglePause(camp, $event)">
+                {{ camp.status === 'ACTIVE' ? '⏸️ Pause' : '▶️ Resume' }}
+              </button>
+              <button class="btn-ctrl btn-ctrl-enroll" (click)="openEnrollModal(camp.campaignId, $event)">
+                ➕ Enroll Prospect
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noCampaigns>
+          <div class="empty-state">
+            <p>No campaigns yet. Click "New Campaign Sequence" to launch your first outbound sequence.</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Right Column: Campaign Sequence & Recipients Details -->
+    <div class="campaign-detail-col">
+      <div class="card" *ngIf="selectedCampaign; else selectPrompt">
+        <div class="camp-detail-header">
+          <div>
+            <span class="detail-label">ACTIVE SEQUENCE DETAILS</span>
+            <h3>{{ selectedCampaign.name }}</h3>
+            <p class="detail-sub">{{ selectedCampaign.description }}</p>
+          </div>
+          <button class="btn btn-primary btn-sm" (click)="openEnrollModal(selectedCampaign.campaignId, $event)">
+            ➕ Enroll Prospect
+          </button>
+        </div>
+
+        <!-- Sequence Step Flow -->
+        <div class="sequence-section">
+          <h4 class="section-title">🪜 Sequence Workflow Steps</h4>
+          
+          <div class="steps-flow">
+            <div *ngFor="let step of selectedCampaign.steps" class="step-card">
+              <div class="step-badge">Step {{ step.stepNumber }}</div>
+              <div class="step-content">
+                <div class="step-top">
+                  <strong class="step-name">{{ step.name }}</strong>
+                  <span class="delay-pill" *ngIf="step.delayDays > 0 || step.delayHours > 0">
+                    ⏱️ Wait {{ step.delayDays }}d {{ step.delayHours }}h
+                  </span>
+                  <span class="delay-pill delay-immediate" *ngIf="step.delayDays === 0 && step.delayHours === 0">
+                    ⚡ Immediate Trigger
+                  </span>
+                </div>
+                <div class="step-subject"><strong>Subject:</strong> {{ step.subject }}</div>
+                <div class="step-body-preview">{{ step.body }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enrolled Recipients Table -->
+        <div class="recipients-section">
+          <h4 class="section-title">👥 Enrolled Prospects & Progress ({{ selectedCampaign.recipients?.length || 0 }})</h4>
+          
+          <table class="recipients-table" *ngIf="selectedCampaign.recipients?.length > 0; else noRecipients">
+            <thead>
+              <tr>
+                <th>Prospect</th>
+                <th>Status</th>
+                <th>Current Step</th>
+                <th>Enrolled Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let rec of selectedCampaign.recipients">
+                <td>
+                  <strong>{{ rec.prospect?.name || 'Prospect' }}</strong>
+                  <div class="sub-text">{{ rec.prospect?.email }}</div>
+                </td>
+                <td>
+                  <span class="badge badge-rec" [ngClass]="{
+                    'badge-enrolled': rec.status === 'ENROLLED',
+                    'badge-progress': rec.status === 'IN_PROGRESS',
+                    'badge-paused': rec.status === 'PAUSED',
+                    'badge-completed': rec.status === 'COMPLETED'
+                  }">
+                    {{ rec.status }}
+                  </span>
+                </td>
+                <td>Step {{ rec.currentStep || 1 }}</td>
+                <td>{{ rec.enrolledAt | date:'mediumDate' }}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <ng-template #noRecipients>
+            <div class="empty-rec">
+              <p>No prospects currently enrolled in this sequence. Click "Enroll Prospect" to start outreach.</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+
+      <ng-template #selectPrompt>
+        <div class="card empty-state">
+          <p>Select a campaign on the left to view its sequence steps and recipient lifecycle.</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- Create Campaign Modal -->
+  <div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
+    <div class="modal-card modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>✉️ Create Outbound Campaign Sequence</h3>
+        <button class="close-btn" (click)="closeCreateModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Campaign Name</label>
+          <input type="text" [(ngModel)]="newCampaign.name" class="form-control" placeholder="e.g. Q1 Enterprise Outreach" />
+        </div>
+
+        <div class="form-group">
+          <label>Description / Objective</label>
+          <input type="text" [(ngModel)]="newCampaign.description" class="form-control" placeholder="e.g. Target VP of Sales & Ops" />
+        </div>
+
+        <div class="sequence-builder-header">
+          <h4>Sequence Steps</h4>
+          <button class="btn btn-secondary btn-sm" (click)="addStep()">➕ Add Step</button>
+        </div>
+
+        <div class="step-builder-list">
+          <div *ngFor="let step of newCampaign.steps; let i = index" class="step-builder-item">
+            <div class="step-builder-top">
+              <span class="step-title">Step {{ step.stepNumber }}</span>
+              <button class="remove-btn" (click)="removeStep(i)" *ngIf="newCampaign.steps.length > 1">Remove</button>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Step Name</label>
+                <input type="text" [(ngModel)]="step.name" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>Delay (Days after previous step)</label>
+                <input type="number" [(ngModel)]="step.delayDays" min="0" class="form-control" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Email Subject (Supports merge tags: &#123;Name&#125;, &#123;Company&#125;)</label>
+              <input type="text" [(ngModel)]="step.subject" class="form-control" />
+            </div>
+
+            <div class="form-group">
+              <label>Email Template Body</label>
+              <textarea [(ngModel)]="step.body" rows="3" class="form-control"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeCreateModal()">Cancel</button>
+        <button class="btn btn-primary" (click)="createCampaign()">Save & Launch Sequence</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enroll Prospect Modal -->
+  <div class="modal-overlay" *ngIf="showEnrollModal" (click)="closeEnrollModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>👥 Enroll Prospect into Campaign</h3>
+        <button class="close-btn" (click)="closeEnrollModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Select Prospect to Enroll</label>
+          <select [(ngModel)]="selectedProspectIdToEnroll" class="form-control">
+            <option [ngValue]="null">-- Select a prospect --</option>
+            <option *ngFor="let p of prospects" [value]="p.prospectId">
+              {{ p.name }} ({{ p.email }}) — {{ p.jobTitle || 'Executive' }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeEnrollModal()">Cancel</button>
+        <button class="btn btn-primary" [disabled]="!selectedProspectIdToEnroll" (click)="enrollProspect()">
+          Confirm Enrollment
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

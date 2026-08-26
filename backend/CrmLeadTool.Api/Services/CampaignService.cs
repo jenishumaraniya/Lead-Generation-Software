@@ -21,8 +21,6 @@ public class CampaignService
             Name = dto.Name,
             Description = dto.Description,
             Status = dto.Status ?? "DRAFT",
-            ScheduleStartDate = dto.ScheduleStartDate,
-            ScheduleEndDate = dto.ScheduleEndDate,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -30,7 +28,6 @@ public class CampaignService
         _context.Campaigns.Add(campaign);
         await _context.SaveChangesAsync();
 
-        // Add steps
         foreach (var stepDto in dto.Steps.OrderBy(s => s.StepNumber))
         {
             var step = new SequenceStep
@@ -51,21 +48,90 @@ public class CampaignService
         return campaign;
     }
 
-    public async Task<List<Campaign>> GetAllCampaignsAsync()
+    public async Task<List<object>> GetAllCampaignsAsync()
     {
         return await _context.Campaigns
             .Include(c => c.Steps)
+            .Include(c => c.Recipients)
             .OrderByDescending(c => c.CreatedAt)
-            .ToListAsync();
+            .Select(c => new
+            {
+                c.CampaignId,
+                c.Name,
+                c.Description,
+                c.Status,
+                c.ScheduleStartDate,
+                c.ScheduleEndDate,
+                c.CreatedAt,
+                c.UpdatedAt,
+                StepsCount = c.Steps.Count,
+                RecipientsCount = c.Recipients.Count,
+                Steps = c.Steps.OrderBy(s => s.StepNumber).Select(s => new
+                {
+                    s.SequenceStepId,
+                    s.CampaignId,
+                    s.StepNumber,
+                    s.Name,
+                    s.Subject,
+                    s.Body,
+                    s.DelayDays,
+                    s.DelayHours,
+                    s.IsActive,
+                    s.CreatedAt
+                })
+            })
+            .ToListAsync<object>();
     }
 
-    public async Task<Campaign?> GetCampaignAsync(int id)
+    public async Task<object?> GetCampaignAsync(int id)
     {
         return await _context.Campaigns
             .Include(c => c.Steps)
             .Include(c => c.Recipients)
                 .ThenInclude(r => r.Prospect)
-            .FirstOrDefaultAsync(c => c.CampaignId == id);
+            .Where(c => c.CampaignId == id)
+            .Select(c => new
+            {
+                c.CampaignId,
+                c.Name,
+                c.Description,
+                c.Status,
+                c.ScheduleStartDate,
+                c.ScheduleEndDate,
+                c.CreatedAt,
+                c.UpdatedAt,
+                Steps = c.Steps.OrderBy(s => s.StepNumber).Select(s => new
+                {
+                    s.SequenceStepId,
+                    s.CampaignId,
+                    s.StepNumber,
+                    s.Name,
+                    s.Subject,
+                    s.Body,
+                    s.DelayDays,
+                    s.DelayHours,
+                    s.IsActive,
+                    s.CreatedAt
+                }),
+                Recipients = c.Recipients.Select(r => new
+                {
+                    r.CampaignRecipientId,
+                    r.ProspectId,
+                    r.Status,
+                    r.CurrentStep,
+                    r.EnrolledAt,
+                    r.LastActivityAt,
+                    r.CompletedAt,
+                    Prospect = new
+                    {
+                        r.Prospect.Name,
+                        r.Prospect.Email,
+                        r.Prospect.JobTitle,
+                        r.Prospect.CompanyId
+                    }
+                })
+            })
+            .FirstOrDefaultAsync();
     }
 
     public async Task<CampaignRecipient> EnrollProspectAsync(int campaignId, int prospectId)
@@ -80,11 +146,15 @@ public class CampaignService
         if (prospect == null)
             throw new ArgumentException("Prospect not found.");
 
-        // Check if already enrolled
+        // Check suppression list
+        var isSuppressed = await _context.Suppressions.AnyAsync(s => s.Email.ToLower() == prospect.Email.ToLower() && s.IsActive);
+        if (isSuppressed)
+            throw new InvalidOperationException($"Prospect {prospect.Email} is on the suppression list.");
+
         var existing = await _context.CampaignRecipients
             .FirstOrDefaultAsync(cr => cr.CampaignId == campaignId && cr.ProspectId == prospectId);
         if (existing != null)
-            throw new InvalidOperationException("Prospect already enrolled.");
+            throw new InvalidOperationException("Prospect already enrolled in this campaign.");
 
         var recipient = new CampaignRecipient
         {
@@ -100,14 +170,62 @@ public class CampaignService
         return recipient;
     }
 
-    public async Task UpdateCampaignStatusAsync(int campaignId, string status)
+    public async Task<object> GetCampaignRecipientsAsync(int campaignId)
+    {
+        return await _context.CampaignRecipients
+            .Where(cr => cr.CampaignId == campaignId)
+            .Include(cr => cr.Prospect)
+            .Select(cr => new
+            {
+                cr.CampaignRecipientId,
+                cr.CampaignId,
+                cr.ProspectId,
+                cr.Status,
+                cr.CurrentStep,
+                cr.EnrolledAt,
+                cr.LastActivityAt,
+                cr.CompletedAt,
+                Prospect = new
+                {
+                    cr.Prospect.Name,
+                    cr.Prospect.Email,
+                    cr.Prospect.JobTitle,
+                    cr.Prospect.CompanyId
+                }
+            })
+            .ToListAsync();
+    }
+
+    public async Task<Campaign> PauseCampaignAsync(int campaignId)
     {
         var campaign = await _context.Campaigns.FindAsync(campaignId);
-        if (campaign == null)
-            throw new ArgumentException("Campaign not found.");
+        if (campaign == null) throw new ArgumentException("Campaign not found.");
 
-        campaign.Status = status;
+        campaign.Status = "PAUSED";
         campaign.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+        return campaign;
+    }
+
+    public async Task<Campaign> ResumeCampaignAsync(int campaignId)
+    {
+        var campaign = await _context.Campaigns.FindAsync(campaignId);
+        if (campaign == null) throw new ArgumentException("Campaign not found.");
+
+        campaign.Status = "ACTIVE";
+        campaign.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        return campaign;
+    }
+
+    public async Task<CampaignRecipient> UpdateRecipientStatusAsync(int recipientId, string status)
+    {
+        var recipient = await _context.CampaignRecipients.FindAsync(recipientId);
+        if (recipient == null) throw new ArgumentException("Recipient not found.");
+
+        recipient.Status = status;
+        recipient.LastActivityAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        return recipient;
     }
 }

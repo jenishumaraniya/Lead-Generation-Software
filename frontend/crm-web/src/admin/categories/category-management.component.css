@@ -1,0 +1,257 @@
+.page-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.page-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  color: #2563eb;
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+}
+
+.page-title {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.role-notice-badge {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.category-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+  transition: all 0.2s ease;
+}
+
+.category-card:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.cat-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.cat-icon {
+  width: 42px;
+  height: 42px;
+  background: #eff6ff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.cat-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-icon {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.btn-icon:hover {
+  background: #eff6ff;
+}
+
+.btn-delete:hover {
+  background: #fef2f2;
+}
+
+.cat-name {
+  margin: 0 0 16px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.cat-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
+}
+
+.product-count-badge {
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.created-sub {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.table-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+}
+
+.empty-state {
+  padding: 60px 20px;
+  text-align: center;
+  color: #64748b;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-card {
+  background: #ffffff;
+  border-radius: 18px;
+  width: 90%;
+  max-width: 480px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #0f172a;
+  background: #f8fafc;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.form-control:focus {
+  border-color: #2563eb;
+  background: #ffffff;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
