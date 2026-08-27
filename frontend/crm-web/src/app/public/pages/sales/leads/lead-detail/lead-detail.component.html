@@ -1,1 +1,184 @@
-<p>lead-detail works!</p>
+<div class="lead-detail-wrapper" *ngIf="lead">
+  <div class="top-nav">
+    <button (click)="goBack()" class="back-button">&larr; Back to Leads</button>
+    <div class="header-info">
+      <h1 class="lead-title">{{ lead.fullName }}</h1>
+      <span class="status-pill" [class]="lead.status">{{ lead.status }}</span>
+      <span class="score-pill">{{ lead.score || 0 }} pts</span>
+    </div>
+  </div>
+
+  <div *ngIf="saveMessage" class="save-toast">
+    {{ saveMessage }}
+  </div>
+
+  <div class="details-layout">
+    <!-- Left Column: Lead Info & Activities -->
+    <div class="main-column">
+      <div class="card">
+        <h2 class="card-title">Organization & Contact Details</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Company Name</label>
+            <div class="val">{{ lead.companyName }}</div>
+          </div>
+          <div class="info-item">
+            <label>Job Title</label>
+            <div class="val">{{ lead.jobTitle || '—' }}</div>
+          </div>
+          <div class="info-item">
+            <label>Email Address</label>
+            <div class="val"><a [href]="'mailto:' + lead.email" class="email-link">{{ lead.email }}</a></div>
+          </div>
+          <div class="info-item">
+            <label>Phone Number</label>
+            <div class="val">{{ lead.phone || '—' }}</div>
+          </div>
+          <div class="info-item">
+            <label>Industry</label>
+            <div class="val">{{ lead.industry || 'General' }}</div>
+          </div>
+          <div class="info-item">
+            <label>Country / Location</label>
+            <div class="val">{{ lead.country || 'Global' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" *ngIf="lead.businessRequirement">
+        <h2 class="card-title">Stated Commercial Requirement</h2>
+        <p class="requirement-box">{{ lead.businessRequirement }}</p>
+        <div class="meta-row" *ngIf="lead.timeline || lead.quantity">
+          <span *ngIf="lead.timeline"><strong>Timeline:</strong> {{ lead.timeline }}</span>
+          <span *ngIf="lead.quantity"><strong>Units:</strong> {{ lead.quantity }}</span>
+        </div>
+      </div>
+
+      <!-- Activity Timeline -->
+      <div class="card">
+        <h2 class="card-title">Sales Engagement Log</h2>
+        
+        <div class="activity-input-box">
+          <select [(ngModel)]="newActivity.activityType" class="act-select">
+            <option value="CALL">Phone Call</option>
+            <option value="EMAIL">Email Follow-up</option>
+            <option value="MEETING">Meeting / Demo</option>
+            <option value="NOTE">Internal Note</option>
+          </select>
+          <input 
+            type="text" 
+            [(ngModel)]="newActivity.description" 
+            placeholder="Log details of conversation or next steps..." 
+            class="act-input"
+            (keyup.enter)="addActivity()"
+          />
+          <button (click)="addActivity()" [disabled]="!newActivity.description.trim()" class="btn-primary">
+            Log Activity
+          </button>
+        </div>
+
+        <div class="activity-feed">
+          <div class="activity-item" *ngFor="let act of activities">
+            <div class="act-badge" [class]="act.activityType">{{ act.activityType }}</div>
+            <div class="act-content">
+              <p class="act-desc">{{ act.description }}</p>
+              <div class="act-meta">
+                <span>By: {{ act.createdBy || 'Sales Rep' }}</span>
+                <span>&bull;</span>
+                <span>{{ act.activityDate | date:'medium' }}</span>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="!activities.length" class="empty-activities">
+            No sales activities logged yet. Use the form above to record your first touchpoint.
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Transition Audit -->
+      <div class="card" *ngIf="statusHistories && statusHistories.length">
+        <h2 class="card-title">Status Transition Audit</h2>
+        <div class="history-list">
+          <div class="history-item" *ngFor="let sh of statusHistories">
+            <div class="history-dot"></div>
+            <div class="history-info">
+              <div class="history-title">
+                Changed from <span class="stage-tag">{{ sh.oldStatus || 'NONE' }}</span> to <span class="stage-tag active">{{ sh.newStatus }}</span>
+              </div>
+              <div class="history-meta">
+                <span>By: {{ sh.changedBy || 'Sales Rep' }}</span>
+                <span>&bull;</span>
+                <span>{{ sh.changedAt | date:'medium' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Status & Follow-up Actions -->
+    <div class="side-column">
+      <div class="card action-card">
+        <h2 class="card-title">Status & Pipeline Action</h2>
+        
+        <div class="form-group">
+          <label>Pipeline Stage</label>
+          <select [(ngModel)]="lead.status" class="form-select">
+            <option value="NEW">NEW</option>
+            <option value="CONTACTED">CONTACTED</option>
+            <option value="QUALIFIED">QUALIFIED</option>
+            <option value="WON">WON</option>
+            <option value="LOST">LOST</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Next Follow-Up Date</label>
+          <input 
+            type="date" 
+            [ngModel]="followUpDateString" 
+            (ngModelChange)="onFollowUpDateChange($event)" 
+            class="form-input" 
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Qualification Tier</label>
+          <select [(ngModel)]="lead.qualification" class="form-select">
+            <option value="MQL">MQL (Marketing Qualified)</option>
+            <option value="SQL">SQL (Sales Qualified)</option>
+            <option value="HIGH_INTENT">High Intent</option>
+            <option value="UNQUALIFIED">Unqualified</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Sales Notes</label>
+          <textarea 
+            [(ngModel)]="lead.notes" 
+            rows="4" 
+            placeholder="Add general notes on prospect requirements..."
+            class="form-textarea"
+          ></textarea>
+        </div>
+
+        <button (click)="updateLead()" class="btn-primary full-width-btn">
+          Save Changes
+        </button>
+      </div>
+
+      <div class="card score-card" *ngIf="lead.scoreHistories && lead.scoreHistories.length">
+        <h2 class="card-title">Scoring Attribution</h2>
+        <div class="score-list">
+          <div class="score-item" *ngFor="let sh of lead.scoreHistories">
+            <span class="score-delta">+{{ sh.delta }}</span>
+            <div class="score-details">
+              <strong>{{ sh.ruleName }}</strong>
+              <small>{{ sh.reason }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

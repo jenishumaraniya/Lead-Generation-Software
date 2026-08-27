@@ -155,6 +155,74 @@ public static class DbInitializer
                   Retries INT NOT NULL DEFAULT 0,
                   CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
                   HandedOffAt DATETIME2 NULL
+              )",
+            @"IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Campaign_CRM')
+              CREATE TABLE Campaign_CRM (
+                  CampaignId INT IDENTITY(1,1) PRIMARY KEY,
+                  Name NVARCHAR(255) NOT NULL,
+                  Description NVARCHAR(MAX) NULL,
+                  Status NVARCHAR(50) NOT NULL DEFAULT 'DRAFT',
+                  ScheduleStartDate DATETIME2 NULL,
+                  ScheduleEndDate DATETIME2 NULL,
+                  CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+                  UpdatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+              )",
+
+            @"IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'SequenceStep_CRM')
+              CREATE TABLE SequenceStep_CRM (
+                  SequenceStepId INT IDENTITY(1,1) PRIMARY KEY,
+                  CampaignId INT NOT NULL,
+                  StepNumber INT NOT NULL,
+                  Name NVARCHAR(255) NOT NULL,
+                  Subject NVARCHAR(255) NOT NULL,
+                  Body NVARCHAR(MAX) NOT NULL,
+                  DelayDays INT NOT NULL DEFAULT 0,
+                  DelayHours INT NOT NULL DEFAULT 0,
+                  IsActive BIT NOT NULL DEFAULT 1,
+                  CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+              )",
+
+            @"IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'CampaignRecipient_CRM')
+              CREATE TABLE CampaignRecipient_CRM (
+                  CampaignRecipientId INT IDENTITY(1,1) PRIMARY KEY,
+                  CampaignId INT NOT NULL,
+                  ProspectId INT NOT NULL,
+                  Status NVARCHAR(50) NOT NULL DEFAULT 'ENROLLED',
+                  CurrentStep INT NOT NULL DEFAULT 1,
+                  EnrolledAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+                  LastActivityAt DATETIME2 NULL,
+                  CompletedAt DATETIME2 NULL
+              )",
+
+            @"IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'LeadNote_CRM')
+              CREATE TABLE LeadNote_CRM (
+                  LeadNoteId INT IDENTITY(1,1) PRIMARY KEY,
+                  LeadId INT NOT NULL,
+                  NoteText NVARCHAR(MAX) NOT NULL,
+                  CreatedBy NVARCHAR(255) NULL,
+                  CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+              )",
+
+            @"IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'LeadStatusHistory_CRM')
+              CREATE TABLE LeadStatusHistory_CRM (
+                  LeadStatusHistoryId INT IDENTITY(1,1) PRIMARY KEY,
+                  LeadId INT NOT NULL,
+                  OldStatus NVARCHAR(50) NULL,
+                  NewStatus NVARCHAR(50) NOT NULL,
+                  ChangedBy NVARCHAR(255) NULL,
+                  Reason NVARCHAR(500) NULL,
+                  ChangedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
+              )",
+
+            @"IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'LeadActivity_CRM')
+              CREATE TABLE LeadActivity_CRM (
+                  LeadActivityId INT IDENTITY(1,1) PRIMARY KEY,
+                  LeadId INT NOT NULL,
+                  ActivityType NVARCHAR(100) NOT NULL,
+                  Description NVARCHAR(MAX) NULL,
+                  Metadata NVARCHAR(MAX) NULL,
+                  CreatedBy NVARCHAR(255) NULL,
+                  CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
               )"
         };
 
@@ -167,6 +235,46 @@ public static class DbInitializer
             catch (Exception ex)
             {
                 Console.WriteLine($"[DbInitializer] SQL error: {ex.Message}");
+            }
+        }
+
+        // Idempotent column migrations — add new columns to existing tables without dropping data
+        var columnMigrations = new[]
+        {
+            // Lead_CRM: AssignedTo, Notes, NextFollowUpDate, IsMultiCategory
+            @"IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Lead_CRM' AND COLUMN_NAME='AssignedTo')
+              ALTER TABLE Lead_CRM ADD AssignedTo INT NULL",
+
+            @"IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Lead_CRM' AND COLUMN_NAME='Notes')
+              ALTER TABLE Lead_CRM ADD Notes NVARCHAR(MAX) NULL",
+
+            @"IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Lead_CRM' AND COLUMN_NAME='NextFollowUpDate')
+              ALTER TABLE Lead_CRM ADD NextFollowUpDate DATETIME2 NULL",
+
+            @"IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Lead_CRM' AND COLUMN_NAME='IsMultiCategory')
+              ALTER TABLE Lead_CRM ADD IsMultiCategory BIT NOT NULL DEFAULT 0",
+
+            // User_CRM: CategoryId for salesperson-category assignment (if not exists)
+            @"IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='User_CRM' AND COLUMN_NAME='CategoryId')
+              ALTER TABLE User_CRM ADD CategoryId INT NULL",
+
+            // Campaign_CRM: ScheduleStartDate and ScheduleEndDate
+            @"IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Campaign_CRM' AND COLUMN_NAME='ScheduleStartDate')
+              ALTER TABLE Campaign_CRM ADD ScheduleStartDate DATETIME2 NULL",
+
+            @"IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Campaign_CRM' AND COLUMN_NAME='ScheduleEndDate')
+              ALTER TABLE Campaign_CRM ADD ScheduleEndDate DATETIME2 NULL",
+        };
+
+        foreach (var sql in columnMigrations)
+        {
+            try
+            {
+                await context.Database.ExecuteSqlRawAsync(sql);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DbInitializer] Column migration error: {ex.Message}");
             }
         }
 
@@ -202,6 +310,37 @@ public static class DbInitializer
                     CreatedAt = DateTime.UtcNow
                 });
             }
+
+            if (!await context.Users.AnyAsync(u => u.Email == "sutharharshit695@gmail.com"))
+            {
+                var (hash, salt) = PasswordHasher.HashPassword("Sales@123");
+                context.Users.Add(new User
+                {
+                    FullName = "Harshit Suthar (Sales Rep)",
+                    Email = "sutharharshit695@gmail.com",
+                    PasswordHash = hash,
+                    Salt = salt,
+                    Role = "SALES_REP",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
+            // Ensure all existing users are active and unlocked
+            var allUsers = await context.Users.ToListAsync();
+            var (defaultSalesHash, defaultSalesSalt) = PasswordHasher.HashPassword("Sales@123");
+            foreach (var u in allUsers)
+            {
+                u.FailedLoginAttempts = 0;
+                u.LockoutEnd = null;
+                u.IsActive = true;
+                if (string.IsNullOrEmpty(u.PasswordHash) || string.IsNullOrEmpty(u.Salt))
+                {
+                    u.PasswordHash = defaultSalesHash;
+                    u.Salt = defaultSalesSalt;
+                }
+            }
+            await context.SaveChangesAsync();
 
             // Seed Default Categories if missing
             var defaultCategoryNames = new[] { "Laptops", "Desktops", "Servers", "Networking", "Cloud Solutions" };

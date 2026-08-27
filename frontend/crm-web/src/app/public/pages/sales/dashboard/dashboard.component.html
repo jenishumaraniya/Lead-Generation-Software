@@ -1,35 +1,93 @@
-<div class="dashboard">
-  <h1>Sales Dashboard</h1>
+<div class="dashboard-wrapper">
+  <div class="header-row">
+    <div>
+      <h1 class="page-title">Sales Pipeline Overview</h1>
+      <p class="page-subtitle">Real-time pipeline analytics, lead stages, and active opportunities</p>
+    </div>
+    <a routerLink="/sales/leads" class="btn-primary">
+      View Assigned Leads &rarr;
+    </a>
+  </div>
   
-  <div class="quick-stats">
-    <div class="stat">Assigned Leads: <strong>12</strong></div>
-    <div class="stat">Pending Follow-ups: <strong>5</strong></div>
-    <div class="stat">Won This Month: <strong>3</strong></div>
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <span class="metric-label">Total Leads</span>
+      <strong class="metric-value">{{ stats.total }}</strong>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">New Inbound</span>
+      <strong class="metric-value">{{ stats.newLeads }}</strong>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">In Contact</span>
+      <strong class="metric-value">{{ stats.contacted }}</strong>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">Qualified (SQL/MQL)</span>
+      <strong class="metric-value">{{ stats.qualified }}</strong>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">Deals Won</span>
+      <strong class="metric-value">{{ stats.won }}</strong>
+    </div>
   </div>
 
-  <div class="row">
-    <div class="col">
-      <h2>My Leads</h2>
-      <table class="table">
+  <div class="content-grid">
+    <div class="card leads-summary-card">
+      <div class="card-header">
+        <h2 class="card-title">Priority Assigned Leads</h2>
+        <a routerLink="/sales/leads" class="sub-link">View all ({{ leads.length }})</a>
+      </div>
+
+      <div *ngIf="leads.length === 0" class="empty-msg">
+        No active leads assigned in pipeline.
+      </div>
+
+      <table class="summary-table" *ngIf="leads.length > 0">
         <thead>
-          <tr><th>Company</th><th>Status</th><th>Next Follow-up</th></tr>
+          <tr>
+            <th>Lead</th>
+            <th>Company</th>
+            <th>Score</th>
+            <th>Status</th>
+            <th class="text-right">Action</th>
+          </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let lead of myLeads">
-            <td>{{ lead.name }}</td>
-            <td><span class="badge">{{ lead.status }}</span></td>
-            <td>{{ lead.nextFollowUp }}</td>
+          <tr *ngFor="let lead of leads.slice(0, 6)">
+            <td>
+              <div class="lead-name">{{ lead.fullName }}</div>
+              <div class="lead-email">{{ lead.email }}</div>
+            </td>
+            <td>{{ lead.companyName }}</td>
+            <td>
+              <span class="score-pill">{{ lead.score || 0 }} pts</span>
+            </td>
+            <td>
+              <span class="status-badge" [class]="lead.status">{{ lead.status }}</span>
+            </td>
+            <td class="text-right">
+              <a [routerLink]="['/sales/leads', lead.leadId]" class="btn-text">Open &rarr;</a>
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
-    <div class="col">
-      <h2>Recent Activity</h2>
-      <div class="activity-feed">
-        <div class="activity" *ngFor="let act of recentActivities">
-          <span class="type">{{ act.type }}</span>
-          <span class="desc">{{ act.detail }}</span>
-          <span class="time">{{ act.time }}</span>
+
+    <div class="card quick-tips-card">
+      <h2 class="card-title">Lead Qualification Guidelines</h2>
+      <div class="tips-list">
+        <div class="tip-item">
+          <strong>Prioritize High Score Leads</strong>
+          <p>Leads above 40 points have visited key product pages and demonstrated clear commercial intent.</p>
+        </div>
+        <div class="tip-item">
+          <strong>Document Communication</strong>
+          <p>Log all phone calls, email replies, and product demo discussions in the engagement history.</p>
+        </div>
+        <div class="tip-item">
+          <strong>Pipeline Progression</strong>
+          <p>Update lead status as prospects advance through qualification to closed-won agreements.</p>
         </div>
       </div>
     </div>

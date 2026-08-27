@@ -72,6 +72,9 @@ export const routes: Routes = [
   // AUTHENTICATION
   // =============================================
   { path: 'login', component: LoginComponent },
+  { path: 'admin/login', redirectTo: 'login', pathMatch: 'full' },
+  { path: 'sales/login', redirectTo: 'login', pathMatch: 'full' },
+  { path: 'pricing', redirectTo: 'products', pathMatch: 'full' },
 
   // =============================================
   // ADMIN ROUTES (protected)
@@ -130,14 +133,20 @@ export const routes: Routes = [
         path: 'salespersons', 
         loadComponent: () => 
           import('./public/pages/admin/salespersons/salesperson-list/salesperson-list.component')
-            .then(m => m.SalesLeadListComponent) 
+            .then(m => m.SalespersonListComponent) 
       },
       {
-  path: 'categories',
-  loadComponent: () =>
-    import('./public/pages/admin/categories/category-list/category-list.component')
-      .then(m => m.CategoryListComponent)
-},
+        path: 'categories',
+        loadComponent: () =>
+          import('./public/pages/admin/categories/category-list/category-list.component')
+            .then(m => m.CategoryListComponent)
+      },
+      {
+        path: 'rules',
+        loadComponent: () =>
+          import('./public/pages/admin/rules/rule-list/rule-list.component')
+            .then(m => m.RuleListComponent)
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },

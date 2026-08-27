@@ -1,51 +1,80 @@
-<div class="category-list">
-  <div class="header">
-    <h2>Categories</h2>
-    <button (click)="openAddModal()" class="btn-primary">+ Add Category</button>
+<div class="page-container">
+  <div class="header-bar">
+    <div>
+      <h1 class="page-title">Categories</h1>
+      <p class="page-subtitle">Organize products and structure lead routing across business units</p>
+    </div>
+    <button (click)="openAddModal()" class="btn-primary">
+      Add Category
+    </button>
   </div>
 
-  <div class="table-container" *ngIf="!loading; else loadingTemplate">
-    <table>
+  <div *ngIf="noticeMessage" class="alert-notice">
+    {{ noticeMessage }}
+  </div>
+
+  <div *ngIf="categories.length > salespersonsCount" class="alignment-banner">
+    <div>
+      <strong>Sales Representative Notice:</strong> You have {{ categories.length }} categories but only {{ salespersonsCount }} sales representative(s). <a routerLink="/admin/salespersons" class="banner-link">Add a Sales Representative</a> to balance inbound lead management.
+    </div>
+  </div>
+
+  <div class="card table-card" *ngIf="!loading; else loadingTemplate">
+    <table class="data-table">
       <thead>
         <tr>
-          <th>ID</th>
+          <th style="width: 80px;">ID</th>
           <th>Category Name</th>
           <th>Created At</th>
-          <th>Actions</th>
+          <th class="text-right">Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let cat of categories">
-          <td>{{ cat.categoryId }}</td>
-          <td>{{ cat.categoryName }}</td>
-          <td>{{ cat.createdAt | date:'medium' }}</td>
-          <td>
-            <button (click)="openEditModal(cat)" class="edit-btn">Edit</button>
-            <button (click)="deleteCategory(cat.categoryId)" class="delete-btn">Delete</button>
+          <td><span class="id-badge">#{{ cat.categoryId }}</span></td>
+          <td><strong>{{ cat.categoryName }}</strong></td>
+          <td>{{ cat.createdAt | date:'mediumDate' }}</td>
+          <td class="text-right actions-cell">
+            <button (click)="openEditModal(cat)" class="btn-text">Edit</button>
+            <button (click)="deleteCategory(cat.categoryId)" class="btn-text-danger">Delete</button>
           </td>
         </tr>
-        <tr *ngIf="!categories.length">
-          <td colspan="4" class="empty">No categories found.</td>
+        <tr *ngIf="categories.length === 0">
+          <td colspan="4" class="empty-cell">No categories found. Click "Add Category" to create your first category.</td>
         </tr>
       </tbody>
     </table>
   </div>
 
   <ng-template #loadingTemplate>
-    <div class="loading">Loading...</div>
+    <div class="loading-state">Loading categories...</div>
   </ng-template>
 
-  <!-- Modal -->
-  <div class="modal" *ngIf="showModal" (click)="closeModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <h3>{{ isEdit ? 'Edit Category' : 'Add Category' }}</h3>
-      <div class="form-group">
-        <label>Category Name</label>
-        <input type="text" [(ngModel)]="categoryName" placeholder="Enter category name" />
+  <!-- Add/Edit Category Modal -->
+  <div class="modal-backdrop" *ngIf="showModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>{{ isEdit ? 'Edit Category' : 'Add Category' }}</h2>
+        <button (click)="closeModal()" class="close-btn">&times;</button>
       </div>
-      <div class="actions">
-        <button (click)="closeModal()">Cancel</button>
-        <button (click)="saveCategory()" [disabled]="!categoryName.trim()">Save</button>
+
+      <div class="form-body">
+        <div class="form-field">
+          <label>Category Name *</label>
+          <input 
+            type="text" 
+            [(ngModel)]="categoryName" 
+            placeholder="e.g. Cloud Infrastructure, Cybersecurity" 
+            (keyup.enter)="saveCategory()"
+          />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button (click)="closeModal()" class="btn-secondary">Cancel</button>
+        <button (click)="saveCategory()" [disabled]="!categoryName.trim()" class="btn-primary">
+          {{ isEdit ? 'Save Changes' : 'Create Category' }}
+        </button>
       </div>
     </div>
   </div>

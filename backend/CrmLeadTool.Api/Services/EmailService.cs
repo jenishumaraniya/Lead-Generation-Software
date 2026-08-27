@@ -2,6 +2,7 @@ using CrmLeadTool.Api.Data;
 using CrmLeadTool.Api.DTOs;
 using CrmLeadTool.Api.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 
@@ -14,7 +15,7 @@ public class EmailService
     private readonly ScoringService _scoringService;
     private readonly QualificationService _qualificationService;
     private readonly ILogger<EmailService> _logger;
-    private readonly HttpClient _httpClient;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public EmailService(
         IConfiguration config,
@@ -22,14 +23,14 @@ public class EmailService
         ScoringService scoringService,
         QualificationService qualificationService,
         ILogger<EmailService> logger,
-        HttpClient httpClient)
+        IHttpClientFactory httpClientFactory)
     {
         _config = config;
         _context = context;
         _scoringService = scoringService;
         _qualificationService = qualificationService;
         _logger = logger;
-        _httpClient = httpClient;
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task<EmailMessage> SendEmailAsync(int campaignRecipientId, string? fromEmail = null)
@@ -120,11 +121,12 @@ public class EmailService
     {
         var apiKey = _config["Mailtrap:ApiKey"];
         var fromName = _config["Mailtrap:FromName"] ?? "LeadGen Platform";
-        var baseUrl = "https://send.api.mailtrap.io/api/send";
+        const string mailtrapUrl = "https://send.api.mailtrap.io/api/send";
 
         if (string.IsNullOrEmpty(apiKey) || apiKey.StartsWith("YOUR_"))
         {
-            // Simulate successful delivery in development mode
+            // Simulate successful delivery in development mode (no API key configured)
+            _logger.LogWarning("Mailtrap API key not configured - simulating delivery.");
             return $"sim-{Guid.NewGuid():N}";
         }
 
@@ -132,31 +134,33 @@ public class EmailService
         {
             from = new { email = fromEmail, name = fromName },
             to = new[] { new { email = to } },
-            subject = subject,
+            subject,
             html = htmlBody,
             text = StripHtml(htmlBody)
         };
 
         var json = JsonSerializer.Serialize(payload);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        _httpClient.DefaultRequestHeaders.Clear();
-        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+        // Use IHttpClientFactory — thread-safe, no shared header state
+        using var httpClient = _httpClientFactory.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Post, mailtrapUrl);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+        request.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PostAsync(baseUrl, content);
+        var response = await httpClient.SendAsync(request);
         var responseBody = await response.Content.ReadAsStringAsync();
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogError("Mailtrap API error: {StatusCode} - {Response}", response.StatusCode, responseBody);
-            throw new Exception($"Mailtrap API error: {response.StatusCode} - {responseBody}");
+            _logger.LogError("Mailtrap API error {StatusCode}: {Response}", response.StatusCode, responseBody);
+            throw new Exception($"Mailtrap API error {response.StatusCode}: {responseBody}");
         }
+
+        _logger.LogInformation("Mailtrap email sent to {To}. Response: {Response}", to, responseBody);
 
         using var doc = JsonDocument.Parse(responseBody);
         if (doc.RootElement.TryGetProperty("message_ids", out var messageIds) && messageIds.EnumerateArray().Any())
-        {
             return messageIds.EnumerateArray().First().GetString() ?? $"msg-{Guid.NewGuid():N}";
-        }
 
         return $"msg-{Guid.NewGuid():N}";
     }

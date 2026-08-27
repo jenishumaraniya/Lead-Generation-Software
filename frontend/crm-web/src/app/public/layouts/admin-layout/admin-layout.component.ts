@@ -11,12 +11,18 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrls: ['./admin-layout.component.css']
 })
 export class AdminLayoutComponent {
-  user = this.authService.getCurrentUser();
   constructor(private authService: AuthService) {}
-  logout() { this.authService.logout(); }
 
-  get welcomeMessage(): string {
-    return `Welcome, ${this.user?.fullName}`;
+  get user() {
+    return this.authService.getCurrentUser();
   }
 
+  logout() { 
+    this.authService.logout(); 
+  }
+
+  get welcomeMessage(): string {
+    const name = this.user?.fullName || 'Administrator';
+    return `Welcome, ${name}`;
+  }
 }

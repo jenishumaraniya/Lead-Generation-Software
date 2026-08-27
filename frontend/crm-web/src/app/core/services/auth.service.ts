@@ -130,7 +130,7 @@ export class AuthService {
     }
     this.clearStorage();
     this.currentUserSubject.next(null);
-    this.router.navigate(['/admin/login']);
+    this.router.navigate(['/login']);
   }
 
   logoutAll(): void {
@@ -139,15 +139,15 @@ export class AuthService {
     });
     this.clearStorage();
     this.currentUserSubject.next(null);
-    this.router.navigate(['/admin/login']);
+    this.router.navigate(['/login']);
   }
 
   private handleAuthResponse(res: AuthResponse): void {
     const token = res.accessToken || res.token || '';
-    const userProfile = res.user || {
+    const userProfile: UserProfile = res.user || {
       fullName: res.fullName || 'User',
       email: res.email || '',
-      role: (res.role as any) || 'SALES_REP'
+      role: ((res.role || 'SALES_REP') as any)
     };
 
     localStorage.setItem(this.ACCESS_TOKEN_KEY, token);
@@ -155,6 +155,7 @@ export class AuthService {
       localStorage.setItem(this.REFRESH_TOKEN_KEY, res.refreshToken);
     }
     localStorage.setItem(this.USER_KEY, JSON.stringify(userProfile));
+    localStorage.setItem('user', JSON.stringify(userProfile));
     this.currentUserSubject.next(userProfile);
   }
 

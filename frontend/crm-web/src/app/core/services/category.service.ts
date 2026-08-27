@@ -2,10 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Category } from '../models/category.model';
+export { Category };
 
 @Injectable({ providedIn: 'root' })
 export class CategoryService {
-  private base = 'http://localhost:5234/api/category'; // adjust to your backend
+  private base = 'http://localhost:5234/api/categories';
 
   constructor(private http: HttpClient) {}
 

@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
@@ -15,7 +15,12 @@ export class LoginComponent {
   loginForm: FormGroup;
   loginError: string = '';
   isLoading = false;
+  showPassword = false;
   returnUrl: string;
+
+  togglePassword(): void {
+    this.showPassword = !this.showPassword;
+  }
 
   constructor(
     private fb: FormBuilder,
@@ -27,10 +32,17 @@ export class LoginComponent {
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
-    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '';
     if (this.authService.isAuthenticated()) {
       this.redirectBasedOnRole();
     }
+  }
+
+  quickFillAdmin(): void {
+    this.loginForm.patchValue({
+      email: 'admin@leadgen.com',
+      password: 'Admin@123'
+    });
   }
 
   onSubmit(): void {
@@ -46,19 +58,32 @@ export class LoginComponent {
       },
       error: (err) => {
         this.isLoading = false;
-        this.loginError = err.error?.message || 'Invalid email or password';
+        this.loginError = err.error?.message || err.error?.error || 'Invalid email or password';
       }
     });
   }
 
   private redirectBasedOnRole(): void {
     const user = this.authService.getCurrentUser();
-    if (user?.role === 'ADMIN') {
+    const role = user?.role;
+
+    if (this.returnUrl && this.returnUrl !== '/' && this.returnUrl !== '/login') {
+      if (role === 'ADMIN') {
+        this.router.navigateByUrl(this.returnUrl);
+        return;
+      }
+      if ((role === 'SALES' || role === 'SALES_REP') && this.returnUrl.startsWith('/sales')) {
+        this.router.navigateByUrl(this.returnUrl);
+        return;
+      }
+    }
+
+    if (role === 'ADMIN') {
       this.router.navigate(['/admin/dashboard']);
-    } else if (user?.role === 'SALES') {
+    } else if (role === 'SALES' || role === 'SALES_REP') {
       this.router.navigate(['/sales/dashboard']);
     } else {
-      this.router.navigate([this.returnUrl]);
+      this.router.navigate(['/']);
     }
   }
 }

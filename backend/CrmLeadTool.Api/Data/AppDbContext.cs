@@ -146,6 +146,36 @@ public class AppDbContext : DbContext
             .HasForeignKey(l => l.ProspectId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        modelBuilder.Entity<Lead>()
+            .HasOne(l => l.AssignedUser)
+            .WithMany()
+            .HasForeignKey(l => l.AssignedTo)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.Category)
+            .WithMany()
+            .HasForeignKey(u => u.CategoryId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<LeadNote>()
+            .HasOne(n => n.Lead)
+            .WithMany(l => l.LeadNotes)
+            .HasForeignKey(n => n.LeadId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<LeadStatusHistory>()
+            .HasOne(s => s.Lead)
+            .WithMany(l => l.StatusHistories)
+            .HasForeignKey(s => s.LeadId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<LeadActivity>()
+            .HasOne(a => a.Lead)
+            .WithMany(l => l.Activities)
+            .HasForeignKey(a => a.LeadId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         modelBuilder.Entity<SequenceStep>()
             .HasOne(s => s.Campaign)
             .WithMany(c => c.Steps)

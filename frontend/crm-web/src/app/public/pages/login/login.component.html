@@ -1,26 +1,53 @@
 <div class="login-container">
   <div class="login-box">
-    <h2>LeadGen Pro</h2>
-    <h3>Sign In</h3>
+    <div class="login-header">
+      <div class="brand-badge">LeadGen CRM</div>
+      <h2>Portal Authentication</h2>
+      <p class="subtitle">Enter your corporate credentials to access your workspace</p>
+    </div>
+
+    <!-- Quick Demo Option (Admin Only) -->
+    <div class="quick-demo-section">
+      <span class="quick-title">Quick Demo Login:</span>
+      <div class="quick-buttons single-btn-grid">
+        <button type="button" class="quick-btn admin-btn full-width" (click)="quickFillAdmin()">
+          Fill Admin Credentials (admin&#64;leadgen.com)
+        </button>
+      </div>
+    </div>
+
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
       <div class="form-group">
-        <label>Email</label>
-        <input type="email" formControlName="email" placeholder="your@email.com" />
+        <label>Email Address</label>
+        <input type="email" formControlName="email" placeholder="e.g. admin@leadgen.com or salesperson email" />
         <small class="error" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
           Valid email required
         </small>
       </div>
       <div class="form-group">
         <label>Password</label>
-        <input type="password" formControlName="password" placeholder="••••••••" />
+        <div class="password-input-wrapper">
+          <input 
+            [type]="showPassword ? 'text' : 'password'" 
+            formControlName="password" 
+            placeholder="Enter password" 
+          />
+          <button type="button" class="btn-toggle-pw" (click)="togglePassword()">
+            {{ showPassword ? 'Hide' : 'Show' }}
+          </button>
+        </div>
         <small class="error" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
           Password required (min 6 chars)
         </small>
       </div>
       <div class="error-message" *ngIf="loginError">{{ loginError }}</div>
-      <button type="submit" [disabled]="loginForm.invalid || isLoading">
-        {{ isLoading ? 'Logging in...' : 'Sign In' }}
+      <button type="submit" class="submit-btn" [disabled]="loginForm.invalid || isLoading">
+        {{ isLoading ? 'Signing in...' : 'Sign In' }}
       </button>
     </form>
+
+    <div class="login-footer">
+      <a routerLink="/" class="back-link">&larr; Return to Public Website</a>
+    </div>
   </div>
 </div>

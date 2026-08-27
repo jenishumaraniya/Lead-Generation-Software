@@ -1,128 +1,3 @@
-
-// import { Component, OnInit } from '@angular/core';
-// import { NgIf } from '@angular/common';
-// import { Router, RouterLink, RouterOutlet } from '@angular/router';
-// import { VisitorTrackingService } from './core/services/visitor-tracking.service';
-// import { ContactService } from './core/services/contact.service';
-// import { FloatingContactButtonComponent } from './components/floating-contact-button/floating-contact-button.component';
-// import { ContactFormComponent, ContactFormData } from './components/contact-form/contact-form.component';
-
-// @Component({
-//   selector: 'app-root',
-//   standalone: true,
-//   imports: [NgIf, RouterOutlet, FloatingContactButtonComponent, RouterLink, ContactFormComponent],
-//   templateUrl: './app.component.html',
-//   styleUrl: './app.component.css'
-// })
-// export class AppComponent implements OnInit {
-//   title = 'crm-web';
-//   showConsentPopup = false;
-//   showContactForm = false;
-//   preselectedProductId?: number;
-//   isLoading = false;
-
-//   // Toast properties
-//   toastMessage: string = '';
-//   isToastError: boolean = false;
-
-//   constructor(
-//     private visitorTrackingService: VisitorTrackingService,
-//     public router: Router,
-//     private contactService: ContactService
-//   ) {}
-
-//   ngOnInit(): void {
-//     this.showConsentPopup = this.visitorTrackingService.shouldShowConsentPopup();
-
-//     if (!this.visitorTrackingService.hasConsent()) {
-//       const currentUrl = this.router.url;
-//       if (currentUrl !== '/') {
-//         this.router.navigate(['/']);
-//       }
-//     }
-
-//     if (this.visitorTrackingService.hasConsent()) {
-//       this.visitorTrackingService.initializeVisitor(
-//         this.visitorTrackingService.getConsentChoice() ?? 'accepted'
-//       );
-//       this.visitorTrackingService.trackActivity('PAGE_VIEW');
-//     }
-
-//     this.contactService.openForm$.subscribe(productId => {
-//       this.openContactForm(productId);
-//     });
-//   }
-
-//   isActiveRoute(path: string): boolean {
-//     return this.router.url === path;
-//   }
-
-//   acceptCookies(): void {
-//     this.visitorTrackingService.setConsentChoice('accepted');
-//     this.showConsentPopup = false;
-//   }
-
-//   rejectCookies(): void {
-//     this.visitorTrackingService.setConsentChoice('rejected');
-//     this.showConsentPopup = false;
-//   }
-
-//   scrollToContact(): void {
-//     if (!this.visitorTrackingService.hasConsent()) {
-//       window.scrollTo({ top: 0, behavior: 'smooth' });
-//       return;
-//     }
-   
-//     this.openContactForm();
-//     this.visitorTrackingService.trackActivity(
-//       'INTEREST_CLICK',
-//       undefined,
-//       { source: 'navbar_contact' }
-//     );
-//   }
-
-//   openContactForm(productId?: number): void {
-//     this.preselectedProductId = productId;
-//     this.showContactForm = true;
-   
-//     if (productId) {
-//       this.visitorTrackingService.trackActivity(
-//         'INTEREST_CLICK',
-//         productId,
-//         { source: 'floating_button' }
-//       );
-//     } else {
-//       this.visitorTrackingService.trackActivity(
-//         'INTEREST_CLICK',
-//         undefined,
-//         { source: 'contact_us_button' }
-//       );
-//     }
-//   }
-
-//   closeContactForm(): void {
-//     this.showContactForm = false;
-//     this.preselectedProductId = undefined;
-//   }
-
-//   handleFormSubmit(formData: ContactFormData): void {
-//     console.log('Form submitted:', formData);
-//   }
-
-//   handleLeadSubmitted(response: any): void {
-//     console.log('Lead created:', response);
-//   }
-
-//   // Toast handler
-//   showToastMessage(message: string): void {
-//     this.toastMessage = message;
-//     this.isToastError = true;
-//     setTimeout(() => {
-//       this.toastMessage = '';
-//     }, 5000);
-//   }
-// }
-
 import { Component, OnInit } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { Router, RouterLink, RouterOutlet, NavigationEnd } from '@angular/router';
@@ -145,7 +20,7 @@ export class AppComponent implements OnInit {
   showContactForm = false;
   preselectedProductId?: number;
   isLoading = false;
-  isPublicRoute = true; // ✅ Track if current route is public
+  isPublicRoute = true;
 
   toastMessage: string = '';
   isToastError: boolean = false;
@@ -157,22 +32,19 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // ✅ Detect route changes to hide public elements on admin/sales
+    const updateRouteStatus = (url: string) => {
+      this.isPublicRoute = !url.startsWith('/admin') && !url.startsWith('/sales') && !url.startsWith('/login');
+    };
+
+    updateRouteStatus(this.router.url);
+
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
-    ).subscribe(() => {
-      const url = this.router.url;
-      this.isPublicRoute = !url.startsWith('/admin') && !url.startsWith('/sales');
+    ).subscribe((event: any) => {
+      updateRouteStatus(event.urlAfterRedirects || this.router.url);
     });
 
     this.showConsentPopup = this.visitorTrackingService.shouldShowConsentPopup();
-
-    if (!this.visitorTrackingService.hasConsent()) {
-      const currentUrl = this.router.url;
-      if (currentUrl !== '/') {
-        this.router.navigate(['/']);
-      }
-    }
 
     if (this.visitorTrackingService.hasConsent()) {
       this.visitorTrackingService.initializeVisitor(
@@ -201,35 +73,34 @@ export class AppComponent implements OnInit {
   }
 
   scrollToContact(): void {
-    if (!this.visitorTrackingService.hasConsent()) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-   
     this.openContactForm();
-    this.visitorTrackingService.trackActivity(
-      'INTEREST_CLICK',
-      undefined,
-      { source: 'navbar_contact' }
-    );
+    if (this.visitorTrackingService.hasConsent()) {
+      this.visitorTrackingService.trackActivity(
+        'INTEREST_CLICK',
+        undefined,
+        { source: 'navbar_contact' }
+      );
+    }
   }
 
   openContactForm(productId?: number): void {
     this.preselectedProductId = productId;
     this.showContactForm = true;
    
-    if (productId) {
-      this.visitorTrackingService.trackActivity(
-        'INTEREST_CLICK',
-        productId,
-        { source: 'floating_button' }
-      );
-    } else {
-      this.visitorTrackingService.trackActivity(
-        'INTEREST_CLICK',
-        undefined,
-        { source: 'contact_us_button' }
-      );
+    if (this.visitorTrackingService.hasConsent()) {
+      if (productId) {
+        this.visitorTrackingService.trackActivity(
+          'INTEREST_CLICK',
+          productId,
+          { source: 'floating_button' }
+        );
+      } else {
+        this.visitorTrackingService.trackActivity(
+          'INTEREST_CLICK',
+          undefined,
+          { source: 'contact_us_button' }
+        );
+      }
     }
   }
 

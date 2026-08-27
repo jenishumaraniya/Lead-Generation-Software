@@ -12,6 +12,7 @@ import { CampaignService } from '../../../../../core/services/campaign.service';
 })
 export class CampaignListComponent implements OnInit {
   campaigns: any[] = [];
+  loading = false;
 
   constructor(private campaignService: CampaignService) {}
 
@@ -20,9 +21,16 @@ export class CampaignListComponent implements OnInit {
   }
 
   loadCampaigns() {
+    this.loading = true;
     this.campaignService.getCampaigns().subscribe({
-      next: (data) => this.campaigns = data,
-      error: () => this.campaigns = []
+      next: (data) => {
+        this.campaigns = data || [];
+        this.loading = false;
+      },
+      error: () => {
+        this.campaigns = [];
+        this.loading = false;
+      }
     });
   }
 
@@ -31,6 +39,15 @@ export class CampaignListComponent implements OnInit {
       this.campaignService.closeCampaign(id).subscribe({
         next: () => this.loadCampaigns(),
         error: () => alert('Failed to close campaign')
+      });
+    }
+  }
+
+  deleteCampaign(id: number) {
+    if (confirm('Are you sure you want to delete this campaign?')) {
+      this.campaignService.deleteCampaign(id).subscribe({
+        next: () => this.loadCampaigns(),
+        error: () => alert('Failed to delete campaign')
       });
     }
   }

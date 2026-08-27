@@ -6,6 +6,7 @@ namespace CrmLeadTool.Api.Controllers;
 
 [ApiController]
 [Route("api/campaigns")]
+[Route("api/campaign")]
 public class CampaignController : ControllerBase
 {
     private readonly CampaignService _campaignService;
@@ -21,7 +22,7 @@ public class CampaignController : ControllerBase
         try
         {
             var campaign = await _campaignService.CreateCampaignAsync(dto);
-            return CreatedAtAction(nameof(GetCampaign), new { id = campaign.CampaignId }, new
+            return Ok(new
             {
                 campaign.CampaignId,
                 campaign.Name,
@@ -53,6 +54,62 @@ public class CampaignController : ControllerBase
         if (campaign == null)
             return NotFound(new { error = $"Campaign with ID {id} not found." });
         return Ok(campaign);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateCampaign(int id, [FromBody] CreateCampaignDto dto)
+    {
+        try
+        {
+            var campaign = await _campaignService.UpdateCampaignAsync(id, dto);
+            return Ok(new
+            {
+                campaign.CampaignId,
+                campaign.Name,
+                campaign.Description,
+                campaign.Status,
+                campaign.ScheduleStartDate,
+                campaign.ScheduleEndDate,
+                campaign.CreatedAt,
+                campaign.UpdatedAt
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpPost("{id}/close")]
+    public async Task<IActionResult> CloseCampaign(int id)
+    {
+        try
+        {
+            var campaign = await _campaignService.CloseCampaignAsync(id);
+            return Ok(new { success = true, campaign.CampaignId, campaign.Status });
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteCampaign(int id)
+    {
+        try
+        {
+            await _campaignService.DeleteCampaignAsync(id);
+            return Ok(new { success = true, message = "Campaign deleted" });
+        }
+        catch (ArgumentException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
     }
 
     [HttpGet("{id}/recipients")]
@@ -114,17 +171,17 @@ public class CampaignController : ControllerBase
         }
     }
 
-    [HttpPut("recipients/{recipientId}/status")]
-    public async Task<IActionResult> UpdateRecipientStatus(int recipientId, [FromBody] UpdateRecipientStatusDto dto)
+    [HttpPost("{id}/launch")]
+    public async Task<IActionResult> LaunchCampaign(int id)
     {
         try
         {
-            var recipient = await _campaignService.UpdateRecipientStatusAsync(recipientId, dto.Status);
-            return Ok(recipient);
+            var sentCount = await _campaignService.LaunchCampaignEmailsAsync(id);
+            return Ok(new { success = true, campaignId = id, emailsSent = sentCount, message = $"Launched campaign. {sentCount} emails dispatched." });
         }
-        catch (ArgumentException ex)
+        catch (Exception ex)
         {
-            return NotFound(new { error = ex.Message });
+            return BadRequest(new { error = ex.Message });
         }
     }
 }

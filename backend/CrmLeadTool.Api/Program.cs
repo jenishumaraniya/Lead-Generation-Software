@@ -33,8 +33,8 @@ builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<AuditLogService>();
 builder.Services.AddScoped<AuthService>();
 
-// HttpClient for External Providers
-builder.Services.AddHttpClient<EmailService>();
+// HttpClient for External Providers (IHttpClientFactory available to all scoped services)
+builder.Services.AddHttpClient(); // registers IHttpClientFactory
 builder.Services.AddScoped<GroqAIService>();
 builder.Services.AddHttpClient<GroqAIService>();
 
