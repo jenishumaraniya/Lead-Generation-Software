@@ -157,6 +157,115 @@ public class ProspectService
         return prospect;
     }
 
+    public async Task<object> ImportCsvProspectsAsync(Stream csvStream)
+    {
+        using var reader = new StreamReader(csvStream);
+        var headerLine = await reader.ReadLineAsync();
+        if (string.IsNullOrWhiteSpace(headerLine))
+        {
+            throw new ArgumentException("CSV file is empty.");
+        }
+
+        var headers = headerLine.Split(',').Select(h => h.Trim().ToLowerInvariant().Replace(" ", "").Replace("_", "")).ToArray();
+        int nameIdx = Array.FindIndex(headers, h => h.Contains("name") && !h.Contains("company"));
+        int emailIdx = Array.FindIndex(headers, h => h.Contains("email"));
+        int companyIdx = Array.FindIndex(headers, h => h.Contains("company"));
+        int titleIdx = Array.FindIndex(headers, h => h.Contains("title") || h.Contains("job") || h.Contains("role"));
+        int industryIdx = Array.FindIndex(headers, h => h.Contains("industry"));
+        int phoneIdx = Array.FindIndex(headers, h => h.Contains("phone"));
+        int domainIdx = Array.FindIndex(headers, h => h.Contains("domain") || h.Contains("website"));
+        int countryIdx = Array.FindIndex(headers, h => h.Contains("country") || h.Contains("location"));
+
+        if (emailIdx == -1)
+        {
+            throw new ArgumentException("CSV must contain an 'Email' column.");
+        }
+
+        int addedCount = 0;
+        int updatedCount = 0;
+        var importedProspects = new List<Prospect>();
+
+        string? line;
+        while ((line = await reader.ReadLineAsync()) != null)
+        {
+            if (string.IsNullOrWhiteSpace(line)) continue;
+            var values = line.Split(',').Select(v => v.Trim().Trim('"')).ToArray();
+
+            string email = emailIdx < values.Length ? values[emailIdx].Trim().ToLowerInvariant() : "";
+            if (string.IsNullOrWhiteSpace(email) || !email.Contains('@')) continue;
+
+            string name = nameIdx >= 0 && nameIdx < values.Length ? values[nameIdx] : "";
+            string companyName = companyIdx >= 0 && companyIdx < values.Length ? values[companyIdx] : "";
+            string jobTitle = titleIdx >= 0 && titleIdx < values.Length ? values[titleIdx] : "";
+            string industry = industryIdx >= 0 && industryIdx < values.Length ? values[industryIdx] : "";
+            string phone = phoneIdx >= 0 && phoneIdx < values.Length ? values[phoneIdx] : "";
+            string domain = domainIdx >= 0 && domainIdx < values.Length ? values[domainIdx] : "";
+            string location = countryIdx >= 0 && countryIdx < values.Length ? values[countryIdx] : "";
+
+            Company? company = null;
+            if (!string.IsNullOrWhiteSpace(companyName))
+            {
+                company = await _context.Companies
+                    .FirstOrDefaultAsync(c => c.Name.ToLower() == companyName.ToLower() || (!string.IsNullOrEmpty(domain) && c.Domain == domain));
+
+                if (company == null)
+                {
+                    company = new Company
+                    {
+                        Name = companyName,
+                        Domain = domain,
+                        Industry = industry,
+                        Location = location,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Companies.Add(company);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            var prospect = await _context.Prospects.FirstOrDefaultAsync(p => p.Email.ToLower() == email);
+            if (prospect == null)
+            {
+                prospect = new Prospect
+                {
+                    Email = email,
+                    Name = !string.IsNullOrWhiteSpace(name) ? name : email.Split('@')[0],
+                    JobTitle = jobTitle,
+                    Phone = phone,
+                    CompanyId = company?.CompanyId,
+                    Source = "CSV_IMPORT",
+                    Status = "NEW",
+                    Score = 10,
+                    Qualification = "COLD",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                _context.Prospects.Add(prospect);
+                addedCount++;
+            }
+            else
+            {
+                if (!string.IsNullOrWhiteSpace(name)) prospect.Name = name;
+                if (!string.IsNullOrWhiteSpace(jobTitle)) prospect.JobTitle = jobTitle;
+                if (!string.IsNullOrWhiteSpace(phone)) prospect.Phone = phone;
+                if (company != null) prospect.CompanyId = company.CompanyId;
+                prospect.UpdatedAt = DateTime.UtcNow;
+                updatedCount++;
+            }
+
+            await _context.SaveChangesAsync();
+            importedProspects.Add(prospect);
+        }
+
+        return new
+        {
+            totalProcessed = addedCount + updatedCount,
+            added = addedCount,
+            updated = updatedCount,
+            prospects = importedProspects.Select(p => new { p.ProspectId, p.Name, p.Email, p.JobTitle, p.Status, p.Score })
+        };
+    }
+
     public async Task DeleteProspectAsync(int id)
     {
         var prospect = await _context.Prospects.FindAsync(id);

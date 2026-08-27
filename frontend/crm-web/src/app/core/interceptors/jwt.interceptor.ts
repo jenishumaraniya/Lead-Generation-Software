@@ -8,7 +8,9 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const token = authService.getAccessToken();
 
   let authReq = req;
-  if (token && req.url.includes('http://localhost:5234/api')) {
+  const isApiUrl = req.url.includes('/api') || req.url.includes('localhost:5234');
+
+  if (token && isApiUrl) {
     authReq = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`

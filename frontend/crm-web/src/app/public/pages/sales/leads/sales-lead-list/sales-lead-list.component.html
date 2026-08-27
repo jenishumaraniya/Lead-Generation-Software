@@ -1,18 +1,17 @@
 <div class="sales-lead-container">
   <div class="header-section">
     <div>
-      <h2>💼 Assigned Sales Leads</h2>
-      <p class="subtitle">Manage prospect pipelines, follow-ups, and customer engagement</p>
+      <h1 class="page-title">Assigned Leads</h1>
+      <p class="page-subtitle">Track prospect interactions, update pipeline stages, and manage customer communications</p>
     </div>
     <div class="filter-controls">
-      <div class="search-box">
-        <input 
-          type="text" 
-          placeholder="Search by name, company, or email..." 
-          [(ngModel)]="searchTerm" 
-          (input)="applyFilters()" 
-        />
-      </div>
+      <input 
+        type="text" 
+        placeholder="Search by name, company, or email..." 
+        [(ngModel)]="searchTerm" 
+        (input)="applyFilters()" 
+        class="search-input"
+      />
       <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="status-select">
         <option value="">All Statuses</option>
         <option value="NEW">New</option>
@@ -29,41 +28,40 @@
   </div>
 
   <div *ngIf="!loading && filteredLeads.length === 0" class="empty-state">
-    <div class="empty-icon">📭</div>
-    <h3>No leads found</h3>
-    <p>Try clearing your filters or check back when new inquiries are submitted.</p>
+    <h3>No assigned leads found</h3>
+    <p>Check back when new inquiries are submitted or assigned to your profile.</p>
   </div>
 
-  <div *ngIf="!loading && filteredLeads.length > 0" class="table-card">
+  <div *ngIf="!loading && filteredLeads.length > 0" class="card table-card">
     <table class="leads-table">
       <thead>
         <tr>
           <th>Lead Name</th>
-          <th>Company</th>
-          <th>Contact</th>
-          <th>Score & Intent</th>
+          <th>Organization</th>
+          <th>Contact Information</th>
+          <th>Score</th>
           <th>Status</th>
           <th>Update Status</th>
-          <th>Action</th>
+          <th class="text-right">Action</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let lead of filteredLeads">
-          <td class="lead-name">
+          <td class="lead-name-cell">
             <strong>{{ lead.fullName }}</strong>
             <span class="job-title" *ngIf="lead.jobTitle">{{ lead.jobTitle }}</span>
           </td>
           <td>
-            <strong>{{ lead.companyName }}</strong>
+            <div class="company-name">{{ lead.companyName }}</div>
             <span class="industry-tag" *ngIf="lead.industry">{{ lead.industry }}</span>
           </td>
           <td>
-            <div class="contact-line">📧 {{ lead.email }}</div>
-            <div class="contact-line" *ngIf="lead.phone">📞 {{ lead.phone }}</div>
+            <div class="contact-line">{{ lead.email }}</div>
+            <div class="contact-line-sub" *ngIf="lead.phone">{{ lead.phone }}</div>
           </td>
           <td>
             <span class="score-badge" [class.high-score]="(lead.score || 0) >= 40">
-              ⚡ {{ lead.score || 0 }} pts
+              {{ lead.score || 0 }} pts
             </span>
           </td>
           <td>
@@ -78,8 +76,8 @@
               <option value="LOST">LOST</option>
             </select>
           </td>
-          <td>
-            <a [routerLink]="['/sales/leads', lead.leadId]" class="view-btn">View Details →</a>
+          <td class="text-right">
+            <a [routerLink]="['/sales/leads', lead.leadId]" class="btn-text">View Details &rarr;</a>
           </td>
         </tr>
       </tbody>

@@ -1,25 +1,108 @@
-<div class="dashboard">
-  <h1>Admin Dashboard</h1>
-  
-  <div class="stats-grid">
-    <div class="stat-card" *ngFor="let stat of stats">
-      <div class="stat-icon">{{ stat.icon }}</div>
-      <div class="stat-value">{{ stat.value }}</div>
-      <div class="stat-label">{{ stat.label }}</div>
+<div class="dashboard-container">
+  <div class="header-bar">
+    <div>
+      <h1 class="page-title">Admin Dashboard</h1>
+      <p class="page-subtitle">Real-time overview of lead flow, campaign activity, and sales operations</p>
+    </div>
+    <div class="refresh-indicator" *ngIf="loading">
+      <span>Updating live metrics...</span>
     </div>
   </div>
 
-  <div class="recent-section">
-    <h2>Recent Leads</h2>
-    <table class="table">
+  <!-- Live Metric Summary Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">Total Leads</span>
+        <span class="stat-pill primary">Live</span>
+      </div>
+      <div class="stat-value">{{ stats.totalLeads }}</div>
+      <div class="stat-sub">Inbound pipeline inquiries</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">New Leads</span>
+        <span class="stat-pill new">Requires Attention</span>
+      </div>
+      <div class="stat-value">{{ stats.newLeads }}</div>
+      <div class="stat-sub">Fresh uncontacted leads</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">Active Campaigns</span>
+        <span class="stat-pill active">Running</span>
+      </div>
+      <div class="stat-value">{{ stats.activeCampaigns }}</div>
+      <div class="stat-sub">Outbound email sequences</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">Sales Team</span>
+        <span class="stat-pill neutral">Active</span>
+      </div>
+      <div class="stat-value">{{ stats.salesTeamCount }}</div>
+      <div class="stat-sub">Assigned category representatives</div>
+    </div>
+  </div>
+
+  <!-- Recent Inbound Leads Card -->
+  <div class="card table-card">
+    <div class="card-header-flex">
+      <div>
+        <h2 class="card-title">Recent Inbound Leads</h2>
+        <p class="card-desc">Latest prospect inquiries captured from the platform</p>
+      </div>
+      <a routerLink="/admin/leads" class="btn-link">View All Leads &rarr;</a>
+    </div>
+
+    <table class="data-table">
       <thead>
-        <tr><th>Company</th><th>Email</th><th>Status</th></tr>
+        <tr>
+          <th>Lead / Contact</th>
+          <th>Organization</th>
+          <th>Score</th>
+          <th>Status</th>
+          <th>Assigned Representative</th>
+          <th>Received</th>
+          <th class="text-right">Actions</th>
+        </tr>
       </thead>
       <tbody>
         <tr *ngFor="let lead of recentLeads">
-          <td>{{ lead.name }}</td>
-          <td>{{ lead.email }}</td>
-          <td><span class="badge">{{ lead.status }}</span></td>
+          <td>
+            <div class="lead-name">{{ lead.fullName || 'Anonymous Prospect' }}</div>
+            <div class="lead-email">{{ lead.email }}</div>
+          </td>
+          <td>
+            <div class="company-name">{{ lead.companyName || '—' }}</div>
+            <span class="multi-tag" *ngIf="lead.isMultiCategory">Multi-Category</span>
+          </td>
+          <td>
+            <span class="score-pill">{{ lead.score || 0 }} pts</span>
+          </td>
+          <td>
+            <span class="status-badge" [class]="lead.status">
+              {{ lead.status }}
+            </span>
+          </td>
+          <td>
+            <span class="rep-name" *ngIf="lead.assignedSalespersonName">
+              {{ lead.assignedSalespersonName }}
+            </span>
+            <span class="unassigned-text" *ngIf="!lead.assignedSalespersonName">
+              Unassigned
+            </span>
+          </td>
+          <td class="date-cell">{{ lead.createdAt | date:'mediumDate' }}</td>
+          <td class="text-right actions-cell">
+            <a [routerLink]="['/admin/leads', lead.leadId]" class="btn-text">View &rarr;</a>
+          </td>
+        </tr>
+        <tr *ngIf="recentLeads.length === 0 && !loading">
+          <td colspan="7" class="empty-cell">No leads captured yet. Inbound inquiries will appear here automatically.</td>
         </tr>
       </tbody>
     </table>

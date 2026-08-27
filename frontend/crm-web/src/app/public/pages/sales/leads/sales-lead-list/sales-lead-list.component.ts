@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Lead, LeadService } from '../../../../../core/services/lead.service';
+import { AuthService } from '../../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-sales-lead-list',
@@ -18,7 +19,10 @@ export class SalesLeadListComponent implements OnInit {
   searchTerm = '';
   loading = false;
 
-  constructor(private leadService: LeadService) {}
+  constructor(
+    private leadService: LeadService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit(): void {
     this.loadLeads();
@@ -26,9 +30,16 @@ export class SalesLeadListComponent implements OnInit {
 
   loadLeads(): void {
     this.loading = true;
-    this.leadService.getLeads().subscribe({
+    const user = this.authService.getCurrentUser();
+    const userId = user?.userId || user?.employeeId;
+
+    this.leadService.getLeads(userId).subscribe({
       next: (data) => {
-        this.leads = data || [];
+        if (userId) {
+          this.leads = (data || []).filter(l => l.assignedTo === userId);
+        } else {
+          this.leads = data || [];
+        }
         this.applyFilters();
         this.loading = false;
       },

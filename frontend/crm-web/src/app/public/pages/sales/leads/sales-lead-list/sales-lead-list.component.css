@@ -1,23 +1,27 @@
 .sales-lead-container {
-  padding: 24px;
+  padding: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .header-section {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 24px;
 }
 
-.header-section h2 {
+.page-title {
   margin: 0 0 4px 0;
   font-size: 24px;
-  color: #1e293b;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
 }
 
-.subtitle {
+.page-subtitle {
   margin: 0;
   color: #64748b;
   font-size: 14px;
@@ -30,35 +34,27 @@
   flex-wrap: wrap;
 }
 
-.search-box input {
-  padding: 10px 14px;
+.search-input {
+  padding: 9px 14px;
   border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 14px;
-  width: 280px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.search-box input:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-radius: 6px;
+  font-size: 13px;
+  width: 260px;
 }
 
 .status-select {
-  padding: 10px 14px;
+  padding: 9px 12px;
   border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 6px;
+  font-size: 13px;
   background: white;
-  outline: none;
   cursor: pointer;
 }
 
-.table-card {
+.card {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   overflow: hidden;
   border: 1px solid #e2e8f0;
 }
@@ -70,30 +66,28 @@
 
 .leads-table th {
   background: #f8fafc;
-  padding: 14px 16px;
+  padding: 12px 16px;
   text-align: left;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   border-bottom: 1px solid #e2e8f0;
 }
 
 .leads-table td {
   padding: 14px 16px;
-  font-size: 14px;
+  font-size: 13px;
   color: #334155;
   border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
 }
 
-.leads-table tr:hover {
-  background: #f8fafc;
-}
-
-.lead-name {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.lead-name-cell strong {
+  display: block;
+  color: #0f172a;
+  font-weight: 600;
 }
 
 .job-title {
@@ -101,83 +95,86 @@
   color: #64748b;
 }
 
+.company-name {
+  font-weight: 600;
+  color: #1e293b;
+}
+
 .industry-tag {
   display: block;
   font-size: 11px;
-  color: #6366f1;
-  font-weight: 500;
+  color: #64748b;
+  margin-top: 2px;
 }
 
 .contact-line {
   font-size: 13px;
-  color: #475569;
-  margin-bottom: 2px;
+  color: #0f172a;
+}
+
+.contact-line-sub {
+  font-size: 12px;
+  color: #64748b;
 }
 
 .score-badge {
   display: inline-block;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
   font-weight: 600;
   background: #f1f5f9;
-  color: #475569;
+  color: #334155;
 }
 
 .score-badge.high-score {
   background: #fef3c7;
-  color: #d97706;
+  color: #92400e;
 }
 
 .badge {
   display: inline-block;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
   font-weight: 600;
 }
 
-.badge.NEW { background: #e0f2fe; color: #0284c7; }
-.badge.CONTACTED { background: #fef3c7; color: #d97706; }
-.badge.QUALIFIED { background: #dcfce7; color: #16a34a; }
-.badge.WON { background: #d1fae5; color: #059669; }
-.badge.LOST { background: #fee2e2; color: #dc2626; }
+.badge.NEW { background: #eff6ff; color: #1d4ed8; }
+.badge.CONTACTED { background: #fffbeb; color: #b45309; }
+.badge.QUALIFIED { background: #f0fdf4; color: #15803d; }
+.badge.WON { background: #ecfdf5; color: #047857; }
+.badge.LOST { background: #fef2f2; color: #b91c1c; }
 
 .quick-status-select {
-  padding: 6px 10px;
+  padding: 5px 8px;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border-radius: 4px;
   font-size: 12px;
   background: white;
   cursor: pointer;
 }
 
-.view-btn {
-  display: inline-block;
-  padding: 6px 12px;
-  background: #6366f1;
-  color: white;
-  border-radius: 6px;
-  font-size: 12px;
+.btn-text {
+  color: #2563eb;
   font-weight: 600;
   text-decoration: none;
-  transition: all 0.2s;
+  font-size: 13px;
 }
 
-.view-btn:hover {
-  background: #4f46e5;
-  transform: translateY(-1px);
+.btn-text:hover {
+  text-decoration: underline;
+}
+
+.text-right {
+  text-align: right;
 }
 
 .loading-state, .empty-state {
   text-align: center;
-  padding: 60px 20px;
+  padding: 50px 20px;
   background: white;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
-}
-
-.empty-icon {
-  font-size: 40px;
-  margin-bottom: 12px;
+  color: #64748b;
 }

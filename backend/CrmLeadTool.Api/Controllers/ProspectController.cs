@@ -139,4 +139,32 @@ public class ProspectController : ControllerBase
             return BadRequest(new { error = ex.Message });
         }
     }
+
+    [HttpGet("template")]
+    public IActionResult GetProspectCsvTemplate()
+    {
+        var csvContent = "FullName,Email,CompanyName,JobTitle,Industry,Country,Phone,Domain\r\nJohn Doe,john.doe@example.com,Acme Corp,CTO,Technology,United States,+1-555-0199,acme.com\r\nJane Smith,jane@innovate.org,Innovate LLC,Director of Sales,Healthcare,United Kingdom,+44-20-7946-0912,innovate.org";
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csvContent);
+        return File(bytes, "text/csv", "prospects_template.csv");
+    }
+
+    [HttpPost("upload-csv")]
+    public async Task<IActionResult> UploadProspectsCsv(IFormFile? file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(new { error = "Please provide a valid CSV file." });
+        }
+
+        try
+        {
+            using var stream = file.OpenReadStream();
+            var result = await _prospectService.ImportCsvProspectsAsync(stream);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
 }

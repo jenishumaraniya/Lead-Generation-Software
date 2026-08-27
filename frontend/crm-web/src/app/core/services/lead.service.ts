@@ -12,15 +12,29 @@ export interface Lead {
   industry: string;
   country: string;
   phone: string;
-  status: string; // NEW, CONTACTED, QUALIFIED, LOST, WON
+  status: string; // NEW, CONTACTED, QUALIFIED, WON, LOST
   score?: number;
   qualification?: string;
   assignedTo: number | null;
-  assignedEmployee?: { employeeId: number; fullName: string };
+  assignedSalespersonName?: string | null;
+  assignedSalespersonEmail?: string | null;
+  assignedCategoryName?: string | null;
+  isMultiCategory?: boolean;
+  productIds?: number[];
+  quantity?: number;
+  timeline?: string;
+  businessRequirement?: string;
+  source?: string;
   createdAt: string;
-  lastContactDate: string | null;
+  updatedAt?: string;
   nextFollowUpDate: string | null;
   notes: string;
+  visitor?: any;
+  prospect?: any;
+  scoreHistories?: any[];
+  statusHistories?: any[];
+  notesList?: any[];
+  activities?: any[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -29,15 +43,16 @@ export class LeadService {
 
   constructor(private http: HttpClient) {}
 
-  getLeads(): Observable<Lead[]> {
-    return this.http.get<Lead[]>(this.base);
+  getLeads(assignedTo?: number): Observable<Lead[]> {
+    const url = assignedTo ? `${this.base}?assignedTo=${assignedTo}` : this.base;
+    return this.http.get<Lead[]>(url);
   }
 
   getLead(id: number): Observable<Lead> {
     return this.http.get<Lead>(`${this.base}/${id}`);
   }
 
-  updateLead(id: number, data: any): Observable<any> {
+  updateLead(id: number, data: { status?: string; qualification?: string; score?: number; assignedTo?: number | null; nextFollowUpDate?: string | null; notes?: string }): Observable<any> {
     return this.http.put(`${this.base}/${id}`, data);
   }
 
@@ -49,7 +64,15 @@ export class LeadService {
     return this.http.get<any[]>(`${this.base}/${id}/activities`);
   }
 
-  assignLead(id: number, employeeId: number): Observable<any> {
-    return this.http.post(`${this.base}/${id}/assign`, { employeeId });
+  addNote(id: number, noteText: string): Observable<any> {
+    return this.http.post(`${this.base}/${id}/notes`, { noteText });
+  }
+
+  getNotes(id: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/${id}/notes`);
+  }
+
+  assignLead(id: number, employeeId: number | null): Observable<any> {
+    return this.http.post(`${this.base}/${id}/assign`, { employeeId: employeeId || 0 });
   }
 }

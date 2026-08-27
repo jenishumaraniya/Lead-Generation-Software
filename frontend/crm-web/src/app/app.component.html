@@ -6,11 +6,8 @@
     <div class="nav-links">
       <a routerLink="/" [class.active]="isActiveRoute('/')">Home</a>
       <a routerLink="/products" [class.active]="isActiveRoute('/products')">Products</a>
-      <a routerLink="/pricing" [class.active]="isActiveRoute('/pricing')">Pricing</a>
-      <a (click)="scrollToContact()">Contact</a>
-      <a routerLink="/sales" class="nav-sales-link">💼 Sales Portal</a>
-      <a routerLink="/admin" class="nav-admin-link">⚡ Admin Engine</a>
-      <a routerLink="/login" class="nav-login-btn">🔑 Sign In</a>
+      <a (click)="openContactForm()" style="cursor: pointer;">Contact</a>
+      <a routerLink="/login" class="nav-login-btn">Sign In</a>
     </div>
   </nav>
 </ng-container>

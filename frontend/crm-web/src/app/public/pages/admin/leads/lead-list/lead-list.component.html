@@ -1,47 +1,133 @@
-<div class="lead-list">
-      <div class="header">
-        <h2>All Leads</h2>
-        <div class="filters">
-          <select [(ngModel)]="statusFilter" (change)="applyFilters()">
-            <option value="">All Status</option>
-            <option value="NEW">New</option>
-            <option value="CONTACTED">Contacted</option>
-            <option value="QUALIFIED">Qualified</option>
-            <option value="LOST">Lost</option>
-            <option value="WON">Won</option>
-          </select>
-          <input type="text" placeholder="Search..." [(ngModel)]="searchTerm" (input)="applyFilters()" />
-        </div>
-      </div>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Company</th>
-              <th>Email</th>
-              <th>Status</th>
-              <th>Assigned To</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let lead of filteredLeads">
-              <td>{{ lead.fullName }}</td>
-              <td>{{ lead.companyName }}</td>
-              <td>{{ lead.email }}</td>
-              <td><span class="badge" [class]="lead.status">{{ lead.status }}</span></td>
-              <td>
-                <select (change)="assignLead(lead.leadId, $event)" [disabled]="!employees.length">
-                  <option value="">Unassigned</option>
-                  <option *ngFor="let emp of employees" [value]="emp.employeeId" [selected]="lead.assignedTo === emp.employeeId">
-                    {{ emp.fullName }}
-                  </option>
-                </select>
-              </td>
-              <td><a [routerLink]="['/admin/leads', lead.leadId]">View</a></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+<div class="page-container">
+  <div class="header-bar">
+    <div>
+      <h1 class="page-title">Lead Management & Routing</h1>
+      <p class="page-subtitle">Automatic category-based routing for single-category leads and manual Admin allocation for multi-category opportunities</p>
     </div>
+
+    <div class="filter-controls">
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm" 
+        (input)="applyFilters()" 
+        placeholder="Search by name, company, or email..."
+        class="search-input"
+      />
+
+      <select [(ngModel)]="assignmentFilter" (change)="applyFilters()" class="filter-select">
+        <option value="">All Routing Types</option>
+        <option value="AUTO_ASSIGNED">Auto-Assigned (Single Category)</option>
+        <option value="MULTI_CATEGORY">Multi-Category (Admin Decision)</option>
+        <option value="UNASSIGNED">Unassigned Leads</option>
+      </select>
+
+      <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="filter-select">
+        <option value="">All Statuses</option>
+        <option value="NEW">NEW</option>
+        <option value="CONTACTED">CONTACTED</option>
+        <option value="QUALIFIED">QUALIFIED</option>
+        <option value="WON">WON</option>
+        <option value="LOST">LOST</option>
+      </select>
+    </div>
+  </div>
+
+  <div *ngIf="successToast" class="toast-banner">
+    {{ successToast }}
+  </div>
+
+  <div class="card table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Lead / Contact</th>
+          <th>Organization & Categories</th>
+          <th>Score</th>
+          <th>Status</th>
+          <th>Assigned Representative</th>
+          <th>Next Follow-up</th>
+          <th class="text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let lead of filteredLeads" [class.highlight-row]="lead.isMultiCategory && !lead.assignedTo">
+          <td>
+            <div class="lead-name">{{ lead.fullName }}</div>
+            <div class="lead-email">{{ lead.email }}</div>
+            <div class="lead-job" *ngIf="lead.jobTitle">{{ lead.jobTitle }}</div>
+          </td>
+          <td>
+            <div class="company-name">{{ lead.companyName }}</div>
+            <div class="tag-row">
+              <span class="industry-tag" *ngIf="lead.industry">{{ lead.industry }}</span>
+              <span class="multi-badge" *ngIf="lead.isMultiCategory">Multi-Category</span>
+            </div>
+          </td>
+          <td>
+            <span class="score-pill">
+              {{ lead.score || 0 }} pts
+            </span>
+          </td>
+          <td>
+            <span class="status-badge" [class]="lead.status">
+              {{ lead.status }}
+            </span>
+          </td>
+          <td>
+            <!-- CASE 1: Single-Category Lead with Auto-Assigned Sales Rep -->
+            <div *ngIf="!lead.isMultiCategory && lead.assignedSalespersonName" class="auto-assign-display">
+              <div class="auto-rep-card">
+                <div class="auto-badge-row">
+                  <span class="auto-pill">Auto-Assigned</span>
+                </div>
+                <div class="rep-primary-name">{{ lead.assignedSalespersonName }}</div>
+                <div class="rep-cat-tag" *ngIf="lead.assignedCategoryName">Category: {{ lead.assignedCategoryName }}</div>
+              </div>
+            </div>
+
+            <!-- CASE 2: Multi-Category Lead or Unassigned Lead (Admin Manual Assignment) -->
+            <div *ngIf="lead.isMultiCategory || !lead.assignedSalespersonName" class="multi-assign-box">
+              <div class="decision-badge-row">
+                <span class="decision-pill" *ngIf="lead.isMultiCategory">Admin Decision Required</span>
+                <span class="pending-pill" *ngIf="!lead.isMultiCategory && !lead.assignedSalespersonName">Unassigned Lead</span>
+              </div>
+              <select 
+                [ngModel]="lead.assignedTo" 
+                (ngModelChange)="assignLead(lead, $event)" 
+                class="assign-select-multi" 
+                [class.unassigned-select]="!lead.assignedTo"
+              >
+                <option [ngValue]="null">-- Select Representative --</option>
+                <option 
+                  *ngFor="let emp of employees" 
+                  [ngValue]="emp.userId"
+                >
+                  {{ emp.fullName }} ({{ emp.categoryName || 'No Category' }})
+                </option>
+              </select>
+              <div class="assigned-lead-info" *ngIf="lead.assignedSalespersonName">
+                Assigned to: <strong>{{ lead.assignedSalespersonName }}</strong>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="follow-up-date" *ngIf="lead.nextFollowUpDate">
+              {{ lead.nextFollowUpDate | date:'mediumDate' }}
+            </span>
+            <span class="no-date" *ngIf="!lead.nextFollowUpDate">—</span>
+          </td>
+          <td class="text-right actions-cell">
+            <a [routerLink]="['/admin/leads', lead.leadId]" class="btn-text">
+              View Details &rarr;
+            </a>
+          </td>
+        </tr>
+        <tr *ngIf="filteredLeads.length === 0 && !loading">
+          <td colspan="7" class="empty-cell">
+            No leads match your filter criteria.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

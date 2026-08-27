@@ -2,16 +2,21 @@ using CrmLeadTool.Api.Data;
 using CrmLeadTool.Api.DTOs;
 using CrmLeadTool.Api.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace CrmLeadTool.Api.Services;
 
 public class CampaignService
 {
     private readonly AppDbContext _context;
+    private readonly EmailService _emailService;
+    private readonly ILogger<CampaignService> _logger;
 
-    public CampaignService(AppDbContext context)
+    public CampaignService(AppDbContext context, EmailService emailService, ILogger<CampaignService> logger)
     {
         _context = context;
+        _emailService = emailService;
+        _logger = logger;
     }
 
     public async Task<Campaign> CreateCampaignAsync(CreateCampaignDto dto)
@@ -21,6 +26,8 @@ public class CampaignService
             Name = dto.Name,
             Description = dto.Description,
             Status = dto.Status ?? "DRAFT",
+            ScheduleStartDate = dto.ScheduleStartDate,
+            ScheduleEndDate = dto.ScheduleEndDate,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -28,23 +35,45 @@ public class CampaignService
         _context.Campaigns.Add(campaign);
         await _context.SaveChangesAsync();
 
-        foreach (var stepDto in dto.Steps.OrderBy(s => s.StepNumber))
+        if (dto.Steps != null && dto.Steps.Any())
         {
-            var step = new SequenceStep
+            foreach (var stepDto in dto.Steps.OrderBy(s => s.StepNumber))
+            {
+                var step = new SequenceStep
+                {
+                    CampaignId = campaign.CampaignId,
+                    StepNumber = stepDto.StepNumber,
+                    Name = string.IsNullOrWhiteSpace(stepDto.Name) ? $"Step {stepDto.StepNumber}" : stepDto.Name,
+                    Subject = string.IsNullOrWhiteSpace(stepDto.Subject) ? $"Introduction regarding enterprise solutions - {campaign.Name}" : stepDto.Subject,
+                    Body = string.IsNullOrWhiteSpace(stepDto.Body) ? "<p>Hello {{Name}},</p><p>We wanted to reach out regarding our solutions for {{Company}}.</p><p>Best regards,<br/>Sales & Partnerships Team</p>" : stepDto.Body,
+                    DelayDays = stepDto.DelayDays,
+                    DelayHours = stepDto.DelayHours,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.SequenceSteps.Add(step);
+            }
+
+            await _context.SaveChangesAsync();
+        }
+        else
+        {
+            // Auto-create default Step 1
+            var defaultStep = new SequenceStep
             {
                 CampaignId = campaign.CampaignId,
-                StepNumber = stepDto.StepNumber,
-                Name = stepDto.Name,
-                Subject = stepDto.Subject,
-                Body = stepDto.Body,
-                DelayDays = stepDto.DelayDays,
-                DelayHours = stepDto.DelayHours,
+                StepNumber = 1,
+                Name = "Initial Outreach",
+                Subject = $"Exploring opportunities with {{Company}} - {campaign.Name}",
+                Body = "<p>Hello {{Name}},</p><p>I noticed your work as {{JobTitle}} at {{Company}}. We provide enterprise solutions tailored for your industry.</p><p>Would you be open to a brief introductory conversation this week?</p><p>Best regards,<br/>Sales & Partnerships Team</p>",
+                DelayDays = 0,
+                DelayHours = 0,
+                IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
-            _context.SequenceSteps.Add(step);
+            _context.SequenceSteps.Add(defaultStep);
+            await _context.SaveChangesAsync();
         }
 
-        await _context.SaveChangesAsync();
         return campaign;
     }
 
@@ -134,7 +163,7 @@ public class CampaignService
             .FirstOrDefaultAsync();
     }
 
-    public async Task<CampaignRecipient> EnrollProspectAsync(int campaignId, int prospectId)
+    public async Task<CampaignRecipient> EnrollProspectAsync(int campaignId, int prospectId, bool sendImmediately = false)
     {
         var campaign = await _context.Campaigns
             .Include(c => c.Steps)
@@ -154,7 +183,20 @@ public class CampaignService
         var existing = await _context.CampaignRecipients
             .FirstOrDefaultAsync(cr => cr.CampaignId == campaignId && cr.ProspectId == prospectId);
         if (existing != null)
-            throw new InvalidOperationException("Prospect already enrolled in this campaign.");
+        {
+            if (sendImmediately || campaign.Status == "ACTIVE")
+            {
+                try
+                {
+                    await _emailService.SendEmailAsync(existing.CampaignRecipientId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Could not send email for existing recipient {Id}", existing.CampaignRecipientId);
+                }
+            }
+            return existing;
+        }
 
         var recipient = new CampaignRecipient
         {
@@ -167,7 +209,74 @@ public class CampaignService
 
         _context.CampaignRecipients.Add(recipient);
         await _context.SaveChangesAsync();
+
+        // If campaign is ACTIVE or immediate send requested, trigger Step 1 email right away
+        if (campaign.Status == "ACTIVE" || sendImmediately)
+        {
+            try
+            {
+                await _emailService.SendEmailAsync(recipient.CampaignRecipientId);
+                _logger.LogInformation("Sent initial campaign email to prospect {Email} (RecipientId {Id})", prospect.Email, recipient.CampaignRecipientId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send initial campaign email for recipient {RecipientId}", recipient.CampaignRecipientId);
+            }
+        }
+
         return recipient;
+    }
+
+    public async Task<int> LaunchCampaignEmailsAsync(int campaignId)
+    {
+        var campaign = await _context.Campaigns
+            .Include(c => c.Steps)
+            .Include(c => c.Recipients)
+                .ThenInclude(r => r.EmailMessages)
+            .FirstOrDefaultAsync(c => c.CampaignId == campaignId);
+
+        if (campaign == null) throw new ArgumentException("Campaign not found.");
+
+        // Ensure at least 1 step exists
+        if (!campaign.Steps.Any())
+        {
+            var defaultStep = new SequenceStep
+            {
+                CampaignId = campaign.CampaignId,
+                StepNumber = 1,
+                Name = "Initial Outreach",
+                Subject = $"Exploring opportunities with {{Company}} - {campaign.Name}",
+                Body = "<p>Hello {{Name}},</p><p>I noticed your work as {{JobTitle}} at {{Company}}. We provide enterprise solutions tailored for your industry.</p><p>Would you be open to a brief introductory conversation this week?</p><p>Best regards,<br/>Sales & Partnerships Team</p>",
+                DelayDays = 0,
+                DelayHours = 0,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.SequenceSteps.Add(defaultStep);
+            await _context.SaveChangesAsync();
+            campaign.Steps.Add(defaultStep);
+        }
+
+        campaign.Status = "ACTIVE";
+        campaign.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        int sentCount = 0;
+        foreach (var recipient in campaign.Recipients.Where(r => r.Status == "ENROLLED" || r.EmailMessages == null || !r.EmailMessages.Any()))
+        {
+            try
+            {
+                await _emailService.SendEmailAsync(recipient.CampaignRecipientId);
+                sentCount++;
+                _logger.LogInformation("Immediately launched email for recipient {RecipientId} in campaign {CampaignId}", recipient.CampaignRecipientId, campaignId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send immediate email for recipient {RecipientId}", recipient.CampaignRecipientId);
+            }
+        }
+
+        return sentCount;
     }
 
     public async Task<object> GetCampaignRecipientsAsync(int campaignId)
@@ -215,6 +324,9 @@ public class CampaignService
         campaign.Status = "ACTIVE";
         campaign.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        // Also launch pending emails
+        await LaunchCampaignEmailsAsync(campaignId);
         return campaign;
     }
 
@@ -237,8 +349,8 @@ public class CampaignService
         if (!string.IsNullOrEmpty(dto.Name)) campaign.Name = dto.Name;
         if (dto.Description != null) campaign.Description = dto.Description;
         if (!string.IsNullOrEmpty(dto.Status)) campaign.Status = dto.Status;
-        if (dto.ScheduleStartDate.HasValue) campaign.ScheduleStartDate = dto.ScheduleStartDate;
-        if (dto.ScheduleEndDate.HasValue) campaign.ScheduleEndDate = dto.ScheduleEndDate;
+        campaign.ScheduleStartDate = dto.ScheduleStartDate;
+        campaign.ScheduleEndDate = dto.ScheduleEndDate;
         campaign.UpdatedAt = DateTime.UtcNow;
 
         if (dto.Steps != null && dto.Steps.Any())
@@ -250,9 +362,9 @@ public class CampaignService
                 {
                     CampaignId = campaign.CampaignId,
                     StepNumber = stepDto.StepNumber,
-                    Name = stepDto.Name,
-                    Subject = stepDto.Subject,
-                    Body = stepDto.Body,
+                    Name = string.IsNullOrWhiteSpace(stepDto.Name) ? $"Step {stepDto.StepNumber}" : stepDto.Name,
+                    Subject = string.IsNullOrWhiteSpace(stepDto.Subject) ? $"Introduction - {campaign.Name}" : stepDto.Subject,
+                    Body = string.IsNullOrWhiteSpace(stepDto.Body) ? "<p>Hello {{Name}},</p><p>We wanted to reach out regarding solutions for {{Company}}.</p>" : stepDto.Body,
                     DelayDays = stepDto.DelayDays,
                     DelayHours = stepDto.DelayHours,
                     CreatedAt = DateTime.UtcNow
@@ -261,6 +373,13 @@ public class CampaignService
         }
 
         await _context.SaveChangesAsync();
+
+        // If campaign is updated to ACTIVE, immediately dispatch pending emails
+        if (campaign.Status == "ACTIVE")
+        {
+            await LaunchCampaignEmailsAsync(campaignId);
+        }
+
         return campaign;
     }
 

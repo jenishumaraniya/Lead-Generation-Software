@@ -9,6 +9,8 @@ public class User
     public string Salt { get; set; } = string.Empty;
     public string Role { get; set; } = "SALES_REP"; // "ADMIN" or "SALES_REP"
     public bool IsActive { get; set; } = true;
+    public int? CategoryId { get; set; }   // Assigned category for SALES_REP
+    public Category? Category { get; set; }
     public int FailedLoginAttempts { get; set; } = 0;
     public DateTime? LockoutEnd { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -16,3 +18,4 @@ public class User
 
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }
+

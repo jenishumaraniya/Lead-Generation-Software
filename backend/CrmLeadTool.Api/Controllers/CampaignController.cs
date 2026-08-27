@@ -22,7 +22,7 @@ public class CampaignController : ControllerBase
         try
         {
             var campaign = await _campaignService.CreateCampaignAsync(dto);
-            return CreatedAtAction(nameof(GetCampaign), new { id = campaign.CampaignId }, new
+            return Ok(new
             {
                 campaign.CampaignId,
                 campaign.Name,
@@ -62,7 +62,17 @@ public class CampaignController : ControllerBase
         try
         {
             var campaign = await _campaignService.UpdateCampaignAsync(id, dto);
-            return Ok(campaign);
+            return Ok(new
+            {
+                campaign.CampaignId,
+                campaign.Name,
+                campaign.Description,
+                campaign.Status,
+                campaign.ScheduleStartDate,
+                campaign.ScheduleEndDate,
+                campaign.CreatedAt,
+                campaign.UpdatedAt
+            });
         }
         catch (ArgumentException ex)
         {
@@ -161,17 +171,17 @@ public class CampaignController : ControllerBase
         }
     }
 
-    [HttpPut("recipients/{recipientId}/status")]
-    public async Task<IActionResult> UpdateRecipientStatus(int recipientId, [FromBody] UpdateRecipientStatusDto dto)
+    [HttpPost("{id}/launch")]
+    public async Task<IActionResult> LaunchCampaign(int id)
     {
         try
         {
-            var recipient = await _campaignService.UpdateRecipientStatusAsync(recipientId, dto.Status);
-            return Ok(recipient);
+            var sentCount = await _campaignService.LaunchCampaignEmailsAsync(id);
+            return Ok(new { success = true, campaignId = id, emailsSent = sentCount, message = $"Launched campaign. {sentCount} emails dispatched." });
         }
-        catch (ArgumentException ex)
+        catch (Exception ex)
         {
-            return NotFound(new { error = ex.Message });
+            return BadRequest(new { error = ex.Message });
         }
     }
 }

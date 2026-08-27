@@ -9,9 +9,10 @@ public class Lead
     public int LeadId { get; set; }
     public int? VisitorId { get; set; }
     public int? ProspectId { get; set; }
-    //public int? CreatedBy { get; set; }
-    //public int? AssignedTo { get; set; }
-    //public int? UpdatedBy { get; set; }
+    public int? AssignedTo { get; set; }
+    public string? Notes { get; set; }
+    public DateTime? NextFollowUpDate { get; set; }
+    public bool IsMultiCategory { get; set; } = false;
     public string CompanyName { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
@@ -33,9 +34,13 @@ public class Lead
 
     public Visitor? Visitor { get; set; }
     public Prospect? Prospect { get; set; }
+    public User? AssignedUser { get; set; }
     public string? PriorityLevel { get; set; }
     public ICollection<LeadScoreHistory> ScoreHistories { get; set; } = new List<LeadScoreHistory>();
     public ICollection<LeadHandoff> Handoffs { get; set; } = new List<LeadHandoff>();
+    public ICollection<LeadNote> LeadNotes { get; set; } = new List<LeadNote>();
+    public ICollection<LeadActivity> Activities { get; set; } = new List<LeadActivity>();
+    public ICollection<LeadStatusHistory> StatusHistories { get; set; } = new List<LeadStatusHistory>();
 
     public int[] GetProductIdList()
     {

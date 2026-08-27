@@ -55,13 +55,37 @@ public class AuthController : ControllerBase
         }
     }
 
+    private (string? Role, int? UserId) ExtractUserClaims()
+    {
+        var role = User.FindFirstValue(ClaimTypes.Role) ?? User.FindFirstValue("role");
+        var sub = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+        int? userId = int.TryParse(sub, out int parsed) ? parsed : null;
+
+        if (!string.IsNullOrEmpty(role) && userId.HasValue) return (role, userId);
+
+        var authHeader = Request.Headers["Authorization"].ToString();
+        if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        {
+            var tokenString = authHeader.Substring("Bearer ".Length).Trim();
+            try
+            {
+                var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+                var token = handler.ReadJwtToken(tokenString);
+                var tokenRole = token.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role || c.Type == "role")?.Value;
+                var tokenSub = token.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "sub" || c.Type == "nameid")?.Value;
+                int? tokenUserId = int.TryParse(tokenSub, out int p) ? p : null;
+                return (tokenRole, tokenUserId);
+            }
+            catch {}
+        }
+
+        return (null, null);
+    }
+
     [HttpPost("logout")]
     public async Task<IActionResult> Logout([FromBody] RefreshTokenRequestDto dto)
     {
-        int? userId = null;
-        var sub = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-        if (int.TryParse(sub, out int parsed)) userId = parsed;
-
+        var (_, userId) = ExtractUserClaims();
         await _authService.LogoutAsync(dto.RefreshToken, userId);
         return Ok(new { message = "Logged out successfully" });
     }
@@ -69,28 +93,28 @@ public class AuthController : ControllerBase
     [HttpPost("logout-all")]
     public async Task<IActionResult> LogoutAll()
     {
-        var sub = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-        if (!int.TryParse(sub, out int userId))
+        var (_, userId) = ExtractUserClaims();
+        if (!userId.HasValue)
         {
             return Unauthorized(new { error = "User not authenticated" });
         }
 
-        await _authService.LogoutAllDevicesAsync(userId);
+        await _authService.LogoutAllDevicesAsync(userId.Value);
         return Ok(new { message = "Logged out of all devices successfully" });
     }
 
     [HttpPost("change-password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto dto)
     {
-        var sub = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-        if (!int.TryParse(sub, out int userId))
+        var (_, userId) = ExtractUserClaims();
+        if (!userId.HasValue)
         {
             return Unauthorized(new { error = "User not authenticated" });
         }
 
         try
         {
-            await _authService.ChangePasswordAsync(userId, dto.CurrentPassword, dto.NewPassword);
+            await _authService.ChangePasswordAsync(userId.Value, dto.CurrentPassword, dto.NewPassword);
             return Ok(new { message = "Password changed successfully" });
         }
         catch (UnauthorizedAccessException ex)

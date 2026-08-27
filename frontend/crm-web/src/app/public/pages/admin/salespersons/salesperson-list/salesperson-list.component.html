@@ -1,31 +1,162 @@
-<div class="sales-lead-list">
-  <h2>My Leads</h2>
-  <div class="filters">
-    <select [(ngModel)]="statusFilter" (change)="applyFilters()">
-      <option value="">All Status</option>
-      <option value="NEW">New</option>
-      <option value="CONTACTED">Contacted</option>
-      <option value="QUALIFIED">Qualified</option>
-      <option value="WON">Won</option>
-      <option value="LOST">Lost</option>
-    </select>
-    <input type="text" placeholder="Search..." [(ngModel)]="searchTerm" (input)="applyFilters()" />
+<div class="page-container">
+  <div class="header-bar">
+    <div>
+      <h1 class="page-title">Sales Representatives & Categories</h1>
+      <p class="page-subtitle">Manage sales team members and configure 1-to-1 product category alignments</p>
+    </div>
+    <button (click)="openAddModal()" class="btn-primary">
+      Add Sales Representative
+    </button>
   </div>
-  <div class="table-container">
-    <table>
+
+  <div *ngIf="successMessage" class="alert-success">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="categories.length > salespersons.length" class="alignment-banner">
+    <div class="banner-content">
+      <strong>Category Coverage Notice:</strong> You currently have {{ categories.length }} active categories and {{ salespersons.length }} sales representatives. Ensure all categories are assigned.
+    </div>
+  </div>
+
+  <div class="card table-card">
+    <table class="data-table">
       <thead>
-        <tr><th>Name</th><th>Company</th><th>Email</th><th>Status</th><th>Next Follow-up</th><th>Action</th></tr>
+        <tr>
+          <th>Name</th>
+          <th>Email Address</th>
+          <th>Assigned Category</th>
+          <th>Status</th>
+          <th>Joined</th>
+          <th class="text-right">Actions</th>
+        </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let lead of filteredLeads">
-          <td>{{ lead.fullName }}</td>
-          <td>{{ lead.companyName }}</td>
-          <td>{{ lead.email }}</td>
-          <td><span class="badge" [class]="lead.status">{{ lead.status }}</span></td>
-          <td>{{ lead.nextFollowUpDate | date }}</td>
-          <td><a [routerLink]="['/sales/leads', lead.leadId]">View</a></td>
+        <tr *ngFor="let rep of salespersons">
+          <td>
+            <div class="rep-name">{{ rep.fullName }}</div>
+          </td>
+          <td>{{ rep.email }}</td>
+          <td>
+            <select 
+              [ngModel]="rep.categoryId" 
+              (ngModelChange)="onCategorySelected(rep, $event)" 
+              class="category-select"
+            >
+              <option [ngValue]="null">-- No Category Assigned --</option>
+              <option 
+                *ngFor="let cat of categories" 
+                [ngValue]="cat.categoryId"
+                [disabled]="isCategoryAssignedToOther(cat.categoryId, rep.userId)"
+              >
+                {{ cat.categoryName }}
+                <ng-container *ngIf="isCategoryAssignedToOther(cat.categoryId, rep.userId)">
+                  (Assigned: {{ getAssignedRepNameForCategory(cat.categoryId) }})
+                </ng-container>
+              </option>
+            </select>
+          </td>
+          <td>
+            <span class="status-indicator" [class.active]="rep.isActive">
+              {{ rep.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+          <td>{{ rep.createdAt | date:'mediumDate' }}</td>
+          <td class="text-right actions-cell">
+            <button (click)="openPasswordModal(rep)" class="btn-text">
+              Change Password
+            </button>
+            <button (click)="deleteSalesperson(rep)" class="btn-text-danger">
+              Remove
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="salespersons.length === 0 && !loading">
+          <td colspan="6" class="empty-cell">
+            No sales representatives found. Click "Add Sales Representative" to create one.
+          </td>
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <!-- Add Salesperson Modal -->
+  <div class="modal-backdrop" *ngIf="showAddModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Add Sales Representative</h2>
+        <button (click)="closeAddModal()" class="close-btn">&times;</button>
+      </div>
+
+      <div *ngIf="errorMessage" class="alert-danger">
+        {{ errorMessage }}
+      </div>
+
+      <div class="form-body">
+        <div class="form-field">
+          <label>Full Name *</label>
+          <input type="text" [(ngModel)]="newRep.fullName" placeholder="e.g. Alex Carter" />
+        </div>
+
+        <div class="form-field">
+          <label>Email Address *</label>
+          <input type="email" [(ngModel)]="newRep.email" placeholder="e.g. alex.carter@leadgen.com" />
+        </div>
+
+        <div class="form-field">
+          <label>Initial Password *</label>
+          <input type="password" [(ngModel)]="newRep.password" placeholder="Minimum 6 characters" />
+        </div>
+
+        <div class="form-field">
+          <label>Assign Product Category (1-to-1)</label>
+          <select [(ngModel)]="newRep.categoryId" class="modal-select">
+            <option [ngValue]="null">-- None (Assign Later) --</option>
+            <option 
+              *ngFor="let cat of categories" 
+              [ngValue]="cat.categoryId"
+              [disabled]="isCategoryAssignedToOther(cat.categoryId)"
+            >
+              {{ cat.categoryName }}
+              <ng-container *ngIf="isCategoryAssignedToOther(cat.categoryId)">
+                (Already Assigned to {{ getAssignedRepNameForCategory(cat.categoryId) }})
+              </ng-container>
+            </option>
+          </select>
+          <small class="field-hint">Note: No two sales representatives can be assigned to the same category.</small>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button (click)="closeAddModal()" class="btn-secondary">Cancel</button>
+        <button (click)="createSalesperson()" class="btn-primary">Create Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div class="modal-backdrop" *ngIf="showPasswordModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Change Password for {{ selectedRep?.fullName }}</h2>
+        <button (click)="closePasswordModal()" class="close-btn">&times;</button>
+      </div>
+
+      <div *ngIf="errorMessage" class="alert-danger">
+        {{ errorMessage }}
+      </div>
+
+      <div class="form-body">
+        <div class="form-field">
+          <label>New Password</label>
+          <input type="password" [(ngModel)]="newPassword" placeholder="Enter new password" />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button (click)="closePasswordModal()" class="btn-secondary">Cancel</button>
+        <button (click)="resetPassword()" class="btn-primary">Update Password</button>
+      </div>
+    </div>
   </div>
 </div>

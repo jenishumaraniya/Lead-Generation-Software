@@ -36,6 +36,7 @@ public class CreateUserDto
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string Role { get; set; } = "SALES_REP"; // "ADMIN" or "SALES_REP"
+    public int? CategoryId { get; set; }
 }
 
 public class UpdateUserDto
@@ -43,6 +44,12 @@ public class UpdateUserDto
     public string FullName { get; set; } = string.Empty;
     public string Role { get; set; } = "SALES_REP";
     public bool IsActive { get; set; } = true;
+    public int? CategoryId { get; set; }
+}
+
+public class AssignCategoryDto
+{
+    public int? CategoryId { get; set; }
 }
 
 public class UserDto
@@ -52,6 +59,8 @@ public class UserDto
     public string Email { get; set; } = string.Empty;
     public string Role { get; set; } = "SALES_REP";
     public bool IsActive { get; set; }
+    public int? CategoryId { get; set; }
+    public string? CategoryName { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
 }

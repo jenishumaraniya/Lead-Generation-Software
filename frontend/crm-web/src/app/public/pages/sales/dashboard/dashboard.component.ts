@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Lead, LeadService } from '../../../../core/services/lead.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-sales-dashboard',
@@ -21,7 +22,10 @@ export class SalesDashboardComponent implements OnInit {
   };
   loading = false;
 
-  constructor(private leadService: LeadService) {}
+  constructor(
+    private leadService: LeadService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit(): void {
     this.loadDashboardData();
@@ -29,9 +33,16 @@ export class SalesDashboardComponent implements OnInit {
 
   loadDashboardData(): void {
     this.loading = true;
-    this.leadService.getLeads().subscribe({
+    const user = this.authService.getCurrentUser();
+    const userId = user?.userId || user?.employeeId;
+
+    this.leadService.getLeads(userId).subscribe({
       next: (data: Lead[]) => {
-        this.leads = data || [];
+        if (userId) {
+          this.leads = (data || []).filter(l => l.assignedTo === userId);
+        } else {
+          this.leads = data || [];
+        }
         this.computeStats();
         this.loading = false;
       },

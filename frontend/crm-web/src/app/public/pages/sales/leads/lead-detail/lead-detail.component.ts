@@ -14,9 +14,12 @@ import { Lead, LeadService } from '../../../../../core/services/lead.service';
 export class LeadDetailComponent implements OnInit {
   lead: any = null;
   activities: any[] = [];
+  statusHistories: any[] = [];
+  scoreHistories: any[] = [];
   newActivity = { activityType: 'CALL', description: '' };
   loading = false;
   saveMessage = '';
+  followUpDateString = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -31,7 +34,6 @@ export class LeadDetailComponent implements OnInit {
       return;
     }
     this.loadLead(id);
-    this.loadActivities(id);
   }
 
   loadLead(id: number): void {
@@ -39,6 +41,16 @@ export class LeadDetailComponent implements OnInit {
     this.leadService.getLead(id).subscribe({
       next: (data) => {
         this.lead = data;
+        this.activities = data.activities || [];
+        this.statusHistories = data.statusHistories || [];
+        this.scoreHistories = data.scoreHistories || [];
+
+        if (data.nextFollowUpDate) {
+          const d = new Date(data.nextFollowUpDate);
+          this.followUpDateString = d.toISOString().split('T')[0];
+        } else {
+          this.followUpDateString = '';
+        }
         this.loading = false;
       },
       error: (err) => {
@@ -48,11 +60,11 @@ export class LeadDetailComponent implements OnInit {
     });
   }
 
-  loadActivities(id: number): void {
-    this.leadService.getActivities(id).subscribe({
-      next: (data) => this.activities = data || [],
-      error: () => this.activities = []
-    });
+  onFollowUpDateChange(val: string): void {
+    this.followUpDateString = val;
+    if (this.lead) {
+      this.lead.nextFollowUpDate = val ? new Date(val).toISOString() : null;
+    }
   }
 
   updateLead(): void {
@@ -60,11 +72,13 @@ export class LeadDetailComponent implements OnInit {
     this.leadService.updateLead(this.lead.leadId, {
       status: this.lead.status,
       qualification: this.lead.qualification,
+      nextFollowUpDate: this.followUpDateString ? new Date(this.followUpDateString).toISOString() : null,
       notes: this.lead.notes
     }).subscribe({
       next: () => {
         this.saveMessage = 'Lead updated successfully';
         setTimeout(() => this.saveMessage = '', 3000);
+        this.loadLead(this.lead.leadId);
       },
       error: () => alert('Failed to update lead')
     });
@@ -75,7 +89,7 @@ export class LeadDetailComponent implements OnInit {
     this.leadService.addActivity(this.lead.leadId, this.newActivity).subscribe({
       next: () => {
         this.newActivity.description = '';
-        this.loadActivities(this.lead.leadId);
+        this.loadLead(this.lead.leadId);
       },
       error: () => alert('Failed to log activity')
     });

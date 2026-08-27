@@ -45,6 +45,23 @@ public class ScoringService
         return await _context.ScoreRules.OrderBy(r => r.Category).ThenByDescending(r => r.Points).ToListAsync();
     }
 
+    public async Task<ScoreRule?> GetRuleByIdAsync(int ruleId)
+    {
+        return await _context.ScoreRules.FindAsync(ruleId);
+    }
+
+    public async Task<ScoreRule> CreateRuleAsync(ScoreRule rule)
+    {
+        rule.CreatedAt = DateTime.UtcNow;
+        rule.UpdatedAt = DateTime.UtcNow;
+        if (string.IsNullOrWhiteSpace(rule.Category)) rule.Category = "INTENT";
+        if (string.IsNullOrWhiteSpace(rule.Direction)) rule.Direction = rule.Points >= 0 ? "POSITIVE" : "NEGATIVE";
+
+        _context.ScoreRules.Add(rule);
+        await _context.SaveChangesAsync();
+        return rule;
+    }
+
     public async Task<ScoreRule> UpdateRuleAsync(int ruleId, int points, bool isActive)
     {
         var rule = await _context.ScoreRules.FindAsync(ruleId);
@@ -52,10 +69,51 @@ public class ScoringService
 
         rule.Points = points;
         rule.IsActive = isActive;
+        rule.Direction = points >= 0 ? "POSITIVE" : "NEGATIVE";
         rule.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
         return rule;
+    }
+
+    public async Task<ScoreRule> UpdateRuleFullAsync(int ruleId, ScoreRule updated)
+    {
+        var rule = await _context.ScoreRules.FindAsync(ruleId);
+        if (rule == null) throw new ArgumentException($"Score rule {ruleId} not found");
+
+        rule.Name = updated.Name;
+        rule.EventType = updated.EventType;
+        rule.Category = updated.Category;
+        rule.Direction = updated.Direction;
+        rule.Points = updated.Points;
+        rule.IsActive = updated.IsActive;
+        rule.Description = updated.Description;
+        rule.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return rule;
+    }
+
+    public async Task<ScoreRule> ToggleRuleAsync(int ruleId)
+    {
+        var rule = await _context.ScoreRules.FindAsync(ruleId);
+        if (rule == null) throw new ArgumentException($"Score rule {ruleId} not found");
+
+        rule.IsActive = !rule.IsActive;
+        rule.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return rule;
+    }
+
+    public async Task<bool> DeleteRuleAsync(int ruleId)
+    {
+        var rule = await _context.ScoreRules.FindAsync(ruleId);
+        if (rule == null) return false;
+
+        _context.ScoreRules.Remove(rule);
+        await _context.SaveChangesAsync();
+        return true;
     }
 
     public async Task<LeadScoreHistory?> ApplyScoreEventAsync(int leadId, string eventType, string? customReason = null, int? customDelta = null)

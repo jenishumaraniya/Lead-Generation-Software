@@ -15,7 +15,12 @@ export class LoginComponent {
   loginForm: FormGroup;
   loginError: string = '';
   isLoading = false;
+  showPassword = false;
   returnUrl: string;
+
+  togglePassword(): void {
+    this.showPassword = !this.showPassword;
+  }
 
   constructor(
     private fb: FormBuilder,
@@ -33,18 +38,11 @@ export class LoginComponent {
     }
   }
 
-  quickFill(role: 'admin' | 'sales'): void {
-    if (role === 'admin') {
-      this.loginForm.patchValue({
-        email: 'admin@leadgen.com',
-        password: 'Admin@123'
-      });
-    } else {
-      this.loginForm.patchValue({
-        email: 'sales@leadgen.com',
-        password: 'Sales@123'
-      });
-    }
+  quickFillAdmin(): void {
+    this.loginForm.patchValue({
+      email: 'admin@leadgen.com',
+      password: 'Admin@123'
+    });
   }
 
   onSubmit(): void {

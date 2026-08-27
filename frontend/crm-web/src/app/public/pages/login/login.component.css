@@ -65,8 +65,16 @@
 
 .quick-buttons {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 8px;
+}
+
+.quick-buttons.single-btn-grid {
+  grid-template-columns: 1fr;
+}
+
+.quick-btn.full-width {
+  width: 100%;
 }
 
 .quick-btn {
@@ -122,6 +130,34 @@
   font-size: 14px;
   box-sizing: border-box;
   transition: border-color 0.2s;
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper input {
+  padding-right: 60px;
+}
+
+.btn-toggle-pw {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.btn-toggle-pw:hover {
+  color: #0f172a;
+  background: #f1f5f9;
 }
 
 .form-group input:focus {

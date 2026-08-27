@@ -77,7 +77,7 @@ public class CategoryController : ControllerBase
         var userEmail = User.FindFirstValue(ClaimTypes.Email) ?? "ADMIN";
         await _auditLog.LogAsync(null, userEmail, "CREATE_CATEGORY", "Category", category.CategoryId.ToString(), $"Created category: {category.CategoryName}");
 
-        return CreatedAtAction(nameof(GetCategory), new { id = category.CategoryId }, category);
+        return Ok(category);
     }
 
     [HttpPut("{id}")]
