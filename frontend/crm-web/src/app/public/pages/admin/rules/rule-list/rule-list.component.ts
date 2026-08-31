@@ -20,7 +20,7 @@ export class RuleListComponent implements OnInit {
   successMessage = '';
   errorMessage = '';
 
-  // Filter
+  // Filter state
   searchQuery = '';
   categoryFilter = '';
   statusFilter = '';
@@ -46,17 +46,20 @@ export class RuleListComponent implements OnInit {
 
   categoriesList = ['INTENT', 'ENGAGEMENT', 'FIT', 'ENRICHMENT', 'COMPLIANCE'];
 
-  // ===== NEW: For Event Type Dropdown =====
-  eventTypes: string[] = [];
-  showCustomEventInput = false;
-  customEventType = '';
-  // ========================================
+  /**
+   * Predefined event types that do NOT yet have a score rule.
+   * Loaded from GET /api/scoring/undefined-event-types.
+   * Empty when all 12 system events are already configured.
+   */
+  undefinedEventTypes: string[] = [];
+
+  /** True while loading the undefined event types list */
+  loadingEventTypes = false;
 
   constructor(private ruleService: RuleService) {}
 
   ngOnInit(): void {
     this.loadRules();
-    this.loadEventTypes();
   }
 
   loadRules(): void {
@@ -68,66 +71,31 @@ export class RuleListComponent implements OnInit {
         this.computeStats();
         this.loading = false;
       },
-      error: (err) => {
+      error: () => {
         this.errorMessage = 'Failed to load lead qualification rules.';
         this.loading = false;
       },
     });
   }
 
-  // ===== NEW: Load existing event types from API =====
-  loadEventTypes(): void {
-    this.ruleService.getEventTypes().subscribe({
+  /**
+   * Fetches the predefined event types that are not yet configured.
+   * Called when opening the "Add Rule" modal so the dropdown is always fresh.
+   */
+  loadUndefinedEventTypes(callback?: () => void): void {
+    this.loadingEventTypes = true;
+    this.ruleService.getUndefinedEventTypes().subscribe({
       next: (data) => {
-        this.eventTypes = data || [];
+        this.undefinedEventTypes = data || [];
+        this.loadingEventTypes = false;
+        callback?.();
       },
-      error: (err) => {
-        console.error('Failed to load event types', err);
-        this.eventTypes = [];
+      error: () => {
+        this.undefinedEventTypes = [];
+        this.loadingEventTypes = false;
+        callback?.();
       },
     });
-  }
-
-  // ===== NEW: Compute available event types (exclude used ones) =====
-  get availableEventTypes(): string[] {
-    const usedEventTypes = new Set<string>();
-
-    // Collect all event types from existing rules
-    this.rules.forEach((rule) => {
-      // If editing, exclude the current rule's own event type so it can still be selected
-      if (this.isEditing && this.selectedRuleId === rule.scoreRuleId) {
-        return; // skip adding this rule's event type to used set
-      }
-      usedEventTypes.add(rule.eventType);
-    });
-
-    // Filter the full list to only those not used
-    const available = this.eventTypes.filter((et) => !usedEventTypes.has(et));
-
-    // If editing, ensure the current rule's event type is in the list (it might have been filtered out)
-    if (this.isEditing && this.ruleForm.eventType) {
-      if (!available.includes(this.ruleForm.eventType)) {
-        available.push(this.ruleForm.eventType);
-      }
-    }
-
-    return available;
-  }
-
-  // ===== NEW: Handle dropdown selection =====
-  onEventTypeChange(value: string): void {
-    if (value === 'CUSTOM') {
-      this.showCustomEventInput = true;
-      this.ruleForm.eventType = '';
-    } else {
-      this.showCustomEventInput = false;
-      this.ruleForm.eventType = value;
-    }
-  }
-
-  // ===== NEW: Handle custom event type input =====
-  onCustomEventTypeChange(value: string): void {
-    this.ruleForm.eventType = value.toUpperCase().trim();
   }
 
   computeStats(): void {
@@ -162,6 +130,7 @@ export class RuleListComponent implements OnInit {
   openCreateModal(): void {
     this.isEditing = false;
     this.selectedRuleId = null;
+    this.errorMessage = '';
     this.ruleForm = {
       name: '',
       eventType: '',
@@ -170,26 +139,34 @@ export class RuleListComponent implements OnInit {
       isActive: true,
       description: '',
     };
-    this.showCustomEventInput = false;
-    this.customEventType = '';
-    this.errorMessage = '';
-    this.showModal = true;
+
+    // Fetch fresh list of still-unassigned event types before opening the modal
+    this.loadUndefinedEventTypes(() => {
+      if (this.undefinedEventTypes.length === 0) {
+        this.errorMessage =
+          'All predefined event types already have a rule configured. ' +
+          'Edit an existing rule to adjust its score.';
+        return;
+      }
+      // Pre-select the first available event type for convenience
+      this.ruleForm.eventType = this.undefinedEventTypes[0];
+      this.showModal = true;
+    });
   }
 
   openEditModal(rule: ScoreRule): void {
     this.isEditing = true;
     this.selectedRuleId = rule.scoreRuleId;
+    this.errorMessage = '';
     this.ruleForm = {
       name: rule.name,
-      eventType: rule.eventType,
+      eventType: rule.eventType,   // locked; cannot be changed during edit
       category: rule.category,
       points: rule.points,
       isActive: rule.isActive,
       description: rule.description || '',
     };
-    this.showCustomEventInput = false;
-    this.customEventType = '';
-    this.errorMessage = '';
+    this.undefinedEventTypes = []; // not needed for edit modal
     this.showModal = true;
   }
 
@@ -197,21 +174,25 @@ export class RuleListComponent implements OnInit {
     this.showModal = false;
     this.selectedRuleId = null;
     this.errorMessage = '';
-    this.showCustomEventInput = false;
-    this.customEventType = '';
+    this.undefinedEventTypes = [];
   }
 
   saveRule(): void {
-    if (!this.ruleForm.name?.trim() || !this.ruleForm.eventType?.trim()) {
-      this.errorMessage = 'Rule Name and Event Type are required.';
+    if (!this.ruleForm.name?.trim()) {
+      this.errorMessage = 'Rule Name is required.';
+      return;
+    }
+
+    if (!this.isEditing && !this.ruleForm.eventType?.trim()) {
+      this.errorMessage = 'Please select an Event Type.';
       return;
     }
 
     const payload = {
       name: this.ruleForm.name.trim(),
-      eventType: this.ruleForm.eventType.trim().toUpperCase(),
+      eventType: this.ruleForm.eventType!.trim().toUpperCase(),
       category: this.ruleForm.category,
-      points: Number(this.ruleForm.points || 0),
+      points: Number(this.ruleForm.points ?? 0),
       isActive: !!this.ruleForm.isActive,
       description: this.ruleForm.description?.trim() || '',
     };
@@ -222,7 +203,6 @@ export class RuleListComponent implements OnInit {
           this.showToast('Rule updated successfully.');
           this.closeModal();
           this.loadRules();
-          this.loadEventTypes();
         },
         error: (err) => {
           this.errorMessage = err.error?.error || 'Failed to update rule.';
@@ -234,7 +214,6 @@ export class RuleListComponent implements OnInit {
           this.showToast('New lead rule created successfully.');
           this.closeModal();
           this.loadRules();
-          this.loadEventTypes();
         },
         error: (err) => {
           this.errorMessage = err.error?.error || 'Failed to create rule.';
@@ -267,7 +246,6 @@ export class RuleListComponent implements OnInit {
       next: () => {
         this.showToast(`Rule "${rule.name}" deleted.`);
         this.loadRules();
-        this.loadEventTypes();
       },
       error: () => {
         this.showToast('Failed to delete rule.');

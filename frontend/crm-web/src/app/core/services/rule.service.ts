@@ -32,11 +32,23 @@ export class RuleService {
   getRules(): Observable<ScoreRule[]> {
     return this.http.get<ScoreRule[]>(this.apiUrl);
   }
+
   getEventTypes(): Observable<string[]> {
     return this.http.get<string[]>(
       'http://localhost:5234/api/scoring/event-types',
     );
   }
+
+  /**
+   * Returns predefined system event types that have NO score rule yet.
+   * Used to populate the "Add Rule" modal dropdown.
+   */
+  getUndefinedEventTypes(): Observable<string[]> {
+    return this.http.get<string[]>(
+      'http://localhost:5234/api/scoring/undefined-event-types',
+    );
+  }
+
   getRule(id: number): Observable<ScoreRule> {
     return this.http.get<ScoreRule>(`${this.apiUrl}/${id}`);
   }

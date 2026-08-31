@@ -159,12 +159,47 @@ public class ScoringService
     }
 
     public async Task<List<string>> GetDistinctEventTypesAsync()
-{
-    return await _context.ScoreRules
-        .Where(r => r.IsActive)
-        .Select(r => r.EventType)
-        .Distinct()
-        .OrderBy(e => e)
-        .ToListAsync();
-}
+    {
+        return await _context.ScoreRules
+            .Select(r => r.EventType)
+            .Distinct()
+            .OrderBy(e => e)
+            .ToListAsync();
+    }
+
+    /// <summary>
+    /// Returns the list of predefined system event types that do NOT yet have a
+    /// ScoreRule configured in the database. This is what the "Add Rule" modal
+    /// should populate its event-type dropdown with.
+    /// </summary>
+    public static readonly IReadOnlyList<string> PredefinedEventTypes = new[]
+    {
+        "COMPANY_FIT",
+        "EMAIL_BOUNCE",
+        "EMAIL_CLICK",
+        "EMAIL_OPEN",
+        "EMAIL_REPLY",
+        "FORM_SUBMIT",
+        "INVALID_CONTACT",
+        "IRRELEVANT_REQ",
+        "LINKEDIN_ENRICHED",
+        "PRODUCT_VIEW",
+        "REPEAT_VISIT",
+        "ROLE_MATCH"
+    };
+
+    public async Task<List<string>> GetUndefinedEventTypesAsync()
+    {
+        var usedEventTypes = await _context.ScoreRules
+            .Select(r => r.EventType.ToUpper())
+            .Distinct()
+            .ToListAsync();
+
+        var usedSet = new HashSet<string>(usedEventTypes, StringComparer.OrdinalIgnoreCase);
+
+        return PredefinedEventTypes
+            .Where(et => !usedSet.Contains(et))
+            .OrderBy(et => et)
+            .ToList();
+    }
 }

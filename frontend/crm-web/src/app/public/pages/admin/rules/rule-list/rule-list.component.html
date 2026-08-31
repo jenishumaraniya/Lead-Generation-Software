@@ -2,20 +2,28 @@
   <!-- Header Bar -->
   <div class="header-bar">
     <div>
-      <h1 class="page-title">Lead Qualification & Scoring Rules</h1>
+      <h1 class="page-title">Lead Qualification &amp; Scoring Rules</h1>
       <p class="page-subtitle">
         Configure automated behavioral weights, ICP criteria, and qualification
         thresholds
       </p>
     </div>
-    <button class="btn-create" (click)="openCreateModal()">
-      + Create Rule
+    <button class="btn-create" (click)="openCreateModal()" [disabled]="loadingEventTypes">
+      <span *ngIf="!loadingEventTypes">+ Add Rule</span>
+      <span *ngIf="loadingEventTypes">Loading…</span>
     </button>
   </div>
 
   <!-- Toast Notification -->
   <div class="toast-banner" *ngIf="successMessage">
     {{ successMessage }}
+  </div>
+
+  <!-- All-rules-configured info banner (shown when no undefined event types remain) -->
+  <div class="info-banner" *ngIf="!loading && rules.length >= 12 && !showModal">
+    <span class="info-icon">ℹ️</span>
+    All 12 predefined scoring events are configured. Edit an existing rule to
+    adjust its score or status.
   </div>
 
   <!-- KPI Overview Cards -->
@@ -77,7 +85,7 @@
     <table class="data-table">
       <thead>
         <tr>
-          <th>Rule Name & Event</th>
+          <th>Rule Name &amp; Event</th>
           <th>Category</th>
           <th>Points / Impact</th>
           <th>Status</th>
@@ -151,7 +159,7 @@
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>
-        {{ isEditing ? "Edit Qualification Rule" : "Create New Lead Rule" }}
+        {{ isEditing ? "Edit Qualification Rule" : "Add Scoring Rule" }}
       </h2>
       <button class="modal-close" (click)="closeModal()">&times;</button>
     </div>
@@ -161,60 +169,43 @@
         {{ errorMessage }}
       </div>
 
+      <!-- Event Type — dropdown (create) or read-only badge (edit) -->
+      <div class="form-group" *ngIf="!isEditing">
+        <label>Event Type *</label>
+        <select class="form-select" [(ngModel)]="ruleForm.eventType">
+          <option value="" disabled>— Select predefined event —</option>
+          <option *ngFor="let type of undefinedEventTypes" [value]="type">
+            {{ type }}
+          </option>
+        </select>
+        <small class="field-hint">
+          Only system-defined events without a score rule are shown. Once all 12
+          are configured, no further rules can be added.
+        </small>
+      </div>
+
+      <div class="form-group" *ngIf="isEditing">
+        <label>Event Type</label>
+        <div class="event-type-readonly">
+          <span class="event-code-badge large">{{ ruleForm.eventType }}</span>
+          <small class="field-hint locked-hint">
+            🔒 Event type cannot be changed — it defines the system behaviour
+            this rule responds to. Delete this rule and recreate if needed.
+          </small>
+        </div>
+      </div>
+
       <div class="form-group">
         <label>Rule Name *</label>
         <input
           type="text"
           class="form-input"
-          placeholder="e.g. Schedule Product Demo Request"
+          placeholder="e.g. Repeat Website Visit"
           [(ngModel)]="ruleForm.name"
         />
       </div>
 
-      <!-- Event Type (Dropdown + Custom) -->
       <div class="form-row">
-        <div class="form-group flex-1">
-          <label>Event Type Code *</label>
-          <select
-            class="form-select"
-            [(ngModel)]="ruleForm.eventType"
-            (change)="onEventTypeChange($any($event).target.value)"
-          >
-            <option value="" disabled selected>
-              -- Select existing event --
-            </option>
-            <option *ngFor="let type of availableEventTypes" [value]="type">
-              {{ type }}
-            </option>
-          </select>
-          <small class="field-hint" *ngIf="!showCustomEventInput">
-            Select an existing event or add a custom one
-          </small>
-          <small
-            class="field-hint"
-            *ngIf="showCustomEventInput"
-            style="color: #007bff"
-          >
-            Type the exact event code your frontend will send
-          </small>
-
-          <!-- Custom Input (appears when "CUSTOM" is selected) -->
-          <div *ngIf="showCustomEventInput" style="margin-top: 6px">
-            <input
-              type="text"
-              class="form-input"
-              placeholder="Type NEW_EVENT_NAME (e.g. WEBINAR_SIGNUP)"
-              [(ngModel)]="customEventType"
-              (input)="onCustomEventTypeChange($any($event).target.value)"
-              style="border-color: #007bff"
-            />
-            <small style="color: #dc3545; display: block; margin-top: 4px">
-              ⚠️ You must update your frontend code to actually trigger this new
-              event later.
-            </small>
-          </div>
-        </div>
-
         <div class="form-group flex-1">
           <label>Category *</label>
           <select class="form-select" [(ngModel)]="ruleForm.category">
@@ -223,9 +214,7 @@
             </option>
           </select>
         </div>
-      </div>
 
-      <div class="form-row">
         <div class="form-group flex-1">
           <label>Points Impact *</label>
           <input
@@ -234,17 +223,15 @@
             placeholder="e.g. 20 or -15"
             [(ngModel)]="ruleForm.points"
           />
-          <small class="field-hint"
-            >Positive values boost score, negative reduce</small
-          >
+          <small class="field-hint">Positive boosts score, negative reduces it</small>
         </div>
+      </div>
 
-        <div class="form-group flex-1 checkbox-group">
-          <label class="checkbox-label">
-            <input type="checkbox" [(ngModel)]="ruleForm.isActive" />
-            <span>Enable Rule Immediately</span>
-          </label>
-        </div>
+      <div class="form-group checkbox-group">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="ruleForm.isActive" />
+          <span>Enable Rule Immediately</span>
+        </label>
       </div>
 
       <div class="form-group">
@@ -252,7 +239,7 @@
         <textarea
           class="form-textarea"
           rows="3"
-          placeholder="Detailed explanation of when this rule triggers and its qualification purpose..."
+          placeholder="Explain when this rule triggers and its qualification purpose..."
           [(ngModel)]="ruleForm.description"
         ></textarea>
       </div>
@@ -261,7 +248,7 @@
     <div class="modal-footer">
       <button class="btn-secondary" (click)="closeModal()">Cancel</button>
       <button class="btn-primary" (click)="saveRule()">
-        {{ isEditing ? "Save Changes" : "Create Rule" }}
+        {{ isEditing ? "Save Changes" : "Add Rule" }}
       </button>
     </div>
   </div>
