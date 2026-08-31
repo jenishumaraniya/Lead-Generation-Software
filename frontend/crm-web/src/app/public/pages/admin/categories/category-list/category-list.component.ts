@@ -15,7 +15,21 @@ import { EmployeeService } from '../../../../../core/services/employee.service';
 })
 export class CategoryListComponent implements OnInit {
   categories: Category[] = [];
+  filteredCategories: Category[] = [];
+  salespersons: any[] = [];
   salespersonsCount = 0;
+  
+  searchTerm: string = '';
+  selectedFilter: string = 'ALL';
+  viewMode: 'cards' | 'table' = 'cards';
+
+  stats = {
+    totalCategories: 0,
+    coveredCount: 0,
+    unassignedCount: 0,
+    totalReps: 0
+  };
+
   showModal = false;
   isEdit = false;
   editingId: number | null = null;
@@ -37,19 +51,63 @@ export class CategoryListComponent implements OnInit {
     this.categoryService.getCategories().subscribe({
       next: (data) => {
         this.categories = data || [];
-        this.loading = false;
+        this.employeeService.getEmployees().subscribe({
+          next: (users) => {
+            this.salespersons = (users || []).filter(u => u.role === 'SALES_REP' && u.isActive);
+            this.salespersonsCount = this.salespersons.length;
+            this.calculateStats();
+            this.applyFilter();
+            this.loading = false;
+          },
+          error: () => {
+            this.salespersons = [];
+            this.salespersonsCount = 0;
+            this.calculateStats();
+            this.applyFilter();
+            this.loading = false;
+          }
+        });
       },
       error: () => {
         this.categories = [];
+        this.filteredCategories = [];
+        this.calculateStats();
         this.loading = false;
       }
     });
+  }
 
-    this.employeeService.getEmployees().subscribe({
-      next: (users) => {
-        this.salespersonsCount = users.filter(u => u.role === 'SALES_REP').length;
-      },
-      error: () => this.salespersonsCount = 0
+  calculateStats(): void {
+    this.stats.totalCategories = this.categories.length;
+    this.stats.totalReps = this.salespersonsCount;
+    
+    const assignedCategoryIds = new Set(this.salespersons.filter(s => s.categoryId).map(s => s.categoryId));
+    this.stats.coveredCount = this.categories.filter(c => assignedCategoryIds.has(c.categoryId)).length;
+    this.stats.unassignedCount = this.categories.filter(c => !assignedCategoryIds.has(c.categoryId)).length;
+  }
+
+  getAssignedSalesperson(categoryId: number): any {
+    return this.salespersons.find(s => s.categoryId === categoryId);
+  }
+
+  setViewMode(mode: 'cards' | 'table'): void {
+    this.viewMode = mode;
+  }
+
+  applyFilter(): void {
+    const term = this.searchTerm.trim().toLowerCase();
+
+    this.filteredCategories = this.categories.filter(cat => {
+      const assignedRep = this.getAssignedSalesperson(cat.categoryId);
+
+      if (this.selectedFilter === 'ASSIGNED' && !assignedRep) return false;
+      if (this.selectedFilter === 'UNASSIGNED' && assignedRep) return false;
+
+      if (!term) return true;
+
+      const nameMatch = cat.categoryName?.toLowerCase().includes(term);
+      const repMatch = assignedRep?.fullName?.toLowerCase().includes(term);
+      return nameMatch || repMatch;
     });
   }
 

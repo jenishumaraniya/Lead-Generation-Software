@@ -1,54 +1,198 @@
 <div class="page-container">
+  <!-- Header Bar -->
   <div class="header-bar">
     <div>
       <h1 class="page-title">Categories</h1>
       <p class="page-subtitle">Organize products and structure lead routing across business units</p>
     </div>
     <button (click)="openAddModal()" class="btn-primary">
-      Add Category
+      + Add Category
     </button>
   </div>
 
+  <!-- Notice Message -->
   <div *ngIf="noticeMessage" class="alert-notice">
     {{ noticeMessage }}
   </div>
 
+  <!-- Alignment Banner if reps < categories -->
   <div *ngIf="categories.length > salespersonsCount" class="alignment-banner">
     <div>
-      <strong>Sales Representative Notice:</strong> You have {{ categories.length }} categories but only {{ salespersonsCount }} sales representative(s). <a routerLink="/admin/salespersons" class="banner-link">Add a Sales Representative</a> to balance inbound lead management.
+      <strong>Sales Representative Notice:</strong> You have {{ categories.length }} categories but only {{ salespersonsCount }} sales representative(s). <a routerLink="/admin/salespersons" class="banner-link">Add a Sales Representative</a> to ensure all categories have coverage.
     </div>
   </div>
 
-  <div class="card table-card" *ngIf="!loading; else loadingTemplate">
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon icon-blue">🏷️</div>
+      <div class="stat-info">
+        <span class="stat-label">Total Categories</span>
+        <span class="stat-value">{{ stats.totalCategories }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-green">✅</div>
+      <div class="stat-info">
+        <span class="stat-label">Covered Categories</span>
+        <span class="stat-value">{{ stats.coveredCount }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-orange">⚠️</div>
+      <div class="stat-info">
+        <span class="stat-label">Unassigned Categories</span>
+        <span class="stat-value">{{ stats.unassignedCount }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-purple">👥</div>
+      <div class="stat-info">
+        <span class="stat-label">Sales Reps Available</span>
+        <span class="stat-value">{{ stats.totalReps }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar: Search, Filters & View Toggle -->
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm" 
+        (ngModelChange)="applyFilter()" 
+        placeholder="Search categories by name or assigned sales rep..." 
+      />
+    </div>
+
+    <div class="filter-actions">
+      <select [(ngModel)]="selectedFilter" (ngModelChange)="applyFilter()" class="filter-select">
+        <option value="ALL">All Categories</option>
+        <option value="ASSIGNED">Assigned Only</option>
+        <option value="UNASSIGNED">Unassigned Only</option>
+      </select>
+
+      <!-- View Switcher -->
+      <div class="view-toggle-group">
+        <button 
+          type="button" 
+          [class.active]="viewMode === 'cards'" 
+          (click)="setViewMode('cards')" 
+          title="Grid View"
+        >
+          <span>⊞ Grid</span>
+        </button>
+        <button 
+          type="button" 
+          [class.active]="viewMode === 'table'" 
+          (click)="setViewMode('table')" 
+          title="Table View"
+        >
+          <span>☰ Table</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="card loading-state">
+    <div class="spinner"></div>
+    <p>Loading categories...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && filteredCategories.length === 0" class="card empty-state">
+    <div class="empty-icon">🏷️</div>
+    <p class="empty-title">No categories found</p>
+    <p class="empty-desc">No categories matched your search. Click "Add Category" to create your first category.</p>
+    <button (click)="openAddModal()" class="btn-primary">+ Add Category</button>
+  </div>
+
+  <!-- 1. GRID VIEW (Cards) - Primary / Default -->
+  <div *ngIf="!loading && filteredCategories.length > 0 && viewMode === 'cards'" class="category-grid">
+    <div *ngFor="let cat of filteredCategories" class="category-card">
+      
+      <!-- Card Header -->
+      <div class="cat-card-top">
+        <div class="cat-icon-wrap">
+          <span class="cat-icon">🏷️</span>
+        </div>
+        <span class="id-badge">#{{ cat.categoryId }}</span>
+      </div>
+
+      <!-- Card Body -->
+      <div class="cat-card-body">
+        <h3 class="cat-card-title">{{ cat.categoryName }}</h3>
+
+        <!-- Salesperson Alignment Box -->
+        <div class="rep-alignment-box">
+          <div class="rep-box-label">👤 Assigned Sales Rep (1:1)</div>
+          <div *ngIf="getAssignedSalesperson(cat.categoryId) as rep" class="assigned-rep-info">
+            <div class="rep-chip">
+              <span class="rep-dot active"></span>
+              <strong>{{ rep.fullName }}</strong>
+            </div>
+            <span class="rep-sub">{{ rep.email }}</span>
+          </div>
+          <div *ngIf="!getAssignedSalesperson(cat.categoryId)" class="unassigned-rep-info">
+            <span class="unassigned-badge">⚠️ No Sales Rep Assigned</span>
+            <a routerLink="/admin/salespersons" class="assign-link">Assign Rep →</a>
+          </div>
+        </div>
+
+        <div class="cat-meta-row">
+          <span>Created: {{ cat.createdAt | date:'mediumDate' }}</span>
+        </div>
+      </div>
+
+      <!-- Card Footer Actions -->
+      <div class="cat-card-footer">
+        <button (click)="openEditModal(cat)" class="btn-action edit">
+          ✏️ Edit
+        </button>
+        <button (click)="deleteCategory(cat.categoryId)" class="btn-action delete">
+          🗑️ Delete
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2. TABLE VIEW (Fallback) -->
+  <div class="card table-card" *ngIf="!loading && filteredCategories.length > 0 && viewMode === 'table'">
     <table class="data-table">
       <thead>
         <tr>
           <th style="width: 80px;">ID</th>
           <th>Category Name</th>
+          <th>Assigned Sales Rep</th>
           <th>Created At</th>
           <th class="text-right">Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let cat of categories">
+        <tr *ngFor="let cat of filteredCategories">
           <td><span class="id-badge">#{{ cat.categoryId }}</span></td>
           <td><strong>{{ cat.categoryName }}</strong></td>
+          <td>
+            <div *ngIf="getAssignedSalesperson(cat.categoryId) as rep">
+              <strong>{{ rep.fullName }}</strong>
+              <div class="text-muted" style="font-size: 12px;">{{ rep.email }}</div>
+            </div>
+            <span *ngIf="!getAssignedSalesperson(cat.categoryId)" class="text-orange" style="font-size: 12px; font-weight: 600;">
+              ⚠️ Unassigned
+            </span>
+          </td>
           <td>{{ cat.createdAt | date:'mediumDate' }}</td>
           <td class="text-right actions-cell">
-            <button (click)="openEditModal(cat)" class="btn-text">Edit</button>
-            <button (click)="deleteCategory(cat.categoryId)" class="btn-text-danger">Delete</button>
+            <button (click)="openEditModal(cat)" class="btn-action edit">Edit</button>
+            <button (click)="deleteCategory(cat.categoryId)" class="btn-action delete">Delete</button>
           </td>
-        </tr>
-        <tr *ngIf="categories.length === 0">
-          <td colspan="4" class="empty-cell">No categories found. Click "Add Category" to create your first category.</td>
         </tr>
       </tbody>
     </table>
   </div>
-
-  <ng-template #loadingTemplate>
-    <div class="loading-state">Loading categories...</div>
-  </ng-template>
 
   <!-- Add/Edit Category Modal -->
   <div class="modal-backdrop" *ngIf="showModal">

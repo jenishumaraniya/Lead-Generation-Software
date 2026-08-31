@@ -14,10 +14,23 @@ import { CategoryService, Category } from '../../../../../core/services/category
 })
 export class SalespersonListComponent implements OnInit {
   salespersons: Salesperson[] = [];
+  filteredSalespersons: Salesperson[] = [];
   categories: Category[] = [];
   loading = false;
   errorMessage = '';
   successMessage = '';
+
+  searchTerm: string = '';
+  selectedFilter: string = 'ALL';
+  viewMode: 'cards' | 'table' = 'cards';
+
+  stats = {
+    totalReps: 0,
+    activeReps: 0,
+    assignedCount: 0,
+    totalCategories: 0,
+    unassignedCategoriesCount: 0
+  };
 
   // Add Salesperson Modal State
   showAddModal = false;
@@ -50,19 +63,68 @@ export class SalespersonListComponent implements OnInit {
         this.employeeService.getEmployees().subscribe({
           next: (users) => {
             this.salespersons = (users || []).filter(u => u.role === 'SALES_REP');
+            this.calculateStats();
+            this.applyFilter();
             this.loading = false;
           },
           error: () => {
             this.salespersons = [];
+            this.filteredSalespersons = [];
+            this.calculateStats();
             this.loading = false;
           }
         });
       },
       error: () => {
         this.categories = [];
+        this.salespersons = [];
+        this.filteredSalespersons = [];
+        this.calculateStats();
         this.loading = false;
       }
     });
+  }
+
+  calculateStats(): void {
+    this.stats.totalReps = this.salespersons.length;
+    this.stats.activeReps = this.salespersons.filter(s => s.isActive).length;
+    this.stats.assignedCount = this.salespersons.filter(s => s.categoryId && s.isActive).length;
+    this.stats.totalCategories = this.categories.length;
+    const assignedCategoryIds = new Set(this.salespersons.filter(s => s.categoryId && s.isActive).map(s => s.categoryId));
+    this.stats.unassignedCategoriesCount = this.categories.filter(c => !assignedCategoryIds.has(c.categoryId)).length;
+  }
+
+  setViewMode(mode: 'cards' | 'table'): void {
+    this.viewMode = mode;
+  }
+
+  applyFilter(): void {
+    const term = this.searchTerm.trim().toLowerCase();
+
+    this.filteredSalespersons = this.salespersons.filter(rep => {
+      // Filter logic
+      if (this.selectedFilter === 'ASSIGNED' && !rep.categoryId) return false;
+      if (this.selectedFilter === 'UNASSIGNED' && rep.categoryId) return false;
+      if (this.selectedFilter === 'ACTIVE' && !rep.isActive) return false;
+
+      // Search term
+      if (!term) return true;
+
+      const nameMatch = rep.fullName?.toLowerCase().includes(term);
+      const emailMatch = rep.email?.toLowerCase().includes(term);
+      const catMatch = (rep.categoryName || '').toLowerCase().includes(term);
+
+      return nameMatch || emailMatch || catMatch;
+    });
+  }
+
+  getInitials(name?: string): string {
+    if (!name) return 'SR';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
   }
 
   isCategoryAssignedToOther(categoryId: number, currentUserId?: number): boolean {
