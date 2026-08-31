@@ -1,25 +1,188 @@
 <div class="page-container">
+  <!-- Header Bar -->
   <div class="header-bar">
     <div>
       <h1 class="page-title">Sales Representatives & Categories</h1>
       <p class="page-subtitle">Manage sales team members and configure 1-to-1 product category alignments</p>
     </div>
     <button (click)="openAddModal()" class="btn-primary">
-      Add Sales Representative
+      + Add Sales Representative
     </button>
   </div>
 
+  <!-- Messages -->
   <div *ngIf="successMessage" class="alert-success">
     {{ successMessage }}
   </div>
+  <div *ngIf="errorMessage" class="alert-danger">
+    {{ errorMessage }}
+  </div>
 
+  <!-- Notice Banner if unassigned categories exist -->
   <div *ngIf="categories.length > salespersons.length" class="alignment-banner">
     <div class="banner-content">
-      <strong>Category Coverage Notice:</strong> You currently have {{ categories.length }} active categories and {{ salespersons.length }} sales representatives. Ensure all categories are assigned.
+      <strong>Category Coverage Notice:</strong> You currently have {{ categories.length }} active categories and {{ salespersons.length }} sales representatives. Ensure all categories are assigned for optimal lead routing.
     </div>
   </div>
 
-  <div class="card table-card">
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon icon-blue">👥</div>
+      <div class="stat-info">
+        <span class="stat-label">Total Reps</span>
+        <span class="stat-value">{{ stats.totalReps }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-green">⚡</div>
+      <div class="stat-info">
+        <span class="stat-label">Active Reps</span>
+        <span class="stat-value">{{ stats.activeReps }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-purple">🏷️</div>
+      <div class="stat-info">
+        <span class="stat-label">Category Coverage</span>
+        <span class="stat-value">{{ stats.assignedCount }} / {{ stats.totalCategories }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-orange">⚠️</div>
+      <div class="stat-info">
+        <span class="stat-label">Unassigned Categories</span>
+        <span class="stat-value">{{ stats.unassignedCategoriesCount }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar: Search, Filters & View Switcher -->
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm" 
+        (ngModelChange)="applyFilter()" 
+        placeholder="Search representatives by name, email, or category..." 
+      />
+    </div>
+
+    <div class="filter-actions">
+      <select [(ngModel)]="selectedFilter" (ngModelChange)="applyFilter()" class="filter-select">
+        <option value="ALL">All Representatives</option>
+        <option value="ASSIGNED">Category Assigned</option>
+        <option value="UNASSIGNED">No Category</option>
+        <option value="ACTIVE">Active Only</option>
+      </select>
+
+      <!-- View Switcher -->
+      <div class="view-toggle-group">
+        <button 
+          type="button" 
+          [class.active]="viewMode === 'cards'" 
+          (click)="setViewMode('cards')" 
+          title="Grid View"
+        >
+          <span>⊞ Grid</span>
+        </button>
+        <button 
+          type="button" 
+          [class.active]="viewMode === 'table'" 
+          (click)="setViewMode('table')" 
+          title="Table View"
+        >
+          <span>☰ Table</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="card loading-state">
+    <div class="spinner"></div>
+    <p>Loading sales team...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && filteredSalespersons.length === 0" class="card empty-state">
+    <div class="empty-icon">👥</div>
+    <p class="empty-title">No sales representatives found</p>
+    <p class="empty-desc">No team members match your current filter. Click "Add Sales Representative" to create one.</p>
+    <button (click)="openAddModal()" class="btn-primary">+ Add Sales Representative</button>
+  </div>
+
+  <!-- 1. GRID VIEW (Cards) - Primary / Default -->
+  <div *ngIf="!loading && filteredSalespersons.length > 0 && viewMode === 'cards'" class="salesperson-grid">
+    <div *ngFor="let rep of filteredSalespersons" class="salesperson-card">
+      
+      <!-- Card Header: Avatar, Name & Status -->
+      <div class="rep-card-header">
+        <div class="rep-avatar-wrap">
+          <div class="rep-avatar">
+            {{ getInitials(rep.fullName) }}
+          </div>
+          <div class="rep-header-info">
+            <h3 class="rep-card-name">{{ rep.fullName }}</h3>
+            <span class="rep-card-email">✉️ {{ rep.email }}</span>
+          </div>
+        </div>
+        <span class="status-badge" [class.active]="rep.isActive">
+          {{ rep.isActive ? 'Active' : 'Inactive' }}
+        </span>
+      </div>
+
+      <!-- Card Body: 1-to-1 Category Assignment Box -->
+      <div class="rep-card-body">
+        <div class="assignment-box">
+          <div class="assignment-header">
+            <span class="assignment-label">🏷️ Assigned Category (1:1)</span>
+            <span *ngIf="rep.categoryId" class="coverage-badge">Covered</span>
+            <span *ngIf="!rep.categoryId" class="coverage-badge unassigned">Unassigned</span>
+          </div>
+
+          <select 
+            [ngModel]="rep.categoryId" 
+            (ngModelChange)="onCategorySelected(rep, $event)" 
+            class="card-category-select"
+          >
+            <option [ngValue]="null">-- No Category Assigned --</option>
+            <option 
+              *ngFor="let cat of categories" 
+              [ngValue]="cat.categoryId"
+              [disabled]="isCategoryAssignedToOther(cat.categoryId, rep.userId)"
+            >
+              {{ cat.categoryName }}
+              <ng-container *ngIf="isCategoryAssignedToOther(cat.categoryId, rep.userId)">
+                (Assigned: {{ getAssignedRepNameForCategory(cat.categoryId) }})
+              </ng-container>
+            </option>
+          </select>
+        </div>
+
+        <!-- Meta info -->
+        <div class="rep-meta-row">
+          <span>Joined: {{ rep.createdAt | date:'mediumDate' }}</span>
+          <span class="role-pill">Sales Representative</span>
+        </div>
+      </div>
+
+      <!-- Card Footer: Actions -->
+      <div class="rep-card-footer">
+        <button (click)="openPasswordModal(rep)" class="btn-action edit">
+          🔑 Change Password
+        </button>
+        <button (click)="deleteSalesperson(rep)" class="btn-action delete">
+          🗑️ Remove
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2. TABLE VIEW (Fallback) -->
+  <div class="card table-card" *ngIf="!loading && filteredSalespersons.length > 0 && viewMode === 'table'">
     <table class="data-table">
       <thead>
         <tr>
@@ -32,9 +195,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let rep of salespersons">
+        <tr *ngFor="let rep of filteredSalespersons">
           <td>
-            <div class="rep-name">{{ rep.fullName }}</div>
+            <div class="rep-table-name">
+              <div class="mini-avatar">{{ getInitials(rep.fullName) }}</div>
+              <strong>{{ rep.fullName }}</strong>
+            </div>
           </td>
           <td>{{ rep.email }}</td>
           <td>
@@ -57,23 +223,18 @@
             </select>
           </td>
           <td>
-            <span class="status-indicator" [class.active]="rep.isActive">
+            <span class="status-badge" [class.active]="rep.isActive">
               {{ rep.isActive ? 'Active' : 'Inactive' }}
             </span>
           </td>
           <td>{{ rep.createdAt | date:'mediumDate' }}</td>
           <td class="text-right actions-cell">
-            <button (click)="openPasswordModal(rep)" class="btn-text">
+            <button (click)="openPasswordModal(rep)" class="btn-action edit">
               Change Password
             </button>
-            <button (click)="deleteSalesperson(rep)" class="btn-text-danger">
+            <button (click)="deleteSalesperson(rep)" class="btn-action delete">
               Remove
             </button>
-          </td>
-        </tr>
-        <tr *ngIf="salespersons.length === 0 && !loading">
-          <td colspan="6" class="empty-cell">
-            No sales representatives found. Click "Add Sales Representative" to create one.
           </td>
         </tr>
       </tbody>

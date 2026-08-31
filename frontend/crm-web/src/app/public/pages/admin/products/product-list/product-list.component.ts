@@ -13,12 +13,26 @@ import { CategoryService, Category } from '../../../../../core/services/category
 })
 export class ProductListComponent implements OnInit {
   products: any[] = [];
+  filteredProducts: any[] = [];
   categories: Category[] = [];
   showModal = false;
   isEdit = false;
   formData: any = { name: '', pricing: 0, description: '', categoryId: null, status: 'ACTIVE' };
   editingId: number | null = null;
   loading = false;
+
+  // View & Filters
+  viewMode: 'cards' | 'table' = 'cards';
+  searchTerm: string = '';
+  selectedCategory: string = 'ALL';
+  selectedStatus: string = 'ALL';
+
+  stats = {
+    total: 0,
+    active: 0,
+    categoriesCount: 0,
+    avgPrice: 0
+  };
 
   constructor(
     private productService: ProductService,
@@ -34,17 +48,66 @@ export class ProductListComponent implements OnInit {
     this.productService.getProducts().subscribe({
       next: (data) => {
         this.products = data || [];
+        this.calculateStats();
+        this.applyFilter();
         this.loading = false;
       },
       error: () => {
         this.products = [];
+        this.filteredProducts = [];
+        this.calculateStats();
         this.loading = false;
       }
     });
 
     this.categoryService.getCategories().subscribe({
-      next: (cats) => this.categories = cats || [],
+      next: (cats) => {
+        this.categories = cats || [];
+        this.calculateStats();
+      },
       error: () => this.categories = []
+    });
+  }
+
+  calculateStats(): void {
+    this.stats.total = this.products.length;
+    this.stats.active = this.products.filter(p => !p.status || p.status.toUpperCase() === 'ACTIVE').length;
+    this.stats.categoriesCount = this.categories.length;
+    const totalPricing = this.products.reduce((acc, p) => acc + (Number(p.pricing) || 0), 0);
+    this.stats.avgPrice = this.products.length ? Math.round(totalPricing / this.products.length) : 0;
+  }
+
+  setViewMode(mode: 'cards' | 'table'): void {
+    this.viewMode = mode;
+  }
+
+  applyFilter(): void {
+    const term = this.searchTerm.trim().toLowerCase();
+
+    this.filteredProducts = this.products.filter(p => {
+      // Category filter
+      if (this.selectedCategory !== 'ALL') {
+        if (this.selectedCategory === 'UNCATEGORIZED') {
+          if (p.categoryId) return false;
+        } else {
+          if (p.categoryId !== Number(this.selectedCategory)) return false;
+        }
+      }
+
+      // Status filter
+      if (this.selectedStatus !== 'ALL') {
+        const pStatus = (p.status || 'ACTIVE').toUpperCase();
+        if (pStatus !== this.selectedStatus) return false;
+      }
+
+      // Search term
+      if (!term) return true;
+
+      const nameMatch = p.name?.toLowerCase().includes(term);
+      const descMatch = p.description?.toLowerCase().includes(term);
+      const catMatch = this.getCategoryName(p.categoryId).toLowerCase().includes(term);
+
+      return nameMatch || descMatch || catMatch;
     });
   }
 

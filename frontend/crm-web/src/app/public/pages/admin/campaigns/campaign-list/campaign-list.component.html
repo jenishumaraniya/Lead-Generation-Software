@@ -7,18 +7,170 @@
     <a routerLink="/admin/campaigns/new" class="btn-create">+ New Campaign</a>
   </div>
 
-  <div class="card table-card">
-    <div *ngIf="loading" class="loading-state">
-      Loading campaigns...
+  <!-- Stats Grid Bar -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon icon-blue">📢</div>
+      <div class="stat-info">
+        <span class="stat-label">Total Campaigns</span>
+        <span class="stat-value">{{ stats.total }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-green">🚀</div>
+      <div class="stat-info">
+        <span class="stat-label">Active Running</span>
+        <span class="stat-value">{{ stats.active }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-purple">👥</div>
+      <div class="stat-info">
+        <span class="stat-label">Total Prospects</span>
+        <span class="stat-value">{{ stats.totalProspects }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-gray">⏸️</div>
+      <div class="stat-info">
+        <span class="stat-label">Draft / Closed</span>
+        <span class="stat-value">{{ stats.draft + stats.completed }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters & View Switcher Toolbar -->
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm" 
+        (ngModelChange)="applyFilter()" 
+        placeholder="Search campaigns by name or description..." 
+      />
     </div>
 
-    <div *ngIf="!loading && campaigns.length === 0" class="empty-state">
-      <p class="empty-title">No campaigns found</p>
-      <p class="empty-desc">Create your first outbound email campaign to start engaging prospects.</p>
-      <a routerLink="/admin/campaigns/new" class="btn-create">+ Create Campaign</a>
-    </div>
+    <div class="filter-actions">
+      <select [(ngModel)]="selectedStatus" (ngModelChange)="applyFilter()" class="status-select">
+        <option value="ALL">All Statuses</option>
+        <option value="ACTIVE">Active</option>
+        <option value="DRAFT">Draft</option>
+        <option value="PAUSED">Paused</option>
+        <option value="COMPLETED">Completed</option>
+        <option value="CLOSED">Closed</option>
+      </select>
 
-    <table *ngIf="!loading && campaigns.length > 0" class="data-table">
+      <div class="view-toggle-group">
+        <button 
+          type="button" 
+          [class.active]="viewMode === 'cards'" 
+          (click)="setViewMode('cards')" 
+          title="Grid View"
+        >
+          <span>⊞ Grid</span>
+        </button>
+        <button 
+          type="button" 
+          [class.active]="viewMode === 'table'" 
+          (click)="setViewMode('table')" 
+          title="Table View"
+        >
+          <span>☰ Table</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="card loading-state">
+    <div class="spinner"></div>
+    <p>Loading campaigns...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && filteredCampaigns.length === 0" class="card empty-state">
+    <div class="empty-icon">📢</div>
+    <p class="empty-title">No campaigns found</p>
+    <p class="empty-desc">Create your first outbound email campaign to start engaging target prospects.</p>
+    <a routerLink="/admin/campaigns/new" class="btn-create">+ Create Campaign</a>
+  </div>
+
+  <!-- 1. GRID VIEW (Cards) - Primary / Default -->
+  <div *ngIf="!loading && filteredCampaigns.length > 0 && viewMode === 'cards'" class="campaign-grid">
+    <div *ngFor="let campaign of filteredCampaigns" class="campaign-card">
+      
+      <!-- Card Header -->
+      <div class="card-header">
+        <div class="campaign-badge-wrap">
+          <span class="status-badge" [ngClass]="(campaign.status || 'draft').toLowerCase()">
+            {{ campaign.status || 'DRAFT' }}
+          </span>
+          <span class="count-pill">👥 {{ campaign.recipientsCount || 0 }} Prospects</span>
+        </div>
+        <div class="card-actions-dropdown">
+          <a [routerLink]="['/admin/campaigns', campaign.campaignId]" class="btn-icon-action" title="Edit Campaign">✏️</a>
+        </div>
+      </div>
+
+      <!-- Card Body -->
+      <div class="card-body">
+        <h3 class="campaign-card-title" [routerLink]="['/admin/campaigns', campaign.campaignId]">
+          {{ campaign.name }}
+        </h3>
+        <p class="campaign-card-desc">
+          {{ campaign.description || 'No campaign description provided.' }}
+        </p>
+
+        <!-- Schedule / Timeline Info -->
+        <div class="schedule-box">
+          <div class="schedule-item">
+            <span class="schedule-label">📅 Start:</span>
+            <span class="schedule-val" *ngIf="campaign.scheduleStartDate">
+              {{ campaign.scheduleStartDate | date:'MMM d, y, h:mm a' }}
+            </span>
+            <span class="schedule-val text-muted" *ngIf="!campaign.scheduleStartDate">—</span>
+          </div>
+          <div class="schedule-item">
+            <span class="schedule-label">🏁 End:</span>
+            <span class="schedule-val" *ngIf="campaign.scheduleEndDate">
+              {{ campaign.scheduleEndDate | date:'MMM d, y, h:mm a' }}
+            </span>
+            <span class="schedule-val text-muted" *ngIf="!campaign.scheduleEndDate">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card Footer Actions -->
+      <div class="card-footer">
+        <a [routerLink]="['/admin/campaigns', campaign.campaignId]" class="btn-action edit">
+          Edit Campaign
+        </a>
+        <div class="footer-btn-group">
+          <button 
+            *ngIf="campaign.status !== 'COMPLETED' && campaign.status !== 'CLOSED'" 
+            (click)="closeCampaign(campaign.campaignId)" 
+            class="btn-action close" 
+            title="Close Campaign"
+          >
+            Close
+          </button>
+          <button 
+            (click)="deleteCampaign(campaign.campaignId)" 
+            class="btn-action delete" 
+            title="Delete Campaign"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2. TABLE VIEW (Fallback) -->
+  <div *ngIf="!loading && filteredCampaigns.length > 0 && viewMode === 'table'" class="card table-card">
+    <table class="data-table">
       <thead>
         <tr>
           <th>Campaign Name</th>
@@ -30,7 +182,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let campaign of campaigns">
+        <tr *ngFor="let campaign of filteredCampaigns">
           <td>
             <div class="campaign-name-cell">
               <span class="campaign-name">{{ campaign.name }}</span>
@@ -38,12 +190,12 @@
             </div>
           </td>
           <td>
-            <span class="status-badge" [ngClass]="campaign.status?.toLowerCase()">
-              {{ campaign.status }}
+            <span class="status-badge" [ngClass]="(campaign.status || 'draft').toLowerCase()">
+              {{ campaign.status || 'DRAFT' }}
             </span>
           </td>
           <td>
-            <span class="count-pill">{{ campaign.recipientsCount || 0 }} prospects</span>
+            <span class="count-pill">👥 {{ campaign.recipientsCount || 0 }} prospects</span>
           </td>
           <td class="date-cell">
             <span *ngIf="campaign.scheduleStartDate">{{ campaign.scheduleStartDate | date:'MMM d, y, h:mm a' }}</span>

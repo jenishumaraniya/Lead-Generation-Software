@@ -44,10 +44,25 @@ public class ScoringController : ControllerBase
             return BadRequest(new { error = "Rule Name and Event Type are required." });
         }
 
+        var normalizedEventType = dto.EventType.Trim().ToUpper();
+
+        // Only allow predefined event types — admins cannot inject arbitrary codes
+        if (!ScoringService.PredefinedEventTypes.Contains(normalizedEventType, StringComparer.OrdinalIgnoreCase))
+        {
+            return BadRequest(new { error = $"'{normalizedEventType}' is not a recognized system event type. Allowed values: {string.Join(", ", ScoringService.PredefinedEventTypes)}" });
+        }
+
+        // Prevent duplicate event types
+        var existing = await _scoringService.GetDistinctEventTypesAsync();
+        if (existing.Any(e => string.Equals(e, normalizedEventType, StringComparison.OrdinalIgnoreCase)))
+        {
+            return Conflict(new { error = $"A rule for event type '{normalizedEventType}' already exists. Edit the existing rule instead." });
+        }
+
         var rule = new ScoreRule
         {
             Name = dto.Name.Trim(),
-            EventType = dto.EventType.Trim().ToUpper(),
+            EventType = normalizedEventType,
             Category = string.IsNullOrWhiteSpace(dto.Category) ? "INTENT" : dto.Category.Trim().ToUpper(),
             Direction = dto.Points >= 0 ? "POSITIVE" : "NEGATIVE",
             Points = dto.Points,
@@ -139,11 +154,23 @@ public class ScoringController : ControllerBase
     }
 
     [HttpGet("event-types")]
-public async Task<IActionResult> GetEventTypes()
-{
-    var types = await _scoringService.GetDistinctEventTypesAsync();
-    return Ok(types);
-}
+    public async Task<IActionResult> GetEventTypes()
+    {
+        var types = await _scoringService.GetDistinctEventTypesAsync();
+        return Ok(types);
+    }
+
+    /// <summary>
+    /// Returns the predefined event types that do NOT yet have a ScoreRule
+    /// configured. The frontend "Add Rule" modal uses this to populate
+    /// its dropdown — ensuring admins only configure system-defined events.
+    /// </summary>
+    [HttpGet("undefined-event-types")]
+    public async Task<IActionResult> GetUndefinedEventTypes()
+    {
+        var types = await _scoringService.GetUndefinedEventTypesAsync();
+        return Ok(types);
+    }
 }
 
 public class CreateScoreRuleDto

@@ -1,15 +1,159 @@
 <div class="page-container">
+  <!-- Header Bar -->
   <div class="header-bar">
     <div>
       <h1 class="page-title">Products Catalog</h1>
       <p class="page-subtitle">Manage business software solutions, enterprise tiers, and category mapping</p>
     </div>
     <button (click)="openModal()" class="btn-primary">
-      Add Product
+      + Add Product
     </button>
   </div>
 
-  <div class="card table-card" *ngIf="!loading; else loadingTemplate">
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon icon-blue">📦</div>
+      <div class="stat-info">
+        <span class="stat-label">Total Products</span>
+        <span class="stat-value">{{ stats.total }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-green">⚡</div>
+      <div class="stat-info">
+        <span class="stat-label">Active Products</span>
+        <span class="stat-value">{{ stats.active }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-purple">🏷️</div>
+      <div class="stat-info">
+        <span class="stat-label">Categories Covered</span>
+        <span class="stat-value">{{ stats.categoriesCount }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-orange">💰</div>
+      <div class="stat-info">
+        <span class="stat-label">Average Starting Price</span>
+        <span class="stat-value">${{ stats.avgPrice | number }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar: Search, Filters & View Toggle -->
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm" 
+        (ngModelChange)="applyFilter()" 
+        placeholder="Search products by name, description, or category..." 
+      />
+    </div>
+
+    <div class="filter-actions">
+      <!-- Category Filter -->
+      <select [(ngModel)]="selectedCategory" (ngModelChange)="applyFilter()" class="filter-select">
+        <option value="ALL">All Categories</option>
+        <option value="UNCATEGORIZED">Uncategorized</option>
+        <option *ngFor="let cat of categories" [value]="cat.categoryId">
+          {{ cat.categoryName }}
+        </option>
+      </select>
+
+      <!-- Status Filter -->
+      <select [(ngModel)]="selectedStatus" (ngModelChange)="applyFilter()" class="filter-select">
+        <option value="ALL">All Statuses</option>
+        <option value="ACTIVE">Active</option>
+        <option value="INACTIVE">Inactive</option>
+        <option value="DRAFT">Draft</option>
+      </select>
+
+      <!-- View Switcher -->
+      <div class="view-toggle-group">
+        <button 
+          type="button" 
+          [class.active]="viewMode === 'cards'" 
+          (click)="setViewMode('cards')" 
+          title="Grid View"
+        >
+          <span>⊞ Grid</span>
+        </button>
+        <button 
+          type="button" 
+          [class.active]="viewMode === 'table'" 
+          (click)="setViewMode('table')" 
+          title="Table View"
+        >
+          <span>☰ Table</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="card loading-state">
+    <div class="spinner"></div>
+    <p>Loading products catalog...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && filteredProducts.length === 0" class="card empty-state">
+    <div class="empty-icon">📦</div>
+    <p class="empty-title">No products found</p>
+    <p class="empty-desc">No products matched your search or category filter. Click "Add Product" to add a new one.</p>
+    <button (click)="openModal()" class="btn-primary">+ Add Product</button>
+  </div>
+
+  <!-- 1. GRID VIEW (Cards) - Primary / Default -->
+  <div *ngIf="!loading && filteredProducts.length > 0 && viewMode === 'cards'" class="product-grid">
+    <div *ngFor="let p of filteredProducts" class="product-card">
+      
+      <!-- Card Header -->
+      <div class="product-card-top">
+        <div class="product-icon-wrap">
+          <span class="product-icon">💻</span>
+        </div>
+        <span class="status-badge" [class.active]="(p.status || 'ACTIVE') === 'ACTIVE'">
+          {{ p.status || 'ACTIVE' }}
+        </span>
+      </div>
+
+      <!-- Card Body -->
+      <div class="product-card-body">
+        <div class="category-tag">
+          🏷️ {{ getCategoryName(p.categoryId) }}
+        </div>
+        <h3 class="product-card-title">{{ p.name }}</h3>
+        <p class="product-card-desc">
+          {{ p.description || 'Enterprise solution designed for scalable business workflows.' }}
+        </p>
+
+        <!-- Pricing Tag -->
+        <div class="price-box">
+          <span class="price-label">Starting at</span>
+          <span class="price-amount">${{ p.pricing | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <!-- Card Footer Actions -->
+      <div class="product-card-footer">
+        <button (click)="editProduct(p)" class="btn-action edit">
+          ✏️ Edit
+        </button>
+        <button (click)="deleteProduct(p.productId)" class="btn-action delete">
+          🗑️ Delete
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2. TABLE VIEW (Fallback) -->
+  <div class="card table-card" *ngIf="!loading && filteredProducts.length > 0 && viewMode === 'table'">
     <table class="data-table">
       <thead>
         <tr>
@@ -21,7 +165,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let p of products">
+        <tr *ngFor="let p of filteredProducts">
           <td>
             <div class="prod-name">{{ p.name }}</div>
             <div class="prod-desc" *ngIf="p.description">{{ p.description }}</div>
@@ -30,28 +174,21 @@
             <span class="category-pill">{{ getCategoryName(p.categoryId) }}</span>
           </td>
           <td>
-            <strong>${{ p.pricing | number:'1.2-2' }}</strong>
+            <strong class="price-text">${{ p.pricing | number:'1.2-2' }}</strong>
           </td>
           <td>
-            <span class="status-indicator" [class.active]="p.status === 'ACTIVE'">
+            <span class="status-badge" [class.active]="(p.status || 'ACTIVE') === 'ACTIVE'">
               {{ p.status || 'ACTIVE' }}
             </span>
           </td>
           <td class="text-right actions-cell">
-            <button (click)="editProduct(p)" class="btn-text">Edit</button>
-            <button (click)="deleteProduct(p.productId)" class="btn-text-danger">Delete</button>
+            <button (click)="editProduct(p)" class="btn-action edit">Edit</button>
+            <button (click)="deleteProduct(p.productId)" class="btn-action delete">Delete</button>
           </td>
-        </tr>
-        <tr *ngIf="products.length === 0">
-          <td colspan="5" class="empty-cell">No products found. Click "Add Product" to add a new product.</td>
         </tr>
       </tbody>
     </table>
   </div>
-
-  <ng-template #loadingTemplate>
-    <div class="loading-state">Loading products catalog...</div>
-  </ng-template>
 
   <!-- Add/Edit Product Modal -->
   <div class="modal-backdrop" *ngIf="showModal">
