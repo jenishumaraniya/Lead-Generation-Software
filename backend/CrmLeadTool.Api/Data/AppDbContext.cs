@@ -85,6 +85,10 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<AIInsight>().ToTable("AIInsight_CRM");
         modelBuilder.Entity<AIAnalysisHistory>().ToTable("AIAnalysisHistory_CRM");
 
+
+        modelBuilder.Entity<Product>()
+            .Property(p => p.Pricing)
+            .HasPrecision(18, 4);   
         modelBuilder.Entity<Prospect>()
             .HasOne(p => p.Visitor)
             .WithMany()
@@ -225,32 +229,32 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Suppression>()
             .HasIndex(s => s.Email);
 
-        // AIAnalysis → Lead
-        modelBuilder.Entity<AIAnalysis>()
-            .HasOne(a => a.Lead)
-            .WithMany()
-            .HasForeignKey(a => a.LeadId)
-            .OnDelete(DeleteBehavior.Cascade);
+       // AIAnalysis → Lead
+modelBuilder.Entity<AIAnalysis>()
+    .HasOne(a => a.Lead)
+    .WithMany()                    // ← no navigation from Lead to AIAnalysis
+    .HasForeignKey(a => a.LeadId)
+    .OnDelete(DeleteBehavior.Restrict);   // avoids cascade conflicts
 
-        // AIInsight → Lead
-        modelBuilder.Entity<AIInsight>()
-            .HasOne(i => i.Lead)
-            .WithMany()
-            .HasForeignKey(i => i.LeadId)
-            .OnDelete(DeleteBehavior.Cascade);
+// AIInsight → Lead
+modelBuilder.Entity<AIInsight>()
+    .HasOne(i => i.Lead)
+    .WithMany()                    // ← no navigation from Lead to AIInsight
+    .HasForeignKey(i => i.LeadId)
+    .OnDelete(DeleteBehavior.Restrict);   // fixes the multiple cascade error
 
-        // AIInsight → AIAnalysis
-        modelBuilder.Entity<AIInsight>()
-            .HasOne(i => i.Analysis)
-            .WithMany(a => a.Insights)
-            .HasForeignKey(i => i.AIAnalysisId)
-            .OnDelete(DeleteBehavior.SetNull);
+// AIInsight → AIAnalysis
+modelBuilder.Entity<AIInsight>()
+    .HasOne(i => i.Analysis)
+    .WithMany(a => a.Insights)     
+    .HasForeignKey(i => i.AIAnalysisId)
+    .OnDelete(DeleteBehavior.SetNull);
 
-        // AIAnalysisHistory → Lead
-        modelBuilder.Entity<AIAnalysisHistory>()
-            .HasOne(h => h.Lead)
-            .WithMany()
-            .HasForeignKey(h => h.LeadId)
-            .OnDelete(DeleteBehavior.Cascade);
+// AIAnalysisHistory → Lead
+modelBuilder.Entity<AIAnalysisHistory>()
+    .HasOne(h => h.Lead)
+    .WithMany()                    
+    .HasForeignKey(h => h.LeadId)
+    .OnDelete(DeleteBehavior.Restrict);  
     }
 }

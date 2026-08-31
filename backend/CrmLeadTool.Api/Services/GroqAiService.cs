@@ -13,17 +13,20 @@ public class GroqAIService
     private readonly AppDbContext _context;
     private readonly ILogger<GroqAIService> _logger;
     private readonly HttpClient _httpClient;
+    private readonly ScoringService _scoringService;   // 👈 NEW
 
     public GroqAIService(
         IConfiguration config,
         AppDbContext context,
         ILogger<GroqAIService> logger,
-        HttpClient httpClient)
+        HttpClient httpClient,
+        ScoringService scoringService)   // 👈 NEW
     {
         _config = config;
         _context = context;
         _logger = logger;
         _httpClient = httpClient;
+        _scoringService = scoringService;   // 👈 NEW
     }
 
     public async Task<CombinedAIAnalysis> AnalyzeLeadWithProfileAsync(int leadId)
@@ -42,6 +45,14 @@ public class GroqAIService
 
         await SaveCombinedAnalysisAsync(result, leadId);
         await UpdateLeadWithAIAsync(leadId, result.Analysis);
+
+        // 👇 NEW: Apply scoring points for AI analysis
+        await _scoringService.ApplyScoreEventAsync(
+            leadId,
+            "AI_ANALYSIS",
+            "AI lead analysis completed",
+            15   // points to add
+        );
 
         return result;
     }
@@ -77,24 +88,26 @@ public class GroqAIService
             .Where(a => a.LeadId == lead.LeadId)
             .OrderByDescending(a => a.CreatedAt)
             .Take(3)
-            .Select(a => $"- {a.ActivityType}")
+            .Select(a => $"- {Truncate(a.ActivityType, 50)}")
             .ToList();
 
         var activitySummary = activities.Any() 
             ? string.Join("\n", activities) 
             : "- None";
 
-        var businessReq = lead.BusinessRequirement ?? "";
-        if (businessReq.Length > 150)
-            businessReq = businessReq.Substring(0, 150) + "...";
+        var businessReq = Truncate(lead.BusinessRequirement ?? "", 200);
+        var companyName = Truncate(lead.CompanyName ?? "", 100);
+        var fullName = Truncate(lead.FullName ?? "", 100);
+        var jobTitle = Truncate(lead.JobTitle ?? "", 100);
+        var timeline = Truncate(lead.Timeline ?? "", 100);
 
-        return $@"Analyze this B2B lead. Return ONLY valid JSON.
+        var prompt = $@"Analyze this B2B lead. Return ONLY valid JSON.
 
-Lead: {lead.FullName}
-Company: {lead.CompanyName}
-Title: {lead.JobTitle}
+Lead: {fullName}
+Company: {companyName}
+Title: {jobTitle}
 Need: {businessReq}
-Timeline: {lead.Timeline}
+Timeline: {timeline}
 Score: {lead.Score}
 Activities: {activitySummary}
 
@@ -118,6 +131,16 @@ JSON:
         ""talkingPoints"": [""point1"", ""point2""]
     }}
 }}";
+
+        _logger.LogInformation("Prompt length: {Length} characters", prompt.Length);
+        return prompt;
+    }
+
+    private static string Truncate(string value, int maxLength)
+    {
+        if (string.IsNullOrEmpty(value)) return value;
+        if (value.Length <= maxLength) return value;
+        return value.Substring(0, maxLength) + "...";
     }
 
     private async Task<string> CallGroqApiAsync(string prompt)
@@ -168,120 +191,117 @@ JSON:
 
         return result ?? "{}";
     }
-private CombinedAIAnalysis ParseCombinedResponse(string response, int leadId)
-{
-    try
+
+    private CombinedAIAnalysis ParseCombinedResponse(string response, int leadId)
     {
-        using var doc = JsonDocument.Parse(response);
-        var root = doc.RootElement;
-
-        var profile = new GeneratedProfile();
-        if (root.TryGetProperty("generatedProfile", out var profileElement))
+        try
         {
-            profile.ProfessionalSummary = profileElement.TryGetProperty("professionalSummary", out var ps) ? ps.GetString() ?? "Professional with relevant experience" : "Professional with relevant experience";
-            profile.LikelyIndustry = profileElement.TryGetProperty("likelyIndustry", out var li) ? li.GetString() ?? "Technology" : "Technology";
-            profile.CompanySize = profileElement.TryGetProperty("companySize", out var cs) ? cs.GetString() ?? "SMB" : "SMB";
-            profile.LikelyLocation = profileElement.TryGetProperty("likelyLocation", out var ll) ? ll.GetString() ?? "United States" : "United States";
-            profile.PotentialRole = profileElement.TryGetProperty("potentialRole", out var pr) ? pr.GetString() ?? "Business Decision Maker" : "Business Decision Maker";
+            using var doc = JsonDocument.Parse(response);
+            var root = doc.RootElement;
+
+            var profile = new GeneratedProfile();
+            if (root.TryGetProperty("generatedProfile", out var profileElement))
+            {
+                profile.ProfessionalSummary = profileElement.TryGetProperty("professionalSummary", out var ps) ? ps.GetString() ?? "Professional with relevant experience" : "Professional with relevant experience";
+                profile.LikelyIndustry = profileElement.TryGetProperty("likelyIndustry", out var li) ? li.GetString() ?? "Technology" : "Technology";
+                profile.CompanySize = profileElement.TryGetProperty("companySize", out var cs) ? cs.GetString() ?? "SMB" : "SMB";
+                profile.LikelyLocation = profileElement.TryGetProperty("likelyLocation", out var ll) ? ll.GetString() ?? "United States" : "United States";
+                profile.PotentialRole = profileElement.TryGetProperty("potentialRole", out var pr) ? pr.GetString() ?? "Business Decision Maker" : "Business Decision Maker";
+            }
+
+            var analysis = new AIAnalysis();
+            if (root.TryGetProperty("analysis", out var analysisElement))
+            {
+                analysis.LeadId = leadId;
+                analysis.Intent = analysisElement.TryGetProperty("intent", out var intent) ? intent.GetString() ?? "AWARENESS" : "AWARENESS";
+                analysis.ConfidenceScore = analysisElement.TryGetProperty("confidenceScore", out var conf) 
+                    ? Convert.ToDecimal(conf.GetDouble()) 
+                    : 50m;
+                analysis.LeadSummary = analysisElement.TryGetProperty("leadSummary", out var summary) ? summary.GetString() ?? "Lead requires further analysis" : "Lead requires further analysis";
+                analysis.PriorityRecommendation = analysisElement.TryGetProperty("priorityRecommendation", out var priority) ? priority.GetString() ?? "MEDIUM" : "MEDIUM";
+                analysis.RecommendedNextAction = analysisElement.TryGetProperty("recommendedNextAction", out var action) ? action.GetString() ?? "Contact the lead" : "Contact the lead";
+                analysis.AnalysisDate = DateTime.UtcNow;
+                analysis.CreatedAt = DateTime.UtcNow;
+                analysis.RawResponse = response;
+                analysis.ModelVersion = _config["Groq:Model"] ?? "llama3-70b-8192";
+
+                var insights = new List<AIInsight>();
+
+                if (analysisElement.TryGetProperty("painPoints", out var painPoints) && painPoints.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var point in painPoints.EnumerateArray())
+                    {
+                        insights.Add(new AIInsight 
+                        { 
+                            LeadId = leadId, 
+                            InsightType = "PAIN_POINT", 
+                            InsightText = point.GetString() ?? "Unknown pain point", 
+                            ConfidenceScore = 75m,
+                            CreatedAt = DateTime.UtcNow 
+                        });
+                    }
+                }
+
+                if (analysisElement.TryGetProperty("icebreakers", out var icebreakers) && icebreakers.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var icebreaker in icebreakers.EnumerateArray())
+                    {
+                        insights.Add(new AIInsight 
+                        { 
+                            LeadId = leadId, 
+                            InsightType = "ICEBREAKER", 
+                            InsightText = icebreaker.GetString() ?? "Unknown icebreaker", 
+                            ConfidenceScore = 70m,
+                            CreatedAt = DateTime.UtcNow 
+                        });
+                    }
+                }
+
+                if (analysisElement.TryGetProperty("talkingPoints", out var talkingPoints) && talkingPoints.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var point in talkingPoints.EnumerateArray())
+                    {
+                        insights.Add(new AIInsight 
+                        { 
+                            LeadId = leadId, 
+                            InsightType = "TALKING_POINT", 
+                            InsightText = point.GetString() ?? "Unknown talking point", 
+                            ConfidenceScore = 80m,
+                            CreatedAt = DateTime.UtcNow 
+                        });
+                    }
+                }
+
+                analysis.Insights = insights;
+            }
+
+            return new CombinedAIAnalysis { Profile = profile, Analysis = analysis, RawResponse = response };
         }
-
-        var analysis = new AIAnalysis();
-        if (root.TryGetProperty("analysis", out var analysisElement))
+        catch (Exception ex)
         {
-            analysis.LeadId = leadId;
-            analysis.Intent = analysisElement.TryGetProperty("intent", out var intent) ? intent.GetString() ?? "AWARENESS" : "AWARENESS";
-            
-            // ✅ Parse as decimal
-            analysis.ConfidenceScore = analysisElement.TryGetProperty("confidenceScore", out var conf) 
-                ? Convert.ToDecimal(conf.GetDouble()) 
-                : 50m;
-            
-            analysis.LeadSummary = analysisElement.TryGetProperty("leadSummary", out var summary) ? summary.GetString() ?? "Lead requires further analysis" : "Lead requires further analysis";
-            analysis.PriorityRecommendation = analysisElement.TryGetProperty("priorityRecommendation", out var priority) ? priority.GetString() ?? "MEDIUM" : "MEDIUM";
-            analysis.RecommendedNextAction = analysisElement.TryGetProperty("recommendedNextAction", out var action) ? action.GetString() ?? "Contact the lead" : "Contact the lead";
-            //analysis.RecommendedSalesperson = analysisElement.TryGetProperty("recommendedSalesperson", out var salesperson) ? salesperson.GetString() ?? "Sales Team" : "Sales Team";
-            analysis.AnalysisDate = DateTime.UtcNow;
-            analysis.CreatedAt = DateTime.UtcNow;
-            analysis.RawResponse = response;
-            analysis.ModelVersion = _config["Groq:Model"] ?? "llama3-70b-8192";
-
-            var insights = new List<AIInsight>();
-
-            if (analysisElement.TryGetProperty("painPoints", out var painPoints) && painPoints.ValueKind == JsonValueKind.Array)
+            _logger.LogError(ex, "Failed to parse AI response: {Response}", response);
+            return new CombinedAIAnalysis
             {
-                foreach (var point in painPoints.EnumerateArray())
+                Profile = new GeneratedProfile { ProfessionalSummary = "Unable to generate profile.", LikelyIndustry = "Unknown", CompanySize = "Unknown", LikelyLocation = "Unknown", PotentialRole = "Unknown" },
+                Analysis = new AIAnalysis
                 {
-                    insights.Add(new AIInsight 
-                    { 
-                        LeadId = leadId, 
-                        InsightType = "PAIN_POINT", 
-                        InsightText = point.GetString() ?? "Unknown pain point", 
-                        ConfidenceScore = 75m,  // ✅ Use decimal
-                        CreatedAt = DateTime.UtcNow 
-                    });
-                }
-            }
-
-            if (analysisElement.TryGetProperty("icebreakers", out var icebreakers) && icebreakers.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var icebreaker in icebreakers.EnumerateArray())
-                {
-                    insights.Add(new AIInsight 
-                    { 
-                        LeadId = leadId, 
-                        InsightType = "ICEBREAKER", 
-                        InsightText = icebreaker.GetString() ?? "Unknown icebreaker", 
-                        ConfidenceScore = 70m,  // ✅ Use decimal
-                        CreatedAt = DateTime.UtcNow 
-                    });
-                }
-            }
-
-            if (analysisElement.TryGetProperty("talkingPoints", out var talkingPoints) && talkingPoints.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var point in talkingPoints.EnumerateArray())
-                {
-                    insights.Add(new AIInsight 
-                    { 
-                        LeadId = leadId, 
-                        InsightType = "TALKING_POINT", 
-                        InsightText = point.GetString() ?? "Unknown talking point", 
-                        ConfidenceScore = 80m,  // ✅ Use decimal
-                        CreatedAt = DateTime.UtcNow 
-                    });
-                }
-            }
-
-            analysis.Insights = insights;
+                    LeadId = leadId,
+                    Intent = "AWARENESS",
+                    ConfidenceScore = 50m,
+                    LeadSummary = "Unable to analyze lead. Please review manually.",
+                    PriorityRecommendation = "MEDIUM",
+                    RecommendedNextAction = "Contact the lead for more information",
+                    AnalysisDate = DateTime.UtcNow,
+                    CreatedAt = DateTime.UtcNow,
+                    RawResponse = response,
+                    ModelVersion = _config["Groq:Model"] ?? "llama3-70b-8192",
+                    Insights = new List<AIInsight>()
+                },
+                RawResponse = response
+            };
         }
+    }
 
-        return new CombinedAIAnalysis { Profile = profile, Analysis = analysis, RawResponse = response };
-    }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Failed to parse AI response: {Response}", response);
-        return new CombinedAIAnalysis
-        {
-            Profile = new GeneratedProfile { ProfessionalSummary = "Unable to generate profile.", LikelyIndustry = "Unknown", CompanySize = "Unknown", LikelyLocation = "Unknown", PotentialRole = "Unknown" },
-            Analysis = new AIAnalysis
-            {
-                LeadId = leadId,
-                Intent = "AWARENESS",
-                ConfidenceScore = 50m,  // ✅ Use decimal
-                LeadSummary = "Unable to analyze lead. Please review manually.",
-                PriorityRecommendation = "MEDIUM",
-                RecommendedNextAction = "Contact the lead for more information",
-                //RecommendedSalesperson = "Sales Team",
-                AnalysisDate = DateTime.UtcNow,
-                CreatedAt = DateTime.UtcNow,
-                RawResponse = response,
-                ModelVersion = _config["Groq:Model"] ?? "llama3-70b-8192",
-                Insights = new List<AIInsight>()
-            },
-            RawResponse = response
-        };
-    }
-}
     private async Task SaveCombinedAnalysisAsync(CombinedAIAnalysis result, int leadId)
     {
         var analysis = result.Analysis;
@@ -309,7 +329,6 @@ private CombinedAIAnalysis ParseCombinedResponse(string response, int leadId)
             existing.LeadSummary = analysis.LeadSummary;
             existing.PriorityRecommendation = analysis.PriorityRecommendation;
             existing.RecommendedNextAction = analysis.RecommendedNextAction;
-           // existing.RecommendedSalesperson = analysis.RecommendedSalesperson;
             existing.ProfessionalSummary = result.Profile.ProfessionalSummary;
             existing.LikelyIndustry = result.Profile.LikelyIndustry;
             existing.CompanySize = result.Profile.CompanySize;

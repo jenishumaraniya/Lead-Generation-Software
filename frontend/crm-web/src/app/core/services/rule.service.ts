@@ -6,7 +6,13 @@ export interface ScoreRule {
   scoreRuleId: number;
   name: string;
   eventType: string;
-  category: 'INTENT' | 'ENGAGEMENT' | 'FIT' | 'ENRICHMENT' | 'COMPLIANCE' | string;
+  category:
+    | 'INTENT'
+    | 'ENGAGEMENT'
+    | 'FIT'
+    | 'ENRICHMENT'
+    | 'COMPLIANCE'
+    | string;
   direction: 'POSITIVE' | 'NEGATIVE';
   points: number;
   isActive: boolean;
@@ -16,7 +22,7 @@ export interface ScoreRule {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class RuleService {
   private apiUrl = 'http://localhost:5234/api/scoring/rules';
@@ -26,7 +32,11 @@ export class RuleService {
   getRules(): Observable<ScoreRule[]> {
     return this.http.get<ScoreRule[]>(this.apiUrl);
   }
-
+  getEventTypes(): Observable<string[]> {
+    return this.http.get<string[]>(
+      'http://localhost:5234/api/scoring/event-types',
+    );
+  }
   getRule(id: number): Observable<ScoreRule> {
     return this.http.get<ScoreRule>(`${this.apiUrl}/${id}`);
   }

@@ -137,6 +137,13 @@ public class ScoringController : ControllerBase
             return BadRequest(new { error = ex.Message });
         }
     }
+
+    [HttpGet("event-types")]
+public async Task<IActionResult> GetEventTypes()
+{
+    var types = await _scoringService.GetDistinctEventTypesAsync();
+    return Ok(types);
+}
 }
 
 public class CreateScoreRuleDto
@@ -164,3 +171,4 @@ public class UpdateScoreRuleDto
     public int Points { get; set; }
     public bool IsActive { get; set; }
 }
+

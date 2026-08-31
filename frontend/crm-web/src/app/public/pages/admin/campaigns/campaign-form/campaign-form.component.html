@@ -1,8 +1,12 @@
 <div class="form-container">
   <div class="header-row">
     <div>
-      <button (click)="goBack()" class="back-link">&larr; Back to Campaigns</button>
-      <h1 class="page-title">{{ isEdit ? 'Edit Campaign' : 'Create Outbound Campaign' }}</h1>
+      <button (click)="goBack()" class="back-link">
+        &larr; Back to Campaigns
+      </button>
+      <h1 class="page-title">
+        {{ isEdit ? "Edit Campaign" : "Create Outbound Campaign" }}
+      </h1>
     </div>
   </div>
 
@@ -13,22 +17,38 @@
       <div class="grid-2">
         <div class="form-group full-width">
           <label>Campaign Name *</label>
-          <input type="text" formControlName="name" placeholder="e.g. Q3 Enterprise Cloud Outreach" />
+          <input
+            type="text"
+            formControlName="name"
+            placeholder="e.g. Q3 Enterprise Cloud Outreach"
+          />
         </div>
 
         <div class="form-group full-width">
           <label>Description & Objectives</label>
-          <textarea formControlName="description" rows="2" placeholder="Brief context about this outbound email sequence"></textarea>
+          <textarea
+            formControlName="description"
+            rows="2"
+            placeholder="Brief context about this outbound email sequence"
+          ></textarea>
         </div>
 
         <div class="form-group">
           <label>Scheduled Start Date</label>
-          <input type="datetime-local" formControlName="scheduleStartDate" />
+          <input
+            type="datetime-local"
+            formControlName="scheduleStartDate"
+            [min]="minDateTime"
+          />
         </div>
 
         <div class="form-group">
           <label>Scheduled End Date</label>
-          <input type="datetime-local" formControlName="scheduleEndDate" />
+          <input
+            type="datetime-local"
+            formControlName="scheduleEndDate"
+            [min]="minDateTime"
+          />
         </div>
 
         <div class="form-group">
@@ -48,25 +68,46 @@
       <div class="section-header-flex">
         <div>
           <h2 class="section-title">Email Sequence & Message Content</h2>
-          <p class="section-desc" ngNonBindable>Customize the outbound email dispatched to enrolled prospects. Supported template tags: <code>{{Name}}</code>, <code>{{Company}}</code>, <code>{{JobTitle}}</code>.</p>
+          <p class="section-desc" ngNonBindable>
+            Customize the outbound email dispatched to enrolled prospects.
+            Supported template tags: <code>{{ Name }}</code
+            >, <code>{{ Company }}</code
+            >, <code>{{ JobTitle }}</code
+            >.
+          </p>
         </div>
       </div>
 
       <div class="grid-2">
         <div class="form-group full-width">
           <label>Email Subject Line *</label>
-          <input type="text" formControlName="subject" [placeholder]="'e.g. Exploring Enterprise Solutions for {{Company}}'" />
+          <input
+            type="text"
+            formControlName="subject"
+            [placeholder]="
+              'e.g. Exploring Enterprise Solutions for {{Company}}'
+            "
+          />
         </div>
 
         <div class="form-group full-width">
           <label>Email Body Content (HTML or Plain Text) *</label>
-          <textarea formControlName="body" rows="5" [placeholder]="'<p>Hello {{Name}},</p><p>We provide enterprise solutions for {{Company}}...</p>'"></textarea>
+          <textarea
+            formControlName="body"
+            rows="5"
+            [placeholder]="
+              '<p>Hello {{Name}},</p><p>We provide enterprise solutions for {{Company}}...</p>'
+            "
+          ></textarea>
         </div>
 
         <div class="form-group full-width">
           <label class="checkbox-option">
             <input type="checkbox" formControlName="sendImmediately" />
-            <span><strong>Send Step 1 Emails Immediately</strong> upon saving to all selected prospects (dispatches live via Mailtrap)</span>
+            <span
+              ><strong>Send Step 1 Emails Immediately</strong> upon saving to
+              all selected prospects (dispatches live via Mailtrap)</span
+            >
           </label>
         </div>
       </div>
@@ -77,34 +118,50 @@
       <div class="section-header-flex">
         <div>
           <h2 class="section-title">Audience & Prospect Selection</h2>
-          <p class="section-desc">Upload a standard CSV sheet or select prospects from your database</p>
+          <p class="section-desc">
+            Upload a standard CSV sheet or select prospects from your database
+          </p>
         </div>
         <div class="csv-actions">
-          <button type="button" (click)="downloadTemplate()" class="btn-secondary">
+          <button
+            type="button"
+            (click)="downloadTemplate()"
+            class="btn-secondary"
+          >
             Download CSV Template
           </button>
           <label class="btn-upload">
             Upload Prospects CSV
-            <input type="file" (change)="onCsvFileSelected($event)" accept=".csv" class="hidden-file-input" />
+            <input
+              type="file"
+              (change)="onCsvFileSelected($event)"
+              accept=".csv"
+              class="hidden-file-input"
+            />
           </label>
         </div>
       </div>
 
-      <div *ngIf="csvUploadMessage" class="upload-alert" [class.success]="!isUploadingCsv">
+      <div
+        *ngIf="csvUploadMessage"
+        class="upload-alert"
+        [class.success]="!isUploadingCsv"
+      >
         {{ csvUploadMessage }}
       </div>
 
       <div class="prospects-filter-bar">
-        <input 
-          type="text" 
-          placeholder="Filter prospects by name, company, email, or title..." 
-          [(ngModel)]="prospectSearchTerm" 
-          [ngModelOptions]="{standalone: true}"
-          (input)="applyProspectFilter()" 
+        <input
+          type="text"
+          placeholder="Filter prospects by name, company, email, or title..."
+          [(ngModel)]="prospectSearchTerm"
+          [ngModelOptions]="{ standalone: true }"
+          (input)="applyProspectFilter()"
           class="search-input"
         />
         <div class="selected-count">
-          Selected: <strong>{{ selectedProspectIds.size }}</strong> of {{ allProspects.length }} prospects
+          Selected: <strong>{{ selectedProspectIds.size }}</strong> of
+          {{ allProspects.length }} prospects
         </div>
       </div>
 
@@ -112,11 +169,11 @@
         <table class="prospect-table">
           <thead>
             <tr>
-              <th style="width: 40px;">
-                <input 
-                  type="checkbox" 
-                  [checked]="isAllSelected()" 
-                  (change)="toggleSelectAll($event)" 
+              <th style="width: 40px">
+                <input
+                  type="checkbox"
+                  [checked]="isAllSelected()"
+                  (change)="toggleSelectAll($event)"
                 />
               </th>
               <th>Prospect Name</th>
@@ -128,18 +185,27 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let prospect of filteredProspects" [class.selected-row]="selectedProspectIds.has(prospect.prospectId)">
+            <tr
+              *ngFor="let prospect of filteredProspects"
+              [class.selected-row]="
+                selectedProspectIds.has(prospect.prospectId)
+              "
+            >
               <td>
-                <input 
-                  type="checkbox" 
-                  [checked]="selectedProspectIds.has(prospect.prospectId)" 
-                  (change)="toggleProspectSelection(prospect.prospectId)" 
+                <input
+                  type="checkbox"
+                  [checked]="selectedProspectIds.has(prospect.prospectId)"
+                  (change)="toggleProspectSelection(prospect.prospectId)"
                 />
               </td>
-              <td><strong>{{ prospect.name }}</strong></td>
+              <td>
+                <strong>{{ prospect.name }}</strong>
+              </td>
               <td>{{ prospect.email }}</td>
-              <td>{{ prospect.company?.name || prospect.companyName || '—' }}</td>
-              <td>{{ prospect.jobTitle || '—' }}</td>
+              <td>
+                {{ prospect.company?.name || prospect.companyName || "—" }}
+              </td>
+              <td>{{ prospect.jobTitle || "—" }}</td>
               <td>
                 <span class="score-badge">{{ prospect.score || 0 }} pts</span>
               </td>
@@ -149,7 +215,8 @@
             </tr>
             <tr *ngIf="filteredProspects.length === 0">
               <td colspan="7" class="empty-table-cell">
-                No prospects found. Upload a CSV sheet above to aggregate new prospects.
+                No prospects found. Upload a CSV sheet above to aggregate new
+                prospects.
               </td>
             </tr>
           </tbody>
@@ -158,9 +225,21 @@
     </div>
 
     <div class="form-actions">
-      <button type="button" (click)="goBack()" class="btn-secondary">Cancel</button>
-      <button type="submit" [disabled]="form.invalid || saving" class="btn-primary">
-        {{ saving ? 'Saving Campaign...' : (isEdit ? 'Save Changes' : 'Create & Enroll Prospects') }}
+      <button type="button" (click)="goBack()" class="btn-secondary">
+        Cancel
+      </button>
+      <button
+        type="submit"
+        [disabled]="form.invalid || saving"
+        class="btn-primary"
+      >
+        {{
+          saving
+            ? "Saving Campaign..."
+            : isEdit
+              ? "Save Changes"
+              : "Create & Enroll Prospects"
+        }}
       </button>
     </div>
   </form>

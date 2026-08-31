@@ -8,6 +8,7 @@ public class CreateCampaignDto
     public DateTime? ScheduleStartDate { get; set; }
     public DateTime? ScheduleEndDate { get; set; }
     public List<CreateSequenceStepDto> Steps { get; set; } = new();
+     public List<int>? ProspectIds { get; set; } 
 }
 
 public class CreateSequenceStepDto

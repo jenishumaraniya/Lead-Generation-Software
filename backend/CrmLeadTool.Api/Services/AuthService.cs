@@ -18,7 +18,7 @@ public class AuthService
     private readonly AuditLogService _auditLog;
 
     private const int MaxFailedAttempts = 5;
-    private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(1);
     private static readonly TimeSpan AccessTokenLifetime = TimeSpan.FromHours(2);
     private static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromDays(14);
 
