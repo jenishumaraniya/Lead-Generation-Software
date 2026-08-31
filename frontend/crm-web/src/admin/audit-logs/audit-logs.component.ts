@@ -8,7 +8,7 @@ import { AdminApiService } from '../../app/core/services/admin-api.services';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './audit-logs.component.html',
-  styleUrls: ['./audit-logs.component.css']
+  styleUrls: ['./audit-logs.component.css'],
 })
 export class AuditLogsComponent implements OnInit {
   logs: any[] = [];
@@ -31,7 +31,7 @@ export class AuditLogsComponent implements OnInit {
       error: (err) => {
         console.error(err);
         this.isLoading = false;
-      }
+      },
     });
   }
 

@@ -1,14 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RuleService, ScoreRule } from '../../../../../core/services/rule.service';
+import {
+  RuleService,
+  ScoreRule,
+} from '../../../../../core/services/rule.service';
 
 @Component({
   selector: 'app-rule-list',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './rule-list.component.html',
-  styleUrls: ['./rule-list.component.css']
+  styleUrls: ['./rule-list.component.css'],
 })
 export class RuleListComponent implements OnInit {
   rules: ScoreRule[] = [];
@@ -38,15 +41,22 @@ export class RuleListComponent implements OnInit {
     category: 'INTENT',
     points: 10,
     isActive: true,
-    description: ''
+    description: '',
   };
 
   categoriesList = ['INTENT', 'ENGAGEMENT', 'FIT', 'ENRICHMENT', 'COMPLIANCE'];
+
+  // ===== NEW: For Event Type Dropdown =====
+  eventTypes: string[] = [];
+  showCustomEventInput = false;
+  customEventType = '';
+  // ========================================
 
   constructor(private ruleService: RuleService) {}
 
   ngOnInit(): void {
     this.loadRules();
+    this.loadEventTypes();
   }
 
   loadRules(): void {
@@ -61,26 +71,87 @@ export class RuleListComponent implements OnInit {
       error: (err) => {
         this.errorMessage = 'Failed to load lead qualification rules.';
         this.loading = false;
-      }
+      },
     });
+  }
+
+  // ===== NEW: Load existing event types from API =====
+  loadEventTypes(): void {
+    this.ruleService.getEventTypes().subscribe({
+      next: (data) => {
+        this.eventTypes = data || [];
+      },
+      error: (err) => {
+        console.error('Failed to load event types', err);
+        this.eventTypes = [];
+      },
+    });
+  }
+
+  // ===== NEW: Compute available event types (exclude used ones) =====
+  get availableEventTypes(): string[] {
+    const usedEventTypes = new Set<string>();
+
+    // Collect all event types from existing rules
+    this.rules.forEach((rule) => {
+      // If editing, exclude the current rule's own event type so it can still be selected
+      if (this.isEditing && this.selectedRuleId === rule.scoreRuleId) {
+        return; // skip adding this rule's event type to used set
+      }
+      usedEventTypes.add(rule.eventType);
+    });
+
+    // Filter the full list to only those not used
+    const available = this.eventTypes.filter((et) => !usedEventTypes.has(et));
+
+    // If editing, ensure the current rule's event type is in the list (it might have been filtered out)
+    if (this.isEditing && this.ruleForm.eventType) {
+      if (!available.includes(this.ruleForm.eventType)) {
+        available.push(this.ruleForm.eventType);
+      }
+    }
+
+    return available;
+  }
+
+  // ===== NEW: Handle dropdown selection =====
+  onEventTypeChange(value: string): void {
+    if (value === 'CUSTOM') {
+      this.showCustomEventInput = true;
+      this.ruleForm.eventType = '';
+    } else {
+      this.showCustomEventInput = false;
+      this.ruleForm.eventType = value;
+    }
+  }
+
+  // ===== NEW: Handle custom event type input =====
+  onCustomEventTypeChange(value: string): void {
+    this.ruleForm.eventType = value.toUpperCase().trim();
   }
 
   computeStats(): void {
     this.totalRulesCount = this.rules.length;
-    this.activeRulesCount = this.rules.filter(r => r.isActive).length;
-    this.positiveRulesCount = this.rules.filter(r => r.points > 0).length;
-    this.penaltyRulesCount = this.rules.filter(r => r.points < 0).length;
+    this.activeRulesCount = this.rules.filter((r) => r.isActive).length;
+    this.positiveRulesCount = this.rules.filter((r) => r.points > 0).length;
+    this.penaltyRulesCount = this.rules.filter((r) => r.points < 0).length;
   }
 
   applyFilter(): void {
-    this.filteredRules = this.rules.filter(rule => {
-      const matchesSearch = !this.searchQuery ||
+    this.filteredRules = this.rules.filter((rule) => {
+      const matchesSearch =
+        !this.searchQuery ||
         rule.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
         rule.eventType.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        (rule.description && rule.description.toLowerCase().includes(this.searchQuery.toLowerCase()));
+        (rule.description &&
+          rule.description
+            .toLowerCase()
+            .includes(this.searchQuery.toLowerCase()));
 
-      const matchesCat = !this.categoryFilter || rule.category === this.categoryFilter;
-      const matchesStatus = !this.statusFilter ||
+      const matchesCat =
+        !this.categoryFilter || rule.category === this.categoryFilter;
+      const matchesStatus =
+        !this.statusFilter ||
         (this.statusFilter === 'active' && rule.isActive) ||
         (this.statusFilter === 'inactive' && !rule.isActive);
 
@@ -97,8 +168,10 @@ export class RuleListComponent implements OnInit {
       category: 'INTENT',
       points: 15,
       isActive: true,
-      description: ''
+      description: '',
     };
+    this.showCustomEventInput = false;
+    this.customEventType = '';
     this.errorMessage = '';
     this.showModal = true;
   }
@@ -112,8 +185,10 @@ export class RuleListComponent implements OnInit {
       category: rule.category,
       points: rule.points,
       isActive: rule.isActive,
-      description: rule.description || ''
+      description: rule.description || '',
     };
+    this.showCustomEventInput = false;
+    this.customEventType = '';
     this.errorMessage = '';
     this.showModal = true;
   }
@@ -122,6 +197,8 @@ export class RuleListComponent implements OnInit {
     this.showModal = false;
     this.selectedRuleId = null;
     this.errorMessage = '';
+    this.showCustomEventInput = false;
+    this.customEventType = '';
   }
 
   saveRule(): void {
@@ -136,7 +213,7 @@ export class RuleListComponent implements OnInit {
       category: this.ruleForm.category,
       points: Number(this.ruleForm.points || 0),
       isActive: !!this.ruleForm.isActive,
-      description: this.ruleForm.description?.trim() || ''
+      description: this.ruleForm.description?.trim() || '',
     };
 
     if (this.isEditing && this.selectedRuleId) {
@@ -145,10 +222,11 @@ export class RuleListComponent implements OnInit {
           this.showToast('Rule updated successfully.');
           this.closeModal();
           this.loadRules();
+          this.loadEventTypes();
         },
         error: (err) => {
           this.errorMessage = err.error?.error || 'Failed to update rule.';
-        }
+        },
       });
     } else {
       this.ruleService.createRule(payload).subscribe({
@@ -156,10 +234,11 @@ export class RuleListComponent implements OnInit {
           this.showToast('New lead rule created successfully.');
           this.closeModal();
           this.loadRules();
+          this.loadEventTypes();
         },
         error: (err) => {
           this.errorMessage = err.error?.error || 'Failed to create rule.';
-        }
+        },
       });
     }
   }
@@ -169,11 +248,13 @@ export class RuleListComponent implements OnInit {
       next: (updated) => {
         rule.isActive = updated.isActive;
         this.computeStats();
-        this.showToast(`Rule '${rule.name}' is now ${rule.isActive ? 'Active' : 'Inactive'}.`);
+        this.showToast(
+          `Rule '${rule.name}' is now ${rule.isActive ? 'Active' : 'Inactive'}.`,
+        );
       },
       error: () => {
         this.showToast('Failed to toggle rule status.');
-      }
+      },
     });
   }
 
@@ -186,10 +267,11 @@ export class RuleListComponent implements OnInit {
       next: () => {
         this.showToast(`Rule "${rule.name}" deleted.`);
         this.loadRules();
+        this.loadEventTypes();
       },
       error: () => {
         this.showToast('Failed to delete rule.');
-      }
+      },
     });
   }
 

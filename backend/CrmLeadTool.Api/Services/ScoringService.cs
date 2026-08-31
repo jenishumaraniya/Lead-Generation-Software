@@ -157,4 +157,14 @@ public class ScoringService
             .OrderByDescending(h => h.Timestamp)
             .ToListAsync();
     }
+
+    public async Task<List<string>> GetDistinctEventTypesAsync()
+{
+    return await _context.ScoreRules
+        .Where(r => r.IsActive)
+        .Select(r => r.EventType)
+        .Distinct()
+        .OrderBy(e => e)
+        .ToListAsync();
+}
 }

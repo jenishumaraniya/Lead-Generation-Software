@@ -5,7 +5,9 @@
       <h1 class="lead-title">{{ lead.fullName }}</h1>
       <span class="status-pill" [class]="lead.status">{{ lead.status }}</span>
       <span class="score-pill">{{ lead.score || 0 }} pts</span>
-      <span class="multi-pill" *ngIf="lead.isMultiCategory">Multi-Category Request</span>
+      <span class="multi-pill" *ngIf="lead.isMultiCategory"
+        >Multi-Category Request</span
+      >
     </div>
   </div>
 
@@ -25,31 +27,35 @@
           </div>
           <div class="info-item">
             <label>Job Title</label>
-            <div class="val">{{ lead.jobTitle || '—' }}</div>
+            <div class="val">{{ lead.jobTitle || "—" }}</div>
           </div>
           <div class="info-item">
             <label>Email Address</label>
-            <div class="val"><a [href]="'mailto:' + lead.email" class="email-link">{{ lead.email }}</a></div>
+            <div class="val">
+              <a [href]="'mailto:' + lead.email" class="email-link">{{
+                lead.email
+              }}</a>
+            </div>
           </div>
           <div class="info-item">
             <label>Phone Number</label>
-            <div class="val">{{ lead.phone || '—' }}</div>
+            <div class="val">{{ lead.phone || "—" }}</div>
           </div>
           <div class="info-item">
             <label>Domain</label>
-            <div class="val">{{ lead.domain || '—' }}</div>
+            <div class="val">{{ lead.domain || "—" }}</div>
           </div>
           <div class="info-item">
             <label>Industry</label>
-            <div class="val">{{ lead.industry || 'General' }}</div>
+            <div class="val">{{ lead.industry || "General" }}</div>
           </div>
           <div class="info-item">
             <label>Country / Region</label>
-            <div class="val">{{ lead.country || 'Global' }}</div>
+            <div class="val">{{ lead.country || "Global" }}</div>
           </div>
           <div class="info-item">
             <label>Acquisition Source</label>
-            <div class="val">{{ lead.source || 'Website Inquiry' }}</div>
+            <div class="val">{{ lead.source || "Website Inquiry" }}</div>
           </div>
         </div>
       </div>
@@ -58,15 +64,19 @@
         <h2 class="card-title">Stated Commercial Requirement</h2>
         <p class="requirement-box">{{ lead.businessRequirement }}</p>
         <div class="meta-row" *ngIf="lead.timeline || lead.quantity">
-          <span *ngIf="lead.timeline"><strong>Timeline:</strong> {{ lead.timeline }}</span>
-          <span *ngIf="lead.quantity"><strong>Units Requested:</strong> {{ lead.quantity }}</span>
+          <span *ngIf="lead.timeline"
+            ><strong>Timeline:</strong> {{ lead.timeline }}</span
+          >
+          <span *ngIf="lead.quantity"
+            ><strong>Units Requested:</strong> {{ lead.quantity }}</span
+          >
         </div>
       </div>
 
       <!-- Activity Timeline & Touchpoint Logger -->
       <div class="card">
         <h2 class="card-title">Lead Activity & Interaction Log</h2>
-        
+
         <div class="activity-input-box">
           <select [(ngModel)]="newActivity.activityType" class="act-select">
             <option value="CALL">Phone Call</option>
@@ -74,32 +84,39 @@
             <option value="MEETING">Meeting / Demo</option>
             <option value="NOTE">Internal Note</option>
           </select>
-          <input 
-            type="text" 
-            [(ngModel)]="newActivity.description" 
-            placeholder="Log details of conversation or next steps..." 
+          <input
+            type="text"
+            [(ngModel)]="newActivity.description"
+            placeholder="Log details of conversation or next steps..."
             class="act-input"
             (keyup.enter)="addActivity()"
           />
-          <button (click)="addActivity()" [disabled]="!newActivity.description.trim()" class="btn-primary">
+          <button
+            (click)="addActivity()"
+            [disabled]="!newActivity.description.trim()"
+            class="btn-primary"
+          >
             Record Touchpoint
           </button>
         </div>
 
         <div class="activity-feed">
           <div class="activity-item" *ngFor="let act of activities">
-            <div class="act-badge" [class]="act.activityType">{{ act.activityType }}</div>
+            <div class="act-badge" [class]="act.activityType">
+              {{ act.activityType }}
+            </div>
             <div class="act-content">
               <p class="act-desc">{{ act.description }}</p>
               <div class="act-meta">
-                <span>By: {{ act.createdBy || 'System' }}</span>
+                <span>By: {{ act.createdBy || "System" }}</span>
                 <span>&bull;</span>
-                <span>{{ act.activityDate | date:'medium' }}</span>
+                <span>{{ act.activityDate | date: "medium" }}</span>
               </div>
             </div>
           </div>
           <div *ngIf="!activities.length" class="empty-activities">
-            No activity logged yet. Use the form above to record your first touchpoint.
+            No activity logged yet. Use the form above to record your first
+            touchpoint.
           </div>
         </div>
       </div>
@@ -112,12 +129,14 @@
             <div class="history-dot"></div>
             <div class="history-info">
               <div class="history-title">
-                Changed from <span class="stage-tag">{{ sh.oldStatus || 'NONE' }}</span> to <span class="stage-tag active">{{ sh.newStatus }}</span>
+                Changed from
+                <span class="stage-tag">{{ sh.oldStatus || "NONE" }}</span> to
+                <span class="stage-tag active">{{ sh.newStatus }}</span>
               </div>
               <div class="history-meta">
-                <span>By: {{ sh.changedBy || 'System' }}</span>
+                <span>By: {{ sh.changedBy || "System" }}</span>
                 <span>&bull;</span>
-                <span>{{ sh.changedAt | date:'medium' }}</span>
+                <span>{{ sh.changedAt | date: "medium" }}</span>
                 <span *ngIf="sh.reason">&bull; {{ sh.reason }}</span>
               </div>
             </div>
@@ -130,7 +149,7 @@
     <div class="side-column">
       <div class="card action-card">
         <h2 class="card-title">Status & Assignment Action</h2>
-        
+
         <div class="form-group">
           <label>Pipeline Stage</label>
           <select [(ngModel)]="lead.status" class="form-select">
@@ -142,45 +161,61 @@
           </select>
         </div>
 
-        <div class="form-group" *ngIf="isAdmin && !lead.isMultiCategory && lead.assignedSalespersonName">
+        <div
+          class="form-group"
+          *ngIf="
+            isAdmin && !lead.isMultiCategory && lead.assignedSalespersonName
+          "
+        >
           <label>Assigned Representative</label>
           <div class="auto-route-card">
             <span class="auto-pill">Auto-Assigned by Category</span>
             <div class="rep-title">{{ lead.assignedSalespersonName }}</div>
-            <div class="rep-subtitle" *ngIf="lead.assignedCategoryName">Category: {{ lead.assignedCategoryName }}</div>
+            <div class="rep-subtitle" *ngIf="lead.assignedCategoryName">
+              Category: {{ lead.assignedCategoryName }}
+            </div>
           </div>
         </div>
 
-        <div class="form-group" *ngIf="isAdmin && (lead.isMultiCategory || !lead.assignedSalespersonName)">
+        <div
+          class="form-group"
+          *ngIf="
+            isAdmin && (lead.isMultiCategory || !lead.assignedSalespersonName)
+          "
+        >
           <label>Assigned Representative (Admin Decision)</label>
-          <select 
-            [ngModel]="lead.assignedTo" 
-            (ngModelChange)="onAssignChange($event)" 
+          <select
+            [ngModel]="lead.assignedTo"
+            (ngModelChange)="onAssignChange($event)"
             class="form-select"
           >
-            <option [ngValue]="null">-- Select Representative (Admin Decision) --</option>
-            <option 
-              *ngFor="let emp of employees" 
-              [ngValue]="emp.userId"
-            >
-              {{ emp.fullName }} ({{ emp.categoryName || 'No Category' }})
+            <option [ngValue]="null">
+              -- Select Representative (Admin Decision) --
+            </option>
+            <option *ngFor="let emp of employees" [ngValue]="emp.userId">
+              {{ emp.fullName }} ({{ emp.categoryName || "No Category" }})
             </option>
           </select>
           <small class="field-hint" *ngIf="lead.isMultiCategory">
-            This prospect requested products across multiple categories. Admin decides which representative handles this lead.
+            This prospect requested products across multiple categories. Admin
+            decides which representative handles this lead.
           </small>
-          <small class="field-hint" *ngIf="!lead.isMultiCategory && !lead.assignedSalespersonName">
-            No sales representative is currently mapped to this category. Admin can manually assign this lead.
+          <small
+            class="field-hint"
+            *ngIf="!lead.isMultiCategory && !lead.assignedSalespersonName"
+          >
+            No sales representative is currently mapped to this category. Admin
+            can manually assign this lead.
           </small>
         </div>
 
         <div class="form-group">
           <label>Next Follow-Up Date</label>
-          <input 
-            type="date" 
-            [ngModel]="followUpDateString" 
-            (ngModelChange)="onFollowUpDateChange($event)" 
-            class="form-input" 
+          <input
+            type="date"
+            [ngModel]="followUpDateString"
+            (ngModelChange)="onFollowUpDateChange($event)"
+            class="form-input"
           />
         </div>
 
@@ -196,9 +231,9 @@
 
         <div class="form-group">
           <label>Sales & Engagement Notes</label>
-          <textarea 
-            [(ngModel)]="lead.notes" 
-            rows="4" 
+          <textarea
+            [(ngModel)]="lead.notes"
+            rows="4"
             placeholder="Add general notes on prospect requirements or conversation summaries..."
             class="form-textarea"
           ></textarea>
@@ -210,7 +245,10 @@
       </div>
 
       <!-- Scoring Attribution Card -->
-      <div class="card score-card" *ngIf="scoreHistories && scoreHistories.length">
+      <div
+        class="card score-card"
+        *ngIf="scoreHistories && scoreHistories.length"
+      >
         <h2 class="card-title">Scoring Attribution</h2>
         <div class="score-list">
           <div class="score-item" *ngFor="let sh of scoreHistories">
@@ -222,6 +260,125 @@
           </div>
         </div>
       </div>
+
+      <!-- ======================== -->
+      <!-- AI LEAD INTELLIGENCE CARD -->
+      <!-- ======================== -->
+      <div class="card ai-card">
+        <h2 class="card-title">🤖 AI Lead Intelligence</h2>
+
+        <button
+          (click)="triggerAnalysis()"
+          [disabled]="aiLoading"
+          class="btn-primary full-width-btn"
+        >
+          {{ aiLoading ? "Analyzing..." : "Run AI Analysis" }}
+        </button>
+
+        <div *ngIf="aiLoading" class="ai-loading">
+          ⏳ Processing lead with AI... (may take a few seconds)
+        </div>
+
+        <div *ngIf="aiError" class="ai-error">
+          {{ aiError }}
+        </div>
+
+        <!-- Show existing analysis -->
+        <div *ngIf="analysis && !aiLoading" class="ai-result">
+          <div class="ai-summary">
+            <p>
+              <strong>Intent:</strong>
+              {{ analysis.analysis?.intent || analysis.intent }}
+            </p>
+            <p>
+              <strong>Confidence:</strong>
+              {{
+                analysis.analysis?.confidenceScore || analysis.confidenceScore
+              }}%
+            </p>
+            <p>
+              <strong>Priority:</strong>
+              {{
+                analysis.analysis?.priorityRecommendation ||
+                  analysis.priorityRecommendation
+              }}
+            </p>
+            <p>
+              <strong>Summary:</strong>
+              {{ analysis.analysis?.leadSummary || analysis.leadSummary }}
+            </p>
+            <p>
+              <strong>Recommended Next Action:</strong>
+              {{
+                analysis.analysis?.recommendedNextAction ||
+                  analysis.recommendedNextAction
+              }}
+            </p>
+          </div>
+
+          <div
+            *ngIf="analysis.profile || analysis.professionalSummary"
+            class="ai-profile"
+          >
+            <h4>📌 Enriched Profile</h4>
+            <p>
+              {{
+                analysis.profile?.professionalSummary ||
+                  analysis.professionalSummary
+              }}
+            </p>
+            <p>
+              <strong>Industry:</strong>
+              {{ analysis.profile?.likelyIndustry || analysis.likelyIndustry }}
+            </p>
+            <p>
+              <strong>Company Size:</strong>
+              {{ analysis.profile?.companySize || analysis.companySize }}
+            </p>
+            <p>
+              <strong>Location:</strong>
+              {{ analysis.profile?.likelyLocation || analysis.likelyLocation }}
+            </p>
+            <p>
+              <strong>Role:</strong>
+              {{ analysis.profile?.potentialRole || analysis.potentialRole }}
+            </p>
+          </div>
+
+          <div
+            *ngIf="
+              analysis.analysis?.insights?.length || analysis.insights?.length
+            "
+            class="ai-insights"
+          >
+            <h4>💡 Insights</h4>
+            <ul>
+              <li
+                *ngFor="
+                  let insight of analysis.analysis?.insights ||
+                    analysis.insights
+                "
+              >
+                <strong>{{ insight.insightType }}</strong
+                >: {{ insight.insightText }}
+                <span *ngIf="insight.confidenceScore">
+                  ({{ insight.confidenceScore }}% confidence)</span
+                >
+              </li>
+            </ul>
+          </div>
+
+          <small class="ai-date">
+            Analysis date:
+            {{ analysis.analyzedAt || analysis.analysisDate | date: "medium" }}
+          </small>
+        </div>
+
+        <div *ngIf="!analysisExists && !aiLoading && !aiError" class="ai-empty">
+          No AI analysis found. Click the button to generate one.
+        </div>
+      </div>
+      <!-- END AI CARD -->
     </div>
   </div>
 </div>

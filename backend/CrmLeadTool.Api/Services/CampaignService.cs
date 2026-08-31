@@ -341,48 +341,89 @@ public class CampaignService
         return recipient;
     }
 
-    public async Task<Campaign> UpdateCampaignAsync(int campaignId, CreateCampaignDto dto)
+  public async Task<Campaign> UpdateCampaignAsync(int campaignId, CreateCampaignDto dto)
+{
+    var campaign = await _context.Campaigns
+        .Include(c => c.Steps)
+        .FirstOrDefaultAsync(c => c.CampaignId == campaignId);
+    if (campaign == null)
+        throw new ArgumentException("Campaign not found.");
+
+    // Update basic fields
+    if (!string.IsNullOrEmpty(dto.Name)) campaign.Name = dto.Name;
+    if (dto.Description != null) campaign.Description = dto.Description;
+    if (!string.IsNullOrEmpty(dto.Status)) campaign.Status = dto.Status;
+    campaign.ScheduleStartDate = dto.ScheduleStartDate;
+    campaign.ScheduleEndDate = dto.ScheduleEndDate;
+    campaign.UpdatedAt = DateTime.UtcNow;
+
+    // Update steps (if provided)
+    if (dto.Steps != null && dto.Steps.Any())
     {
-        var campaign = await _context.Campaigns.Include(c => c.Steps).FirstOrDefaultAsync(c => c.CampaignId == campaignId);
-        if (campaign == null) throw new ArgumentException("Campaign not found.");
+        // Delete old email messages referencing old steps
+        var recipientIds = await _context.CampaignRecipients
+            .Where(cr => cr.CampaignId == campaignId)
+            .Select(cr => cr.CampaignRecipientId)
+            .ToListAsync();
+        var emailMessages = await _context.EmailMessages
+            .Where(em => recipientIds.Contains(em.CampaignRecipientId))
+            .ToListAsync();
+        _context.EmailMessages.RemoveRange(emailMessages);
 
-        if (!string.IsNullOrEmpty(dto.Name)) campaign.Name = dto.Name;
-        if (dto.Description != null) campaign.Description = dto.Description;
-        if (!string.IsNullOrEmpty(dto.Status)) campaign.Status = dto.Status;
-        campaign.ScheduleStartDate = dto.ScheduleStartDate;
-        campaign.ScheduleEndDate = dto.ScheduleEndDate;
-        campaign.UpdatedAt = DateTime.UtcNow;
+        // Remove old steps
+        _context.SequenceSteps.RemoveRange(campaign.Steps);
 
-        if (dto.Steps != null && dto.Steps.Any())
+        // Add new steps
+        foreach (var stepDto in dto.Steps.OrderBy(s => s.StepNumber))
         {
-            _context.SequenceSteps.RemoveRange(campaign.Steps);
-            foreach (var stepDto in dto.Steps.OrderBy(s => s.StepNumber))
+            campaign.Steps.Add(new SequenceStep
             {
-                campaign.Steps.Add(new SequenceStep
-                {
-                    CampaignId = campaign.CampaignId,
-                    StepNumber = stepDto.StepNumber,
-                    Name = string.IsNullOrWhiteSpace(stepDto.Name) ? $"Step {stepDto.StepNumber}" : stepDto.Name,
-                    Subject = string.IsNullOrWhiteSpace(stepDto.Subject) ? $"Introduction - {campaign.Name}" : stepDto.Subject,
-                    Body = string.IsNullOrWhiteSpace(stepDto.Body) ? "<p>Hello {{Name}},</p><p>We wanted to reach out regarding solutions for {{Company}}.</p>" : stepDto.Body,
-                    DelayDays = stepDto.DelayDays,
-                    DelayHours = stepDto.DelayHours,
-                    CreatedAt = DateTime.UtcNow
-                });
-            }
+                CampaignId = campaign.CampaignId,
+                StepNumber = stepDto.StepNumber,
+                Name = string.IsNullOrWhiteSpace(stepDto.Name) ? $"Step {stepDto.StepNumber}" : stepDto.Name,
+                Subject = string.IsNullOrWhiteSpace(stepDto.Subject) ? $"Introduction - {campaign.Name}" : stepDto.Subject,
+                Body = string.IsNullOrWhiteSpace(stepDto.Body) ? "<p>Hello {{Name}},</p><p>We wanted to reach out regarding solutions for {{Company}}.</p>" : stepDto.Body,
+                DelayDays = stepDto.DelayDays,
+                DelayHours = stepDto.DelayHours,
+                CreatedAt = DateTime.UtcNow
+            });
         }
-
-        await _context.SaveChangesAsync();
-
-        // If campaign is updated to ACTIVE, immediately dispatch pending emails
-        if (campaign.Status == "ACTIVE")
-        {
-            await LaunchCampaignEmailsAsync(campaignId);
-        }
-
-        return campaign;
     }
 
+    // ---- Sync recipients ----
+    if (dto.ProspectIds != null)
+    {
+        var currentRecipients = await _context.CampaignRecipients
+            .Where(cr => cr.CampaignId == campaignId)
+            .ToListAsync();
+
+        // Remove recipients that are not in the new list
+        var toRemove = currentRecipients
+            .Where(cr => !dto.ProspectIds.Contains(cr.ProspectId))
+            .ToList();
+        _context.CampaignRecipients.RemoveRange(toRemove);
+
+        // Add new recipients (if not already enrolled)
+        var existingIds = currentRecipients.Select(cr => cr.ProspectId).ToHashSet();
+        var toAdd = dto.ProspectIds.Where(id => !existingIds.Contains(id)).ToList();
+
+        foreach (var prospectId in toAdd)
+        {
+            // Enroll without sending email immediately (we handle launch separately)
+            await EnrollProspectAsync(campaignId, prospectId, sendImmediately: false);
+        }
+    }
+
+    await _context.SaveChangesAsync();
+
+    // If campaign is now ACTIVE, dispatch pending emails
+    if (campaign.Status == "ACTIVE")
+    {
+        await LaunchCampaignEmailsAsync(campaignId);
+    }
+
+    return campaign;
+}
     public async Task<Campaign> CloseCampaignAsync(int campaignId)
     {
         var campaign = await _context.Campaigns.FindAsync(campaignId);

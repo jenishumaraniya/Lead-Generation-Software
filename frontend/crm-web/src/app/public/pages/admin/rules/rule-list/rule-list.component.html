@@ -3,9 +3,14 @@
   <div class="header-bar">
     <div>
       <h1 class="page-title">Lead Qualification & Scoring Rules</h1>
-      <p class="page-subtitle">Configure automated behavioral weights, ICP criteria, and qualification thresholds</p>
+      <p class="page-subtitle">
+        Configure automated behavioral weights, ICP criteria, and qualification
+        thresholds
+      </p>
     </div>
-    <button class="btn-create" (click)="openCreateModal()">+ Create Rule</button>
+    <button class="btn-create" (click)="openCreateModal()">
+      + Create Rule
+    </button>
   </div>
 
   <!-- Toast Notification -->
@@ -39,18 +44,28 @@
 
   <!-- Controls Bar -->
   <div class="filter-controls">
-    <input 
-      type="text" 
-      class="search-input" 
-      placeholder="Search rules, event code, or description..." 
-      [(ngModel)]="searchQuery" 
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Search rules, event code, or description..."
+      [(ngModel)]="searchQuery"
       (ngModelChange)="applyFilter()"
     />
-    <select class="filter-select" [(ngModel)]="categoryFilter" (ngModelChange)="applyFilter()">
+    <select
+      class="filter-select"
+      [(ngModel)]="categoryFilter"
+      (ngModelChange)="applyFilter()"
+    >
       <option value="">All Categories</option>
-      <option *ngFor="let cat of categoriesList" [value]="cat">{{ cat }}</option>
+      <option *ngFor="let cat of categoriesList" [value]="cat">
+        {{ cat }}
+      </option>
     </select>
-    <select class="filter-select" [(ngModel)]="statusFilter" (ngModelChange)="applyFilter()">
+    <select
+      class="filter-select"
+      [(ngModel)]="statusFilter"
+      (ngModelChange)="applyFilter()"
+    >
       <option value="">All Statuses</option>
       <option value="active">Active Only</option>
       <option value="inactive">Inactive Only</option>
@@ -71,34 +86,51 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let rule of filteredRules" [class.inactive-row]="!rule.isActive">
+        <tr
+          *ngFor="let rule of filteredRules"
+          [class.inactive-row]="!rule.isActive"
+        >
           <td>
             <div class="rule-title">{{ rule.name }}</div>
             <div class="event-code-badge">{{ rule.eventType }}</div>
           </td>
           <td>
-            <span class="category-badge" [ngClass]="rule.category">{{ rule.category }}</span>
+            <span class="category-badge" [ngClass]="rule.category">{{
+              rule.category
+            }}</span>
           </td>
           <td>
-            <span class="points-badge" [class.pos]="rule.points > 0" [class.neg]="rule.points < 0">
-              {{ rule.points > 0 ? '+' : '' }}{{ rule.points }} pts
+            <span
+              class="points-badge"
+              [class.pos]="rule.points > 0"
+              [class.neg]="rule.points < 0"
+            >
+              {{ rule.points > 0 ? "+" : "" }}{{ rule.points }} pts
             </span>
           </td>
           <td>
             <label class="switch">
-              <input type="checkbox" [checked]="rule.isActive" (change)="toggleActive(rule)" />
+              <input
+                type="checkbox"
+                [checked]="rule.isActive"
+                (change)="toggleActive(rule)"
+              />
               <span class="slider"></span>
             </label>
             <span class="status-label" [class.active-text]="rule.isActive">
-              {{ rule.isActive ? 'Active' : 'Disabled' }}
+              {{ rule.isActive ? "Active" : "Disabled" }}
             </span>
           </td>
           <td class="desc-cell">
-            {{ rule.description || '—' }}
+            {{ rule.description || "—" }}
           </td>
           <td class="text-right actions-cell">
-            <button class="btn-action edit" (click)="openEditModal(rule)">Edit</button>
-            <button class="btn-action delete" (click)="deleteRule(rule)">Delete</button>
+            <button class="btn-action edit" (click)="openEditModal(rule)">
+              Edit
+            </button>
+            <button class="btn-action delete" (click)="deleteRule(rule)">
+              Delete
+            </button>
           </td>
         </tr>
         <tr *ngIf="filteredRules.length === 0 && !loading">
@@ -107,9 +139,7 @@
           </td>
         </tr>
         <tr *ngIf="loading">
-          <td colspan="6" class="empty-cell">
-            Loading qualification rules...
-          </td>
+          <td colspan="6" class="empty-cell">Loading qualification rules...</td>
         </tr>
       </tbody>
     </table>
@@ -120,7 +150,9 @@
 <div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>{{ isEditing ? 'Edit Qualification Rule' : 'Create New Lead Rule' }}</h2>
+      <h2>
+        {{ isEditing ? "Edit Qualification Rule" : "Create New Lead Rule" }}
+      </h2>
       <button class="modal-close" (click)="closeModal()">&times;</button>
     </div>
 
@@ -131,30 +163,64 @@
 
       <div class="form-group">
         <label>Rule Name *</label>
-        <input 
-          type="text" 
-          class="form-input" 
-          placeholder="e.g. Schedule Product Demo Request" 
-          [(ngModel)]="ruleForm.name" 
+        <input
+          type="text"
+          class="form-input"
+          placeholder="e.g. Schedule Product Demo Request"
+          [(ngModel)]="ruleForm.name"
         />
       </div>
 
+      <!-- Event Type (Dropdown + Custom) -->
       <div class="form-row">
         <div class="form-group flex-1">
           <label>Event Type Code *</label>
-          <input 
-            type="text" 
-            class="form-input" 
-            placeholder="e.g. DEMO_REQUESTED" 
-            [(ngModel)]="ruleForm.eventType" 
-          />
-          <small class="field-hint">Uppercase code matching system event triggers</small>
+          <select
+            class="form-select"
+            [(ngModel)]="ruleForm.eventType"
+            (change)="onEventTypeChange($any($event).target.value)"
+          >
+            <option value="" disabled selected>
+              -- Select existing event --
+            </option>
+            <option *ngFor="let type of availableEventTypes" [value]="type">
+              {{ type }}
+            </option>
+          </select>
+          <small class="field-hint" *ngIf="!showCustomEventInput">
+            Select an existing event or add a custom one
+          </small>
+          <small
+            class="field-hint"
+            *ngIf="showCustomEventInput"
+            style="color: #007bff"
+          >
+            Type the exact event code your frontend will send
+          </small>
+
+          <!-- Custom Input (appears when "CUSTOM" is selected) -->
+          <div *ngIf="showCustomEventInput" style="margin-top: 6px">
+            <input
+              type="text"
+              class="form-input"
+              placeholder="Type NEW_EVENT_NAME (e.g. WEBINAR_SIGNUP)"
+              [(ngModel)]="customEventType"
+              (input)="onCustomEventTypeChange($any($event).target.value)"
+              style="border-color: #007bff"
+            />
+            <small style="color: #dc3545; display: block; margin-top: 4px">
+              ⚠️ You must update your frontend code to actually trigger this new
+              event later.
+            </small>
+          </div>
         </div>
 
         <div class="form-group flex-1">
           <label>Category *</label>
           <select class="form-select" [(ngModel)]="ruleForm.category">
-            <option *ngFor="let c of categoriesList" [value]="c">{{ c }}</option>
+            <option *ngFor="let c of categoriesList" [value]="c">
+              {{ c }}
+            </option>
           </select>
         </div>
       </div>
@@ -162,13 +228,15 @@
       <div class="form-row">
         <div class="form-group flex-1">
           <label>Points Impact *</label>
-          <input 
-            type="number" 
-            class="form-input" 
-            placeholder="e.g. 20 or -15" 
-            [(ngModel)]="ruleForm.points" 
+          <input
+            type="number"
+            class="form-input"
+            placeholder="e.g. 20 or -15"
+            [(ngModel)]="ruleForm.points"
           />
-          <small class="field-hint">Positive values boost score, negative reduce</small>
+          <small class="field-hint"
+            >Positive values boost score, negative reduce</small
+          >
         </div>
 
         <div class="form-group flex-1 checkbox-group">
@@ -181,10 +249,10 @@
 
       <div class="form-group">
         <label>Description</label>
-        <textarea 
-          class="form-textarea" 
-          rows="3" 
-          placeholder="Detailed explanation of when this rule triggers and its qualification purpose..." 
+        <textarea
+          class="form-textarea"
+          rows="3"
+          placeholder="Detailed explanation of when this rule triggers and its qualification purpose..."
           [(ngModel)]="ruleForm.description"
         ></textarea>
       </div>
@@ -193,7 +261,7 @@
     <div class="modal-footer">
       <button class="btn-secondary" (click)="closeModal()">Cancel</button>
       <button class="btn-primary" (click)="saveRule()">
-        {{ isEditing ? 'Save Changes' : 'Create Rule' }}
+        {{ isEditing ? "Save Changes" : "Create Rule" }}
       </button>
     </div>
   </div>
