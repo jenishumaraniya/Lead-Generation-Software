@@ -357,15 +357,10 @@
 
 .card-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding-top: 14px;
   border-top: 1px solid #f1f5f9;
-}
-
-.footer-btn-group {
-  display: flex;
-  gap: 6px;
 }
 
 /* ======================================================== */
@@ -382,8 +377,15 @@
   overflow: hidden;
 }
 
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .data-table {
   width: 100%;
+  min-width: 860px;
   border-collapse: collapse;
   text-align: left;
 }
@@ -441,14 +443,29 @@
   color: #94a3b8;
 }
 
-.action-btn-group {
+.data-table th:last-child,
+.data-table td:last-child {
+  text-align: right;
+  width: 320px;
+  min-width: 320px;
+  white-space: nowrap;
+  padding-right: 18px;
+}
+
+.action-btn-group,
+.footer-btn-group {
   display: inline-flex;
   gap: 6px;
   align-items: center;
+  justify-content: flex-end;
+  white-space: nowrap;
 }
 
-.btn-action {
-  padding: 6px 12px;
+.action-btn-group .btn-action,
+.footer-btn-group .btn-action {
+  width: 68px;
+  height: 32px;
+  padding: 0;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
@@ -458,6 +475,9 @@
   transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  text-align: center;
 }
 
 .btn-action.edit {
@@ -468,6 +488,26 @@
 
 .btn-action.edit:hover {
   background: #dbeafe;
+}
+
+.btn-action.pause {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #b45309;
+}
+
+.btn-action.pause:hover {
+  background: #fef3c7;
+}
+
+.btn-action.resume {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #047857;
+}
+
+.btn-action.resume:hover {
+  background: #d1fae5;
 }
 
 .btn-action.close {

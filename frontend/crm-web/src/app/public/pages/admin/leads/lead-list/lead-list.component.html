@@ -50,7 +50,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let lead of filteredLeads" [class.highlight-row]="lead.isMultiCategory && !lead.assignedTo">
+        <tr *ngFor="let lead of paginatedLeads" [class.highlight-row]="lead.isMultiCategory && !lead.assignedTo">
           <td>
             <div class="lead-name">{{ lead.fullName }}</div>
             <div class="lead-email">{{ lead.email }}</div>
@@ -129,5 +129,12 @@
         </tr>
       </tbody>
     </table>
+
+    <app-pagination
+      [totalItems]="filteredLeads.length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage"
+      (pageChange)="currentPage = $event"
+    ></app-pagination>
   </div>
 </div>

@@ -14,6 +14,8 @@ export class CampaignService {
   createCampaign(data: any): Observable<any> { return this.http.post(this.base, data); }
   updateCampaign(id: number, data: any): Observable<any> { return this.http.put(`${this.base}/${id}`, data); }
   closeCampaign(id: number): Observable<any> { return this.http.post(`${this.base}/${id}/close`, {}); }
+  pauseCampaign(id: number): Observable<any> { return this.http.post(`${this.base}/${id}/pause`, {}); }
+  resumeCampaign(id: number): Observable<any> { return this.http.post(`${this.base}/${id}/resume`, {}); }
   deleteCampaign(id: number): Observable<any> { return this.http.delete(`${this.base}/${id}`); }
 
   getProspects(): Observable<any[]> {

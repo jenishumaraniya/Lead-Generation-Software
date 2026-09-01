@@ -1,20 +1,75 @@
-<div class="app-wrapper">
+<div class="app-wrapper" [class.sidebar-collapsed]="isSidebarCollapsed">
+  <!-- Sidebar -->
   <aside class="sidebar">
-    <div class="logo">LeadGen <span>Sales</span></div>
-    <nav>
-      <a routerLink="/sales/dashboard" routerLinkActive="active">Dashboard</a>
-      <a routerLink="/sales/leads" routerLinkActive="active">My Leads</a>
+    <div class="sidebar-header">
+      <div class="logo" *ngIf="!isSidebarCollapsed">
+        LeadFlow<span>Sales</span>
+      </div>
+      <div class="logo-icon" *ngIf="isSidebarCollapsed" title="LeadFlow Sales">
+        💼
+      </div>
+      <button type="button" class="btn-sidebar-toggle" (click)="toggleSidebar()" [title]="isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'">
+        {{ isSidebarCollapsed ? '▶' : '◀' }}
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a routerLink="/sales/dashboard" routerLinkActive="active" title="My Pipeline Dashboard">
+        <span class="nav-icon">📊</span>
+        <span class="nav-text" *ngIf="!isSidebarCollapsed">Sales Pipeline</span>
+      </a>
+      <a routerLink="/sales/leads" routerLinkActive="active" title="My Assigned Leads">
+        <span class="nav-icon">🎯</span>
+        <span class="nav-text" *ngIf="!isSidebarCollapsed">My Leads</span>
+      </a>
+      <a routerLink="/sales/guidelines" routerLinkActive="active" title="Qualification Guidelines">
+        <span class="nav-icon">📖</span>
+        <span class="nav-text" *ngIf="!isSidebarCollapsed">Qualification Playbook</span>
+      </a>
     </nav>
-    <div class="logout">
-      <button (click)="logout()">Logout</button>
+
+    <div class="sidebar-footer">
+      <button type="button" class="btn-footer-action" (click)="showChangePassword = true" title="Change Password">
+        <span class="nav-icon">🔒</span>
+        <span class="nav-text" *ngIf="!isSidebarCollapsed">Change Password</span>
+      </button>
+      <button type="button" class="btn-logout" (click)="logout()" title="Logout">
+        <span class="nav-icon">🚪</span>
+        <span class="nav-text" *ngIf="!isSidebarCollapsed">Sign Out</span>
+      </button>
     </div>
   </aside>
-  <main>
-    <header>
-  <span>{{ welcomeMessage }}</span>
-</header>
-    <div class="content">
+
+  <!-- Main Content View -->
+  <main class="main-viewport">
+    <header class="top-header">
+      <div class="header-left">
+        <button type="button" class="btn-top-toggle" (click)="toggleSidebar()">
+          ☰
+        </button>
+        <div class="breadcrumb-trail">
+          <span class="portal-badge">💼 Sales Representative Portal</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="user-profile-widget">
+          <div class="user-avatar">{{ welcomeMessage.charAt(0) }}</div>
+          <div class="user-meta">
+            <span class="user-name">{{ welcomeMessage }}</span>
+            <span class="user-role">Sales Specialist</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="content-container">
       <router-outlet></router-outlet>
     </div>
   </main>
 </div>
+
+<app-change-password-modal
+  [isOpen]="showChangePassword"
+  (close)="showChangePassword = false"
+></app-change-password-modal>

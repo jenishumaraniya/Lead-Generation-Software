@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "CRM Lead & LinkedIn AI Extractor",
+  "version": "1.0.0",
+  "description": "Extract verified LinkedIn prospect data and instantly generate AI sales insights for your CRM.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://*.linkedin.com/*",
+    "http://localhost:*/*",
+    "https://localhost:*/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "CRM Lead Extractor & AI Insights",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.linkedin.com/in/*",
+        "https://*.linkedin.com/company/*",
+        "https://*.linkedin.com/school/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

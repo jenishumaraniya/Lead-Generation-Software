@@ -40,6 +40,42 @@ public class ProspectController : ControllerBase
         }
     }
 
+    [HttpPost("import-linkedin-profile")]
+    public async Task<IActionResult> ImportLinkedInProfile([FromBody] LinkedInProfileImportDto dto)
+    {
+        try
+        {
+            var result = await _enrichmentService.ImportRealLinkedInProfileAsync(dto);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    [HttpPost("import-linkedin-company")]
+    public async Task<IActionResult> ImportLinkedInCompany([FromBody] LinkedInCompanyImportDto dto)
+    {
+        try
+        {
+            var result = await _enrichmentService.ImportRealLinkedInCompanyAsync(dto);
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
     [HttpPost("discover")]
     public async Task<IActionResult> DiscoverProspects([FromBody] DiscoveryCriteria criteria)
     {

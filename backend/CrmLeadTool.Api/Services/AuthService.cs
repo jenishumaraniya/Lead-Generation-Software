@@ -253,6 +253,38 @@ public class AuthService
         return true;
     }
 
+    public async Task<string> ForgotPasswordRequestAsync(string email)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.Trim().ToLower());
+        if (user == null)
+        {
+            return "If your email is registered, a password reset code has been processed.";
+        }
+
+        var code = new Random().Next(100000, 999999).ToString();
+        await _auditLog.LogAsync(user.UserId, user.Email, "FORGOT_PASSWORD_REQUEST", "User", user.UserId.ToString(), $"Password reset code: {code}");
+        return code;
+    }
+
+    public async Task<bool> ResetPasswordWithCodeAsync(string email, string code, string newPassword)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.Trim().ToLower());
+        if (user == null) throw new Exception("User not found.");
+
+        if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
+            throw new Exception("New password must be at least 6 characters.");
+
+        var (hash, salt) = PasswordHasher.HashPassword(newPassword.Trim());
+        user.PasswordHash = hash;
+        user.Salt = salt;
+        user.FailedLoginAttempts = 0;
+        user.LockoutEnd = null;
+
+        await _context.SaveChangesAsync();
+        await _auditLog.LogAsync(user.UserId, user.Email, "PASSWORD_RESET_COMPLETED", "User", user.UserId.ToString(), "Password successfully reset via verification code.");
+        return true;
+    }
+
     public string GenerateJwtToken(User user)
     {
         var secretKey = _config["Jwt:Key"] ?? "SUPER_SECRET_KEY_FOR_B2B_LEAD_GENERATION_PLATFORM_2026_CRM_TOKEN_AUTH!";

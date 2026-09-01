@@ -37,7 +37,7 @@
       <div class="stat-icon icon-orange">💰</div>
       <div class="stat-info">
         <span class="stat-label">Average Starting Price</span>
-        <span class="stat-value">${{ stats.avgPrice | number }}</span>
+        <span class="stat-value">₹{{ stats.avgPrice | number }}</span>
       </div>
     </div>
   </div>
@@ -110,7 +110,7 @@
 
   <!-- 1. GRID VIEW (Cards) - Primary / Default -->
   <div *ngIf="!loading && filteredProducts.length > 0 && viewMode === 'cards'" class="product-grid">
-    <div *ngFor="let p of filteredProducts" class="product-card">
+    <div *ngFor="let p of paginatedProducts" class="product-card">
       
       <!-- Card Header -->
       <div class="product-card-top">
@@ -135,7 +135,7 @@
         <!-- Pricing Tag -->
         <div class="price-box">
           <span class="price-label">Starting at</span>
-          <span class="price-amount">${{ p.pricing | number:'1.2-2' }}</span>
+          <span class="price-amount">₹{{ p.pricing | number:'1.2-2' }}</span>
         </div>
       </div>
 
@@ -165,7 +165,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let p of filteredProducts">
+        <tr *ngFor="let p of paginatedProducts">
           <td>
             <div class="prod-name">{{ p.name }}</div>
             <div class="prod-desc" *ngIf="p.description">{{ p.description }}</div>
@@ -174,7 +174,7 @@
             <span class="category-pill">{{ getCategoryName(p.categoryId) }}</span>
           </td>
           <td>
-            <strong class="price-text">${{ p.pricing | number:'1.2-2' }}</strong>
+            <strong class="price-text">₹{{ p.pricing | number:'1.2-2' }}</strong>
           </td>
           <td>
             <span class="status-badge" [class.active]="(p.status || 'ACTIVE') === 'ACTIVE'">
@@ -188,6 +188,13 @@
         </tr>
       </tbody>
     </table>
+
+    <app-pagination
+      [totalItems]="filteredProducts.length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage"
+      (pageChange)="currentPage = $event"
+    ></app-pagination>
   </div>
 
   <!-- Add/Edit Product Modal -->
@@ -215,8 +222,8 @@
         </div>
 
         <div class="form-field">
-          <label>Starting Price (USD) *</label>
-          <input type="number" [(ngModel)]="formData.pricing" placeholder="e.g. 499" />
+          <label>Starting Price (INR ₹) *</label>
+          <input type="number" [(ngModel)]="formData.pricing" placeholder="e.g. 49999" />
         </div>
 
         <div class="form-field">

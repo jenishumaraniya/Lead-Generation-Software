@@ -116,18 +116,20 @@
               {{ rule.points > 0 ? "+" : "" }}{{ rule.points }} pts
             </span>
           </td>
-          <td>
-            <label class="switch">
-              <input
-                type="checkbox"
-                [checked]="rule.isActive"
-                (change)="toggleActive(rule)"
-              />
-              <span class="slider"></span>
-            </label>
-            <span class="status-label" [class.active-text]="rule.isActive">
-              {{ rule.isActive ? "Active" : "Disabled" }}
-            </span>
+          <td class="status-cell">
+            <div class="status-toggle-wrap">
+              <label class="switch">
+                <input
+                  type="checkbox"
+                  [checked]="rule.isActive"
+                  (change)="toggleActive(rule)"
+                />
+                <span class="slider"></span>
+              </label>
+              <span class="status-label" [class.active-text]="rule.isActive">
+                {{ rule.isActive ? "Active" : "Disabled" }}
+              </span>
+            </div>
           </td>
           <td class="desc-cell">
             {{ rule.description || "—" }}

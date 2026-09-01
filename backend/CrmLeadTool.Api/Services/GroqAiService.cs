@@ -34,6 +34,10 @@ public class GroqAIService
         var lead = await _context.Leads
             .Include(l => l.Visitor)
             .Include(l => l.Prospect)
+                .ThenInclude(p => p!.ProfessionalProfile)
+            .Include(l => l.Prospect)
+                .ThenInclude(p => p!.Company)
+                    .ThenInclude(c => c!.Enrichment)
             .FirstOrDefaultAsync(l => l.LeadId == leadId);
 
         if (lead == null)
@@ -95,21 +99,45 @@ public class GroqAIService
             ? string.Join("\n", activities) 
             : "- None";
 
-        var businessReq = Truncate(lead.BusinessRequirement ?? "", 200);
+        var businessReq = Truncate(lead.BusinessRequirement ?? "", 250);
         var companyName = Truncate(lead.CompanyName ?? "", 100);
         var fullName = Truncate(lead.FullName ?? "", 100);
         var jobTitle = Truncate(lead.JobTitle ?? "", 100);
         var timeline = Truncate(lead.Timeline ?? "", 100);
 
-        var prompt = $@"Analyze this B2B lead. Return ONLY valid JSON.
+        // Extract verified LinkedIn Intelligence if attached
+        var linkedInSection = "";
+        var prof = lead.Prospect?.ProfessionalProfile;
+        var comp = lead.Prospect?.Company?.Enrichment;
 
-Lead: {fullName}
-Company: {companyName}
-Title: {jobTitle}
-Need: {businessReq}
-Timeline: {timeline}
-Score: {lead.Score}
-Activities: {activitySummary}
+        if (prof != null || comp != null)
+        {
+            var summaryPart = !string.IsNullOrEmpty(prof?.Summary) ? $"- LinkedIn Bio/Summary: {Truncate(prof.Summary, 250)}\n" : "";
+            var skillsPart = !string.IsNullOrEmpty(prof?.Skills) ? $"- Verified Skills: {Truncate(prof.Skills, 150)}\n" : "";
+            var seniorityPart = !string.IsNullOrEmpty(prof?.Seniority) ? $"- Seniority/Function: {prof.Seniority} ({prof?.Function ?? "Business"})\n" : "";
+            var signalsPart = !string.IsNullOrEmpty(comp?.PublicSignals) ? $"- Company Growth/Signals: {comp.Growth} | {Truncate(comp.PublicSignals, 150)}\n" : "";
+
+            linkedInSection = $@"
+Verified LinkedIn Data:
+{summaryPart}{skillsPart}{seniorityPart}{signalsPart}";
+        }
+
+        var prompt = $@"Analyze this B2B lead for high-converting sales outreach. Return ONLY valid JSON.
+
+Lead Details:
+- Name: {fullName}
+- Company: {companyName}
+- Title: {jobTitle}
+- Stated Need / Context: {businessReq}
+- Timeline: {timeline}
+- Lead Score: {lead.Score}
+- Recent Activities: {activitySummary}
+{linkedInSection}
+
+Instructions:
+1. Generate a crisp professional profile summary reflecting their actual background.
+2. Formulate 2 personalized, non-generic icebreakers citing their real role/skills/company dynamics.
+3. Identify 2 key operational pain points and 2 high-impact talking points for sales reps.
 
 JSON:
 {{

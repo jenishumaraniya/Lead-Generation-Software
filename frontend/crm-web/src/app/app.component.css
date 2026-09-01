@@ -197,6 +197,28 @@
   box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
 }
 
+.nav-links a.nav-contact-btn {
+  background: #2563eb;
+  color: #ffffff !important;
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  transition: all 0.2s ease;
+}
+
+.nav-links a.nav-contact-btn:hover {
+  background: #1d4ed8;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+}
+
+.nav-links a.nav-contact-btn::after {
+  display: none !important;
+}
+
 .nav-links a.nav-admin-link {
   background: linear-gradient(135deg, #0ea5e9, #0284c7);
   color: white;

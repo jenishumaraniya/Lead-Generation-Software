@@ -6,11 +6,12 @@ import { VisitorTrackingService } from './core/services/visitor-tracking.service
 import { ContactService } from './core/services/contact.service';
 import { FloatingContactButtonComponent } from './components/floating-contact-button/floating-contact-button.component';
 import { ContactFormComponent, ContactFormData } from './components/contact-form/contact-form.component';
+import { ToastContainerComponent } from './components/toast-container/toast-container.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [NgIf, RouterOutlet, FloatingContactButtonComponent, RouterLink, ContactFormComponent],
+  imports: [NgIf, RouterOutlet, FloatingContactButtonComponent, RouterLink, ContactFormComponent, ToastContainerComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })

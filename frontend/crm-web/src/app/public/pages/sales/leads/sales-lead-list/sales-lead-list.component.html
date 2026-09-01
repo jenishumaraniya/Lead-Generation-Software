@@ -46,7 +46,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let lead of filteredLeads">
+        <tr *ngFor="let lead of paginatedLeads">
           <td class="lead-name-cell">
             <strong>{{ lead.fullName }}</strong>
             <span class="job-title" *ngIf="lead.jobTitle">{{ lead.jobTitle }}</span>
@@ -82,5 +82,12 @@
         </tr>
       </tbody>
     </table>
+
+    <app-pagination
+      [totalItems]="filteredLeads.length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage"
+      (pageChange)="currentPage = $event"
+    ></app-pagination>
   </div>
 </div>

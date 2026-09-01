@@ -56,22 +56,8 @@
 
         <div class="product-card">
 
-          <div class="product-icon">
-            @if (product.categoryId === 1) {
-              💻
-            }
-            @else if (product.categoryId === 2) {
-              🖥️
-            }
-            @else if (product.categoryId === 3) {
-              🗄️
-            }
-            @else if (product.categoryId === 4) {
-              🌐
-            }
-            @else {
-              💻
-            }
+          <div class="product-thumb-wrap">
+            <img [src]="getProductImage(product)" [alt]="product.name" class="product-thumb-img" loading="lazy" />
           </div>
 
           <span class="status">{{ product.status }}</span>

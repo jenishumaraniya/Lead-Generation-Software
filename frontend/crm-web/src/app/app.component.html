@@ -1,18 +1,19 @@
 <ng-container *ngIf="isPublicRoute">
   <nav class="navbar">
     <div class="logo" routerLink="/">
-      Lead<span>Tech</span>
+      LeadFlow<span>Enterprise</span>
     </div>
     <div class="nav-links">
       <a routerLink="/" [class.active]="isActiveRoute('/')">Home</a>
-      <a routerLink="/products" [class.active]="isActiveRoute('/products')">Products</a>
-      <a (click)="openContactForm()" style="cursor: pointer;">Contact</a>
-      <a routerLink="/login" class="nav-login-btn">Sign In</a>
+      <a routerLink="/products" [class.active]="isActiveRoute('/products')">Products & Solutions</a>
+      <a routerLink="/products/compare" [class.active]="isActiveRoute('/products/compare')">Compare Products</a>
+      <a (click)="openContactForm()" class="nav-contact-btn">Get in Touch with Sales</a>
     </div>
   </nav>
 </ng-container>
 
 <router-outlet></router-outlet>
+<app-toast-container></app-toast-container>
 
 <ng-container *ngIf="isPublicRoute">
   <!-- Floating Contact Button -->

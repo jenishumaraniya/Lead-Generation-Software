@@ -1,30 +1,137 @@
 <div class="compare-page">
-
-  <nav class="navbar">
-    <div class="logo" routerLink="/">LeadTech</div>
-
-    <div class="nav-links">
-      <a routerLink="/">Home</a>
-      <a routerLink="/products">Products</a>
-      <a routerLink="/pricing">Pricing</a>
-    </div>
-  </nav>
-
-  <main class="compare-shell">
+  <div class="compare-container">
+    <!-- Header -->
     <div class="compare-header">
-      <span>PRODUCT COMPARISON</span>
-      <h1>Compare Products</h1>
-      <p>Compare product features, specifications and pricing.</p>
+      <div class="header-tag">SPECIFICATION BENCHMARK</div>
+      <h1 class="header-title">Compare Enterprise Hardware Solutions</h1>
+      <p class="header-subtitle">Evaluate performance tiers, form factors, and commercial pricing across our catalog.</p>
     </div>
 
-    <div class="compare-content">
-      <h2>Select products to compare</h2>
-      <p>
-        Product comparison functionality will be connected with the product selection.
-      </p>
+    <!-- Product Selectors Bar -->
+    <div class="selectors-bar">
+      <div class="selector-card">
+        <label for="p1-select">Solution 1 (Base)</label>
+        <select id="p1-select" [(ngModel)]="selectedId1" (ngModelChange)="onProduct1Change($event)">
+          <option [ngValue]="null" disabled>Select Product...</option>
+          @for (prod of allProducts; track prod.productId) {
+            <option [ngValue]="prod.productId">{{ prod.name }} (₹{{ prod.pricing | number }})</option>
+          }
+        </select>
+      </div>
 
-      <button routerLink="/products">Browse Products</button>
+      <div class="selector-card">
+        <label for="p2-select">Solution 2</label>
+        <select id="p2-select" [(ngModel)]="selectedId2" (ngModelChange)="onProduct2Change($event)">
+          <option [ngValue]="null">-- Select to Compare --</option>
+          @for (prod of allProducts; track prod.productId) {
+            <option [ngValue]="prod.productId">{{ prod.name }} (₹{{ prod.pricing | number }})</option>
+          }
+        </select>
+      </div>
+
+      <div class="selector-card">
+        <label for="p3-select">Solution 3 (Optional)</label>
+        <select id="p3-select" [(ngModel)]="selectedId3" (ngModelChange)="onProduct3Change($event)">
+          <option [ngValue]="null">-- Select 3rd Solution --</option>
+          @for (prod of allProducts; track prod.productId) {
+            <option [ngValue]="prod.productId">{{ prod.name }} (₹{{ prod.pricing | number }})</option>
+          }
+        </select>
+      </div>
     </div>
-  </main>
 
+    <!-- Comparison Table / Grid -->
+    @if (selectedProduct1 || selectedProduct2 || selectedProduct3) {
+      <div class="comparison-table-wrapper">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th class="feature-col">Feature / Metric</th>
+              <th *ngIf="selectedProduct1" class="product-head">
+                <img [src]="getProductImage(selectedProduct1)" [alt]="selectedProduct1.name" class="compare-p-img" />
+                <h3>{{ selectedProduct1.name }}</h3>
+                <div class="p-price">₹{{ selectedProduct1.pricing | number }}</div>
+                <span class="p-badge">{{ selectedProduct1.status }}</span>
+              </th>
+              <th *ngIf="selectedProduct2" class="product-head">
+                <img [src]="getProductImage(selectedProduct2)" [alt]="selectedProduct2.name" class="compare-p-img" />
+                <h3>{{ selectedProduct2.name }}</h3>
+                <div class="p-price">₹{{ selectedProduct2.pricing | number }}</div>
+                <span class="p-badge">{{ selectedProduct2.status }}</span>
+              </th>
+              <th *ngIf="selectedProduct3" class="product-head">
+                <img [src]="getProductImage(selectedProduct3)" [alt]="selectedProduct3.name" class="compare-p-img" />
+                <h3>{{ selectedProduct3.name }}</h3>
+                <div class="p-price">₹{{ selectedProduct3.pricing | number }}</div>
+                <span class="p-badge">{{ selectedProduct3.status }}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="feature-name">Description & Overview</td>
+              <td *ngIf="selectedProduct1">{{ selectedProduct1.description }}</td>
+              <td *ngIf="selectedProduct2">{{ selectedProduct2.description }}</td>
+              <td *ngIf="selectedProduct3">{{ selectedProduct3.description }}</td>
+            </tr>
+            <tr>
+              <td class="feature-name">Hardware Features & Specifications</td>
+              <td *ngIf="selectedProduct1">
+                <ul class="spec-list">
+                  @for (feat of selectedProduct1.features; track feat) {
+                    <li>✓ {{ feat }}</li>
+                  }
+                </ul>
+              </td>
+              <td *ngIf="selectedProduct2">
+                <ul class="spec-list">
+                  @for (feat of selectedProduct2.features; track feat) {
+                    <li>✓ {{ feat }}</li>
+                  }
+                </ul>
+              </td>
+              <td *ngIf="selectedProduct3">
+                <ul class="spec-list">
+                  @for (feat of selectedProduct3.features; track feat) {
+                    <li>✓ {{ feat }}</li>
+                  }
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td class="feature-name">Enterprise Warranty & Support</td>
+              <td *ngIf="selectedProduct1">3-Year On-Site SLA & Dedicated Replacement</td>
+              <td *ngIf="selectedProduct2">3-Year On-Site SLA & Dedicated Replacement</td>
+              <td *ngIf="selectedProduct3">3-Year On-Site SLA & Dedicated Replacement</td>
+            </tr>
+            <tr>
+              <td class="feature-name">Volume Wholesale Tier</td>
+              <td *ngIf="selectedProduct1">Eligible for 10+ Unit Volume Discount</td>
+              <td *ngIf="selectedProduct2">Eligible for 10+ Unit Volume Discount</td>
+              <td *ngIf="selectedProduct3">Eligible for 10+ Unit Volume Discount</td>
+            </tr>
+            <tr class="action-row">
+              <td class="feature-name">Procurement Action</td>
+              <td *ngIf="selectedProduct1">
+                <button class="btn-quote" [routerLink]="['/products', selectedProduct1.productId]">View Full Details</button>
+              </td>
+              <td *ngIf="selectedProduct2">
+                <button class="btn-quote" [routerLink]="['/products', selectedProduct2.productId]">View Full Details</button>
+              </td>
+              <td *ngIf="selectedProduct3">
+                <button class="btn-quote" [routerLink]="['/products', selectedProduct3.productId]">View Full Details</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <div class="empty-compare">
+        <span class="empty-icon">⚖️</span>
+        <h3>No Products Selected</h3>
+        <p>Select at least one product above to view technical side-by-side comparisons.</p>
+        <button class="btn btn-primary" routerLink="/products">Browse Catalog</button>
+      </div>
+    }
+  </div>
 </div>

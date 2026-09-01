@@ -1,11 +1,12 @@
 <div class="modal-overlay" *ngIf="isOpen" (click)="closeModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <button class="close-btn" (click)="closeModal()" aria-label="Close form">×</button>
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <button class="modal-outside-close-btn" (click)="closeModal()" aria-label="Close form">✕</button>
     
-    <div class="modal-header">
-      <h2>Contact Us</h2>
-      <p class="subtitle">Fill in your details and we'll get back to you shortly.</p>
-    </div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Request Enterprise Consultation</h2>
+        <p class="subtitle">Share your infrastructure specifications and our enterprise team will deliver a customized proposal.</p>
+      </div>
 
     <!-- In the form, near the top -->
 <div *ngIf="submitError" class="alert alert-error" role="alert">
@@ -302,5 +303,6 @@
         <span *ngIf="isLoading" class="spinner">Submitting...</span>
       </button>
     </form>
+    </div>
   </div>
 </div>
