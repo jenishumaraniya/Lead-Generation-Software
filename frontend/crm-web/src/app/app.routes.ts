@@ -62,10 +62,15 @@ export const routes: Routes = [
         .then(m => m.ProductDetailsComponent)
   },
   {
-    path: 'compare',
+    path: 'products/compare',
     loadComponent: () =>
       import('./public/products/compare/compare.component')
         .then(m => m.CompareComponent)
+  },
+  {
+    path: 'compare',
+    redirectTo: 'products/compare',
+    pathMatch: 'full'
   },
 
   // =============================================
@@ -179,6 +184,12 @@ export const routes: Routes = [
         loadComponent: () => 
           import('./public/pages/sales/leads/lead-detail/lead-detail.component')
             .then(m => m.LeadDetailComponent) 
+      },
+      {
+        path: 'guidelines',
+        loadComponent: () =>
+          import('./public/pages/sales/guidelines/qualification-guidelines.component')
+            .then(m => m.QualificationGuidelinesComponent)
       },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]

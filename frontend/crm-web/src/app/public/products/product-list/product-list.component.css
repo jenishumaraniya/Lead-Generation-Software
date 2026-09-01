@@ -345,6 +345,27 @@
    PRODUCT ICON
    ========================================================= */
 
+.product-thumb-wrap {
+  width: 100%;
+  height: 160px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background: #f8fafc;
+}
+
+.product-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+  display: block;
+}
+
+.product-card:hover .product-thumb-img {
+  transform: scale(1.05);
+}
+
 .product-icon {
   width: 58px;
   height: 58px;

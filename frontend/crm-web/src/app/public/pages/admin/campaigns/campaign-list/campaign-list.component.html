@@ -143,10 +143,26 @@
 
       <!-- Card Footer Actions -->
       <div class="card-footer">
-        <a [routerLink]="['/admin/campaigns', campaign.campaignId]" class="btn-action edit">
-          Edit Campaign
-        </a>
         <div class="footer-btn-group">
+          <a [routerLink]="['/admin/campaigns', campaign.campaignId]" class="btn-action edit">
+            Edit
+          </a>
+          <button 
+            *ngIf="campaign.status === 'ACTIVE'" 
+            (click)="pauseCampaign(campaign.campaignId)" 
+            class="btn-action pause" 
+            title="Pause Sequence"
+          >
+            Pause
+          </button>
+          <button 
+            *ngIf="campaign.status === 'PAUSED'" 
+            (click)="resumeCampaign(campaign.campaignId)" 
+            class="btn-action resume" 
+            title="Resume Sequence"
+          >
+            Resume
+          </button>
           <button 
             *ngIf="campaign.status !== 'COMPLETED' && campaign.status !== 'CLOSED'" 
             (click)="closeCampaign(campaign.campaignId)" 
@@ -170,50 +186,54 @@
 
   <!-- 2. TABLE VIEW (Fallback) -->
   <div *ngIf="!loading && filteredCampaigns.length > 0 && viewMode === 'table'" class="card table-card">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Campaign Name</th>
-          <th>Status</th>
-          <th>Audience</th>
-          <th>Scheduled Start</th>
-          <th>Scheduled End</th>
-          <th style="text-align: right;">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let campaign of filteredCampaigns">
-          <td>
-            <div class="campaign-name-cell">
-              <span class="campaign-name">{{ campaign.name }}</span>
-              <span *ngIf="campaign.description" class="campaign-desc">{{ campaign.description }}</span>
-            </div>
-          </td>
-          <td>
-            <span class="status-badge" [ngClass]="(campaign.status || 'draft').toLowerCase()">
-              {{ campaign.status || 'DRAFT' }}
-            </span>
-          </td>
-          <td>
-            <span class="count-pill">👥 {{ campaign.recipientsCount || 0 }} prospects</span>
-          </td>
-          <td class="date-cell">
-            <span *ngIf="campaign.scheduleStartDate">{{ campaign.scheduleStartDate | date:'MMM d, y, h:mm a' }}</span>
-            <span *ngIf="!campaign.scheduleStartDate" class="text-muted">—</span>
-          </td>
-          <td class="date-cell">
-            <span *ngIf="campaign.scheduleEndDate">{{ campaign.scheduleEndDate | date:'MMM d, y, h:mm a' }}</span>
-            <span *ngIf="!campaign.scheduleEndDate" class="text-muted">—</span>
-          </td>
-          <td style="text-align: right;">
-            <div class="action-btn-group">
-              <a [routerLink]="['/admin/campaigns', campaign.campaignId]" class="btn-action edit">Edit</a>
-              <button *ngIf="campaign.status !== 'COMPLETED' && campaign.status !== 'CLOSED'" (click)="closeCampaign(campaign.campaignId)" class="btn-action close">Close</button>
-              <button (click)="deleteCampaign(campaign.campaignId)" class="btn-action delete">Delete</button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Campaign Name</th>
+            <th>Status</th>
+            <th>Audience</th>
+            <th>Scheduled Start</th>
+            <th>Scheduled End</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let campaign of filteredCampaigns">
+            <td>
+              <div class="campaign-name-cell">
+                <span class="campaign-name">{{ campaign.name }}</span>
+                <span *ngIf="campaign.description" class="campaign-desc">{{ campaign.description }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="(campaign.status || 'draft').toLowerCase()">
+                {{ campaign.status || 'DRAFT' }}
+              </span>
+            </td>
+            <td>
+              <span class="count-pill">👥 {{ campaign.recipientsCount || 0 }} prospects</span>
+            </td>
+            <td class="date-cell">
+              <span *ngIf="campaign.scheduleStartDate">{{ campaign.scheduleStartDate | date:'MMM d, y, h:mm a' }}</span>
+              <span *ngIf="!campaign.scheduleStartDate" class="text-muted">—</span>
+            </td>
+            <td class="date-cell">
+              <span *ngIf="campaign.scheduleEndDate">{{ campaign.scheduleEndDate | date:'MMM d, y, h:mm a' }}</span>
+              <span *ngIf="!campaign.scheduleEndDate" class="text-muted">—</span>
+            </td>
+            <td style="text-align: right;">
+              <div class="action-btn-group">
+                <a [routerLink]="['/admin/campaigns', campaign.campaignId]" class="btn-action edit">Edit</a>
+                <button *ngIf="campaign.status === 'ACTIVE'" (click)="pauseCampaign(campaign.campaignId)" class="btn-action pause">Pause</button>
+                <button *ngIf="campaign.status === 'PAUSED'" (click)="resumeCampaign(campaign.campaignId)" class="btn-action resume">Resume</button>
+                <button *ngIf="campaign.status !== 'COMPLETED' && campaign.status !== 'CLOSED'" (click)="closeCampaign(campaign.campaignId)" class="btn-action close">Close</button>
+                <button (click)="deleteCampaign(campaign.campaignId)" class="btn-action delete">Delete</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>

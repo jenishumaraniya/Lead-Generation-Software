@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../../../core/services/product.service';
 import { CategoryService, Category } from '../../../../../core/services/category.service';
+import { PaginationComponent } from '../../../../../components/pagination/pagination.component';
 
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent],
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css']
 })
@@ -26,6 +27,14 @@ export class ProductListComponent implements OnInit {
   searchTerm: string = '';
   selectedCategory: string = 'ALL';
   selectedStatus: string = 'ALL';
+
+  currentPage = 1;
+  pageSize = 10;
+
+  get paginatedProducts(): any[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredProducts.slice(start, start + this.pageSize);
+  }
 
   stats = {
     total: 0,
@@ -82,6 +91,7 @@ export class ProductListComponent implements OnInit {
   }
 
   applyFilter(): void {
+    this.currentPage = 1;
     const term = this.searchTerm.trim().toLowerCase();
 
     this.filteredProducts = this.products.filter(p => {

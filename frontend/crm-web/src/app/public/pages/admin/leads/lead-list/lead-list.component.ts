@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Lead, LeadService } from '../../../../../core/services/lead.service';
 import { EmployeeService, Salesperson } from '../../../../../core/services/employee.service';
+import { PaginationComponent } from '../../../../../components/pagination/pagination.component';
 
 @Component({
   selector: 'app-lead-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, PaginationComponent],
   templateUrl: './lead-list.component.html',
   styleUrl: './lead-list.component.css'
 })
@@ -21,6 +22,14 @@ export class LeadListComponent implements OnInit {
   searchTerm = '';
   successToast = '';
   loading = false;
+
+  currentPage = 1;
+  pageSize = 10;
+
+  get paginatedLeads(): Lead[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredLeads.slice(start, start + this.pageSize);
+  }
 
   constructor(
     private leadService: LeadService,
@@ -60,6 +69,7 @@ export class LeadListComponent implements OnInit {
   }
 
   applyFilters(): void {
+    this.currentPage = 1;
     this.filteredLeads = this.leads.filter(lead => {
       const statusMatch = !this.statusFilter || lead.status === this.statusFilter;
       let assignmentMatch = true;

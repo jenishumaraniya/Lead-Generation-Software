@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Lead & Company Extractor</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-icon">🎯</div>
+        <div>
+          <h1 class="brand-title">LeadFlow AI</h1>
+          <span class="brand-sub">LinkedIn Prospect & Company Extractor</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span id="connectionBadge" class="badge badge-offline">Connecting...</span>
+        <button id="refreshTabBtn" class="icon-btn" title="Re-scan Profile / Company">🔄</button>
+        <button id="settingsBtn" class="icon-btn" title="Settings">⚙️</button>
+      </div>
+    </header>
+
+    <!-- Settings Bar (collapsible) -->
+    <div id="settingsPanel" class="settings-panel hidden">
+      <label class="settings-label" for="apiUrlInput">CRM Backend API URL</label>
+      <div class="input-row">
+        <input type="text" id="apiUrlInput" value="http://localhost:5234" placeholder="http://localhost:5234">
+        <button id="saveSettingsBtn" class="btn btn-sm btn-secondary">Save</button>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+      <!-- Non-LinkedIn Page State -->
+      <div id="noProfileState" class="state-card hidden">
+        <div class="state-icon">🔍</div>
+        <h3>No LinkedIn Page Detected</h3>
+        <p>Please open a LinkedIn profile (<code>/in/...</code>) or company page (<code>/company/...</code>) to extract live data and generate AI sales insights.</p>
+        <button id="checkPageBtn" class="btn btn-secondary btn-full">Check Current Page</button>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loadingState" class="state-card hidden">
+        <div class="spinner"></div>
+        <p id="loadingMessage">Extracting live LinkedIn signals...</p>
+      </div>
+
+      <!-- Detected Profile / Company Form Card -->
+      <div id="profileCard" class="profile-card hidden">
+        <div class="profile-card-header">
+          <span id="modeTag" class="card-tag tag-verified">✓ LinkedIn Live Signals</span>
+          <span class="edit-hint">Editable fields</span>
+        </div>
+
+        <div class="form-group">
+          <label id="nameLabel" class="form-label" for="editName">Full Name</label>
+          <input type="text" id="editName" class="form-input font-bold" placeholder="Full Name or Company Name">
+        </div>
+
+        <div class="form-group">
+          <label id="headlineLabel" class="form-label" for="editHeadline">Headline / Role</label>
+          <input type="text" id="editHeadline" class="form-input" placeholder="Role or Tagline / Industry">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label id="companyLabel" class="form-label" for="editCompany">Company</label>
+            <input type="text" id="editCompany" class="form-input" placeholder="Company Name / Size">
+          </div>
+          <div class="form-group flex-1">
+            <label id="locationLabel" class="form-label" for="editLocation">Location</label>
+            <input type="text" id="editLocation" class="form-input" placeholder="City, Country">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label id="summaryLabel" class="form-label" for="editSummary">Professional Summary / Bio</label>
+          <textarea id="editSummary" class="form-textarea" rows="2" placeholder="Summary of background and expertise..."></textarea>
+        </div>
+
+        <div id="skillsGroup" class="form-group">
+          <label class="form-label" for="editSkills">Verified Skills (comma separated)</label>
+          <input type="text" id="editSkills" class="form-input" placeholder="e.g. Software Development, Cloud">
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="actions-group">
+          <button id="importBtn" class="btn btn-secondary btn-full">
+            📥 Import to CRM
+          </button>
+          <button id="importAndAnalyzeBtn" class="btn btn-primary btn-full">
+            🧠 Import & Run Groq AI Analysis
+          </button>
+        </div>
+      </div>
+
+      <!-- AI Insights Output Drawer -->
+      <div id="aiInsightsDrawer" class="ai-drawer hidden">
+        <div class="drawer-header">
+          <h3>⚡ Groq AI Sales Intelligence</h3>
+          <span id="aiIntentBadge" class="badge badge-intent">BUYING</span>
+        </div>
+
+        <div class="ai-metric-row">
+          <div class="metric-item">
+            <span class="metric-label">Confidence</span>
+            <span id="aiConfidence" class="metric-value">85%</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Priority</span>
+            <span id="aiPriority" class="metric-value priority-high">HIGH</span>
+          </div>
+        </div>
+
+        <div class="section-box">
+          <div class="section-title">Recommended Next Action</div>
+          <p id="aiNextAction" class="ai-action-text">Loading action...</p>
+        </div>
+
+        <!-- Icebreakers -->
+        <div class="section-box">
+          <div class="section-title">🎯 Tailored Icebreakers</div>
+          <div id="icebreakerList" class="insights-list"></div>
+        </div>
+
+        <!-- Pain Points & Talking Points -->
+        <div class="section-box">
+          <div class="section-title">💡 Talking Points</div>
+          <div id="talkingPointsList" class="insights-list"></div>
+        </div>
+
+        <div class="success-banner">
+          ✓ Synced to CRM database & scoring applied (+35 pts)
+        </div>
+      </div>
+
+      <!-- Feedback Toast -->
+      <div id="statusToast" class="toast hidden"></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <span>Lead Generation Software</span>
+      <span class="version-tag">v1.2 (Personal & Company)</span>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

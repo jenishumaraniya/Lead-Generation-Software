@@ -266,7 +266,12 @@
 
         <div class="form-field">
           <label>Initial Password *</label>
-          <input type="password" [(ngModel)]="newRep.password" placeholder="Minimum 6 characters" />
+          <div class="password-input-wrapper">
+            <input [type]="showInitialPassword ? 'text' : 'password'" [(ngModel)]="newRep.password" placeholder="Minimum 6 characters" />
+            <button type="button" class="btn-eye" (click)="showInitialPassword = !showInitialPassword" [title]="showInitialPassword ? 'Hide password' : 'Show password'">
+              {{ showInitialPassword ? '🔒' : '👁️' }}
+            </button>
+          </div>
         </div>
 
         <div class="form-field">
@@ -310,7 +315,12 @@
       <div class="form-body">
         <div class="form-field">
           <label>New Password</label>
-          <input type="password" [(ngModel)]="newPassword" placeholder="Enter new password" />
+          <div class="password-input-wrapper">
+            <input [type]="showNewPassword ? 'text' : 'password'" [(ngModel)]="newPassword" placeholder="Enter new password (min 6 characters)" />
+            <button type="button" class="btn-eye" (click)="showNewPassword = !showNewPassword" [title]="showNewPassword ? 'Hide password' : 'Show password'">
+              {{ showNewPassword ? '🔒' : '👁️' }}
+            </button>
+          </div>
         </div>
       </div>
 

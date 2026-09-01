@@ -5,6 +5,7 @@ import { Product } from '../../../core/models/product.model';
 import { ApiService } from '../../../core/services/api.service';
 import { VisitorTrackingService } from '../../../core/services/visitor-tracking.service';
 import { ContactService } from '../../../core/services/contact.service';
+import { getProductImageUrl } from '../../../core/utils/product-image.util';
 
 @Component({
   selector: 'app-product-list',
@@ -19,6 +20,10 @@ export class ProductListComponent implements OnInit {
   categories: any[] = [];
   selectedCategoryId: number | null = null;
   selectedCategoryName = 'All Products';
+
+  getProductImage(prod: any): string {
+    return getProductImageUrl(prod);
+  }
 
   constructor(
     private router: Router,

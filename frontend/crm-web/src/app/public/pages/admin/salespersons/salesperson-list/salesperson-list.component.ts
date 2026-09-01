@@ -34,6 +34,7 @@ export class SalespersonListComponent implements OnInit {
 
   // Add Salesperson Modal State
   showAddModal = false;
+  showInitialPassword = false;
   newRep = {
     fullName: '',
     email: '',
@@ -43,6 +44,7 @@ export class SalespersonListComponent implements OnInit {
 
   // Change Password Modal State
   showPasswordModal = false;
+  showNewPassword = false;
   selectedRep: Salesperson | null = null;
   newPassword = '';
 

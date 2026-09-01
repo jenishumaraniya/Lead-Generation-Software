@@ -1,250 +1,216 @@
-<!-- 
-  <nav class="navbar">
-
-    <div class="logo" routerLink="/">
-      LeadTech
-    </div>
-
-    <div class="nav-links">
-      <a routerLink="/">Home</a>
-      <a routerLink="/products">Products</a>
-      <a href="#contact">Contact</a>
-    </div>
-
-    <button class="nav-button" (click)="exploreProducts()">
-      Explore Products
-    </button>
-
-  </nav>
-
-  <section class="hero">
-
+<div class="home-container">
+  <!-- Hero Section -->
+  <section class="hero-section">
     <div class="hero-content">
-
-      <span class="badge">
-        B2B Technology Solutions
-      </span>
-
-      <h1>
-        Technology Solutions
-        <span>Built for Business</span>
-      </h1>
-
-      <p>
-        Discover reliable laptops, desktops, servers and
-        networking solutions designed to help your business grow.
-      </p>
-
-      <div class="hero-buttons">
-
-        <button
-          class="primary-button"
-          (click)="exploreProducts()">
-
-          Explore Products
-        </button>
-
-
+      <div class="hero-badge">
+        <span class="pulse-dot"></span>
+        Enterprise Hardware & Technology Infrastructure
       </div>
-
+      <h1 class="hero-title">
+        High-Performance IT Solutions <br/>
+        <span class="highlight">Built for Growing Businesses</span>
+      </h1>
+      <p class="hero-subtitle">
+        Equip your team with enterprise laptops, workstation desktops, high-availability servers, and resilient networking gear backed by dedicated enterprise warranties.
+      </p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" (click)="exploreProducts()">
+          Explore Product Catalog →
+        </button>
+        <button class="btn btn-secondary" routerLink="/products/compare">
+          ⚖️ Compare Solutions
+        </button>
+      </div>
+      
+      <!-- Trust Metrics -->
+      <div class="hero-stats">
+        <div class="stat-item">
+          <span class="stat-number">500+</span>
+          <span class="stat-label">Enterprise Clients</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-number">99.98%</span>
+          <span class="stat-label">Hardware Reliability</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-number">24/7</span>
+          <span class="stat-label">Technical SLA Support</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-number">Next-Day</span>
+          <span class="stat-label">Express Deployment</span>
+        </div>
+      </div>
     </div>
-
   </section>
 
-
-  <section class="products-section">
-
+  <!-- Solutions & Categories Section -->
+  <section class="categories-section">
     <div class="section-header">
-
-      <span class="section-label">
-        OUR PRODUCTS
-      </span>
-
-      <h2>
-        Solutions for Your Business
-      </h2>
-
-      <p>
-        Explore our range of business technology products.
-      </p>
-
+      <span class="section-tag">CATALOG CATEGORIES</span>
+      <h2 class="section-title">Enterprise Infrastructure by Category</h2>
+      <p class="section-desc">Tailored configurations engineered for developer workstations, high-compute server rooms, and distributed office networks.</p>
     </div>
-
 
     <div class="category-grid">
-
-      <div class="category-card">
-
-        <div class="icon">💻</div>
-
-        <h3>Laptops</h3>
-
-        <p>
-          Professional laptops for modern business teams.
-        </p>
-
-        <button (click)="exploreProducts()">
-          Explore →
-        </button>
-
-      </div>
-
-
-      <div class="category-card">
-
-        <div class="icon">🖥️</div>
-
-        <h3>Desktops</h3>
-
-        <p>
-          Powerful desktops for office environments.
-        </p>
-
-        <button (click)="exploreProducts()">
-          Explore →
-        </button>
-
-      </div>
-
-
-      <div class="category-card">
-
-        <div class="icon">🗄️</div>
-
-        <h3>Servers</h3>
-
-        <p>
-          Reliable infrastructure for business workloads.
-        </p>
-
-        <button (click)="exploreProducts()">
-          Explore →
-        </button>
-
-      </div>
-
-
-      <div class="category-card">
-
-        <div class="icon">🌐</div>
-
-        <h3>Networking</h3>
-
-        <p>
-          Networking solutions for connected businesses.
-        </p>
-
-        <button (click)="exploreProducts()">
-          Explore →
-        </button>
-
-      </div>
-
-    </div>
-
-  </section>
-
-  <section class="cta">
-
-    <div>
-
-      <h2>
-        Need the right technology for your business?
-      </h2>
-
-      <p>
-        Explore our products and find the solution that fits
-        your requirements.
-      </p>
-
-    </div>
-
-    <button
-      class="primary-button"
-      (click)="exploreProducts()">
-
-      View Products
-
-    </button>
-
-  </section>
-
-  <footer id="contact">
-
-    <div class="footer-logo">
-      LeadTech
-    </div>
-
-    <p>
-      B2B Technology Solutions
-    </p>
-
-    <p>
-      © 2026 LeadTech. All rights reserved.
-    </p>
-
-  </footer>
-
-</div> -->
-
-<!-- Products Preview -->
-<section class="products-section">
-
-  <div class="section-header">
-
-    <span class="section-label">
-      OUR PRODUCTS
-    </span>
-
-    <h2>
-      Solutions for Your Business
-    </h2>
-
-    <p>
-      Explore our range of business technology products.
-    </p>
-
-  </div>
-
-
-  <div class="category-grid">
-    @if (categories.length > 0) {
-      @for (cat of categories; track cat.categoryId) {
-        <div class="category-card">
-          <div class="icon">
-            {{ getCategoryIcon(cat.categoryName) }}
+      @if (categories && categories.length > 0) {
+        @for (cat of categories; track cat.categoryId) {
+          <div class="category-card" (click)="exploreProducts(cat.categoryId)">
+            <div class="category-icon-wrapper">
+              <span class="category-icon">{{ getCategoryIcon(cat.categoryName) }}</span>
+            </div>
+            <h3 class="category-name">{{ cat.categoryName }}</h3>
+            <p class="category-info">{{ cat.productsCount || 0 }} Models Available</p>
+            <div class="category-action">
+              <span>View Specifications</span>
+              <span class="arrow">→</span>
+            </div>
           </div>
-          <h3>{{ cat.categoryName }}</h3>
-          <p>{{ cat.productsCount || 0 }} Solutions & Products Available</p>
-          <button (click)="exploreProducts(cat.categoryId)">Explore →</button>
+        }
+      } @else {
+        <div class="category-card" (click)="exploreProducts(1)">
+          <div class="category-icon-wrapper"><span class="category-icon">💻</span></div>
+          <h3 class="category-name">Enterprise Laptops</h3>
+          <p class="category-info">Lightweight, high-security notebooks with extended battery life.</p>
+          <div class="category-action"><span>Explore Models</span> <span class="arrow">→</span></div>
+        </div>
+        <div class="category-card" (click)="exploreProducts(2)">
+          <div class="category-icon-wrapper"><span class="category-icon">🖥️</span></div>
+          <h3 class="category-name">Workstation Desktops</h3>
+          <p class="category-info">Multi-display, GPU-accelerated desktops for engineering & design.</p>
+          <div class="category-action"><span>Explore Models</span> <span class="arrow">→</span></div>
+        </div>
+        <div class="category-card" (click)="exploreProducts(3)">
+          <div class="category-icon-wrapper"><span class="category-icon">🗄️</span></div>
+          <h3 class="category-name">Enterprise Servers</h3>
+          <p class="category-info">Rackmount & tower servers optimized for database and virtualization.</p>
+          <div class="category-action"><span>Explore Models</span> <span class="arrow">→</span></div>
+        </div>
+        <div class="category-card" (click)="exploreProducts(4)">
+          <div class="category-icon-wrapper"><span class="category-icon">🌐</span></div>
+          <h3 class="category-name">Networking Systems</h3>
+          <p class="category-info">Managed switches, firewalls, and enterprise Wi-Fi mesh solutions.</p>
+          <div class="category-action"><span>Explore Models</span> <span class="arrow">→</span></div>
         </div>
       }
-    } @else {
-      <div class="category-card">
-        <div class="icon">💻</div>
-        <h3>Laptops</h3>
-        <p>Professional laptops for modern business teams.</p>
-        <button (click)="exploreProducts(1)">Explore →</button>
-      </div>
-      <div class="category-card">
-        <div class="icon">🖥️</div>
-        <h3>Desktops</h3>
-        <p>Powerful desktops for office environments.</p>
-        <button (click)="exploreProducts(2)">Explore →</button>
-      </div>
-      <div class="category-card">
-        <div class="icon">🗄️</div>
-        <h3>Servers</h3>
-        <p>Reliable infrastructure for business workloads.</p>
-        <button (click)="exploreProducts(3)">Explore →</button>
-      </div>
-      <div class="category-card">
-        <div class="icon">🌐</div>
-        <h3>Networking</h3>
-        <p>Networking solutions for connected businesses.</p>
-        <button (click)="exploreProducts(4)">Explore →</button>
-      </div>
-    }
-  </div>
+    </div>
+  </section>
 
-</section>
+  <!-- About Company & Enterprise Value Section -->
+  <section class="about-section">
+    <div class="about-container">
+      <div class="about-text">
+        <span class="section-tag">ABOUT LEADFLOW ENTERPRISE</span>
+        <h2 class="section-title">Bridging Hardware Precision & Commercial Growth</h2>
+        <p class="about-lead">
+          LeadFlow Enterprise is a leading provider of end-to-end B2B computing hardware and IT lifecycle management. We partner with organizations ranging from fast-growing startups to Fortune 500 corporations.
+        </p>
+        
+        <div class="features-list">
+          <div class="feature-item">
+            <div class="feature-icon">🛡️</div>
+            <div>
+              <h4>Tier-1 Verified Hardware</h4>
+              <p>All devices undergo multi-stage stress testing with genuine enterprise warranties.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">💼</div>
+            <div>
+              <h4>Transparent Volume Pricing</h4>
+              <p>Direct wholesale quotes with scalable leasing and flexible payment schedules.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">⚡</div>
+            <div>
+              <h4>Dedicated Account Engineers</h4>
+              <p>Personal technical specialists assigned to configure, deploy, and support your fleet.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="about-visual">
+        <div class="visual-card main-card">
+          <div class="card-header-badge">✓ ISO 9001 & 27001 Certified</div>
+          <h3>Enterprise Grade Supply Chain</h3>
+          <p>Over 50,000+ units delivered across 15+ industry sectors with 99.98% operational compliance.</p>
+          <div class="card-pills">
+            <span class="pill">Fast Deployment</span>
+            <span class="pill">Custom Imaging</span>
+            <span class="pill">Extended Care</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison & Procurement CTA -->
+  <section class="cta-section">
+    <div class="cta-card">
+      <div class="cta-content">
+        <h2>Ready to upgrade your enterprise technology stack?</h2>
+        <p>Compare specifications side-by-side or request a custom procurement proposal tailored to your company's headcount and budget.</p>
+      </div>
+      <div class="cta-actions">
+        <button class="btn btn-light" (click)="exploreProducts()">
+          Browse Products
+        </button>
+        <button class="btn btn-outline-light" routerLink="/products/compare">
+          Compare Specifications
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="public-footer">
+    <div class="footer-grid">
+      <div class="footer-col brand-col">
+        <div class="footer-logo">LeadFlow<span>Enterprise</span></div>
+        <p>Your trusted procurement and infrastructure partner for high-reliability commercial hardware.</p>
+        <div class="footer-badges">
+          <span class="f-badge">✓ Verified B2B Partner</span>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h4>Solutions</h4>
+        <ul>
+          <li><a (click)="exploreProducts(1)">Enterprise Laptops</a></li>
+          <li><a (click)="exploreProducts(2)">High-End Workstations</a></li>
+          <li><a (click)="exploreProducts(3)">Data Center Servers</a></li>
+          <li><a (click)="exploreProducts(4)">Managed Networking</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <ul>
+          <li><a routerLink="/products">Full Catalog</a></li>
+          <li><a routerLink="/products/compare">Product Comparison</a></li>
+          <li><a routerLink="/">Enterprise Overview</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Headquarters</h4>
+        <p class="f-text">Tech Gateway Tower, Suite 400<br/>Business Bay District</p>
+        <p class="f-contact">📧 contact&#64;leadflow-enterprise.com<br/>📞 +91 (800) 555-0199</p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© 2026 LeadFlow Enterprise Technologies. All rights reserved.</p>
+      <div class="footer-links">
+        <span>Privacy Policy</span>
+        <span>Terms of Service</span>
+        <span>Security Compliance</span>
+      </div>
+    </div>
+  </footer>
+</div>

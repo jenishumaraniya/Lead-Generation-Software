@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { CampaignService } from '../../../../../core/services/campaign.service';
+import { SidebarService } from '../../../../../core/services/sidebar.service';
 
 @Component({
   selector: 'app-campaign-list',
@@ -29,7 +30,10 @@ export class CampaignListComponent implements OnInit {
     totalProspects: 0
   };
 
-  constructor(private campaignService: CampaignService) {}
+  constructor(
+    private campaignService: CampaignService,
+    private sidebarService: SidebarService
+  ) {}
 
   ngOnInit() {
     this.loadCampaigns();
@@ -63,6 +67,11 @@ export class CampaignListComponent implements OnInit {
 
   setViewMode(mode: 'cards' | 'table') {
     this.viewMode = mode;
+    if (mode === 'table') {
+      this.sidebarService.setCollapsed(true);
+    } else {
+      this.sidebarService.setCollapsed(false);
+    }
   }
 
   applyFilter() {
@@ -81,6 +90,20 @@ export class CampaignListComponent implements OnInit {
       const nameMatch = c.name?.toLowerCase().includes(term);
       const descMatch = c.description?.toLowerCase().includes(term);
       return nameMatch || descMatch;
+    });
+  }
+
+  pauseCampaign(id: number) {
+    this.campaignService.pauseCampaign(id).subscribe({
+      next: () => this.loadCampaigns(),
+      error: () => alert('Failed to pause campaign')
+    });
+  }
+
+  resumeCampaign(id: number) {
+    this.campaignService.resumeCampaign(id).subscribe({
+      next: () => this.loadCampaigns(),
+      error: () => alert('Failed to resume campaign')
     });
   }
 

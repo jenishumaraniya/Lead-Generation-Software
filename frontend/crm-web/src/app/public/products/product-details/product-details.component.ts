@@ -5,6 +5,7 @@ import { Product } from '../../../core/models/product.model';
 import { ApiService } from '../../../core/services/api.service';
 import { VisitorTrackingService } from '../../../core/services/visitor-tracking.service';
 import { ContactService } from '../../../core/services/contact.service';
+import { getProductImageUrl } from '../../../core/utils/product-image.util';
 
 @Component({
   selector: 'app-product-details',
@@ -16,6 +17,10 @@ import { ContactService } from '../../../core/services/contact.service';
 export class ProductDetailsComponent implements OnInit {
 
   product?: Product;
+
+  getProductImage(prod?: any): string {
+    return getProductImageUrl(prod || this.product);
+  }
 
   private fallbackProducts: Product[] = [
     {
@@ -136,70 +141,85 @@ export class ProductDetailsComponent implements OnInit {
   // }
   // }
   ngOnInit(): void {
-  const id = Number(this.route.snapshot.paramMap.get('id'));
+    this.route.paramMap.subscribe(params => {
+      const id = Number(params.get('id'));
 
-  const handleProduct = (product: Product) => {
-    this.product = product;
-    this.trackProductView(product);
-  };
+      const handleProduct = (product: Product) => {
+        this.product = {
+          ...product,
+          features: product.features && product.features.length > 0 ? product.features : this.getDefaultFeatures(product),
+          specifications: product.specifications && product.specifications.length > 0 ? product.specifications : this.getDefaultSpecs(product)
+        };
+        this.trackProductView(this.product);
+      };
 
-  if (!id) {
-    handleProduct(this.fallbackProducts[0]);
-    return;
+      if (!id) {
+        handleProduct(this.fallbackProducts[0]);
+        return;
+      }
+
+      this.apiService.getProduct(id).subscribe({
+        next: (product) => handleProduct(product),
+        error: () => {
+          const fallback = this.fallbackProducts.find(p => p.productId === id) ?? this.fallbackProducts[0];
+          handleProduct(fallback);
+        }
+      });
+    });
   }
 
-  this.apiService.getProduct(id).subscribe({
-    next: (product) => handleProduct(product),
-    error: () => {
-      const fallback = this.fallbackProducts.find(p => p.productId === id) ?? this.fallbackProducts[0];
-      handleProduct(fallback);
-    }
-  });
-}
+  private getDefaultFeatures(p: Product): string[] {
+    const name = (p.name || '').toLowerCase();
+    if (name.includes('laptop')) return ['High-Speed DDR5 RAM', 'PCIe Gen4 NVMe SSD', 'WiFi 6E & Bluetooth 5.3', 'FHD IPS Anti-Glare Display'];
+    if (name.includes('server')) return ['Dual Intel Xeon / AMD EPYC', 'ECC Registered Memory', 'Hot-Swappable Redundant PSU', 'iDRAC / IPMI Remote Management'];
+    if (name.includes('desktop')) return ['Intel Core 13th Gen / Ryzen 7', 'Ultra-Quiet Thermal Cooling', 'Dual DisplayPort & HDMI', 'Enterprise Windows 11 Pro'];
+    if (name.includes('router') || name.includes('network')) return ['10Gbps SFP+ Uplinks', 'Hardware NAT & IPsec VPN', 'Enterprise Layer 3 Routing', 'Redundant Power Inputs'];
+    if (name.includes('cloud') || name.includes('cluster')) return ['99.999% SLA Uptime', 'Automated Failover & Scaling', 'End-to-End Encryption', 'Dedicated VPC Peering'];
+    if (name.includes('security') || name.includes('threat')) return ['AI Threat Intelligence', 'Zero-Trust MFA & SAML 2.0', 'Continuous Endpoint Telemetry', 'Automated Incident Response'];
+    return ['Enterprise SLA Support', '3-Year Standard Hardware Warranty', 'ISO 27001 Certified', '24/7 Priority Support'];
+  }
 
-private trackProductView(product: Product): void {
-  this.visitorTrackingService.trackActivity(
-    'PRODUCT_VIEW',
-    product.productId,
-    { productName: product.name }
-  );
-}
+  private getDefaultSpecs(p: Product): string[] {
+    const name = (p.name || '').toLowerCase();
+    if (name.includes('laptop')) return ['Processor: High Performance Multi-Core', 'Display: 15.6" IPS 100% sRGB', 'Battery: 8+ Hours Fast-Charging', 'Chassis: Aluminum Alloy Unibody'];
+    if (name.includes('server')) return ['Form Factor: 1U/2U Rackmount', 'Max RAM: Up to 1TB DDR5 ECC', 'Storage: 8x 2.5" / 3.5" Hot-Swap Bays', 'Network: 4x 10GbE SFP+'];
+    if (name.includes('desktop')) return ['Form Factor: Small Form Factor / Tower', 'Power: 500W 80+ Platinum', 'Ports: 8x USB 3.2, 2x USB-C', 'OS: Windows 11 Pro 64-bit'];
+    return ['Architecture: Enterprise Grade 64-bit', 'Standard: ISO 9001 / 27001', 'Warranty: 3 Years Onsite Replacement', 'Compliance: RoHS & Energy Star'];
+  }
+
+  private trackProductView(product: Product): void {
+    this.visitorTrackingService.trackActivity(
+      'PRODUCT_VIEW',
+      product.productId,
+      { productName: product.name }
+    );
+  }
 
   goBack(): void {
     this.router.navigate(['/products']);
   }
 
-  // compare(): void {
-  //   this.router.navigate(['/compare']);
-  // }
-compare(): void {
-  if (this.product) {
-    this.visitorTrackingService.trackActivity(
-      'PRODUCT_COMPARE',
-      this.product.productId,
-      { source: 'product_details' }
-    );
+  compare(): void {
+    if (this.product) {
+      this.visitorTrackingService.trackActivity(
+        'PRODUCT_COMPARE',
+        this.product.productId,
+        { source: 'product_details' }
+      );
+      this.router.navigate(['/products/compare'], { queryParams: { ids: this.product.productId } });
+    } else {
+      this.router.navigate(['/products/compare']);
+    }
   }
-  this.router.navigate(['/compare']);
-}
-  // interested(): void {
-  //   alert(
-  //     'Thank you for your interest. Our team will contact you soon.'
-  //   );
-  // }
 
-  
   interested(): void {
-  // Track the event
-  if (this.product) {
-    this.visitorTrackingService.trackActivity(
-      'INTEREST_CLICK',
-      this.product.productId,
-      { source: 'product_page' }
-    );
-    // Open the contact form with pre-selected product
-    this.contactService.openContactForm(this.product.productId);
+    if (this.product) {
+      this.visitorTrackingService.trackActivity(
+        'INTEREST_CLICK',
+        this.product.productId,
+        { source: 'product_page' }
+      );
+      this.contactService.openContactForm(this.product.productId);
+    }
   }
-}
-
 }
