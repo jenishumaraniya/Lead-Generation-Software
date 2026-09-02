@@ -157,10 +157,38 @@
     <table class="data-table">
       <thead>
         <tr>
-          <th>Product Name</th>
-          <th>Category</th>
-          <th>Starting Price</th>
-          <th>Status</th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'name'" (click)="toggleSort('name')">
+            Product Name
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'name' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'name' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'name'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'category'" (click)="toggleSort('category')">
+            Category
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'category' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'category' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'category'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'pricing'" (click)="toggleSort('pricing')">
+            Starting Price
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'pricing' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'pricing' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'pricing'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'status'" (click)="toggleSort('status')">
+            Status
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'status' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'status' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'status'">↕</span>
+            </span>
+          </th>
           <th class="text-right">Actions</th>
         </tr>
       </thead>

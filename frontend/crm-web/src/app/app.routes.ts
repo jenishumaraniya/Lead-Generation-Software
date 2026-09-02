@@ -1,43 +1,6 @@
-// import { Routes } from '@angular/router'; 
-
-// export const routes: Routes = [ 
-//   { 
-//     path: '', 
-//     loadComponent: () => 
-//       import('./public/home/home.component') 
-//         .then(m => m.HomeComponent) 
-//   }, 
-//   { 
-//     path: 'products', 
-//     loadComponent: () => 
-//       import('./public/products/product-list/product-list.component') 
-//         .then(m => m.ProductListComponent) 
-//   },
-//   {
-//     path: 'products/:id',
-//     loadComponent: () =>
-//       import('./public/products/product-details/product-details.component')
-//         .then(m => m.ProductDetailsComponent)
-//   },
-//   {
-//     path: 'compare',
-//     loadComponent: () =>
-//       import('./public/products/compare/compare.component')
-//         .then(m => m.CompareComponent)
-//   },
-//   { 
-//     path: 'admin', 
-//     loadChildren: () => 
-//       import('../admin/admin.routes') 
-//         .then(m => m.ADMIN_ROUTES) 
-//   },
-//   { path: '**', redirectTo: '' }
-// ];
-
 import { Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
 import { LoginComponent } from './public/pages/login/login.component';
-// import { LoginComponent } from './pages/login/login.component';
 
 export const routes: Routes = [
   // =============================================
@@ -61,16 +24,32 @@ export const routes: Routes = [
       import('./public/products/product-details/product-details.component')
         .then(m => m.ProductDetailsComponent)
   },
+
+  // =============================================
+  // LEGAL & COMPLIANCE PAGES
+  // =============================================
   {
-    path: 'products/compare',
+    path: 'privacy-policy',
     loadComponent: () =>
-      import('./public/products/compare/compare.component')
-        .then(m => m.CompareComponent)
+      import('./public/pages/legal/privacy-policy/privacy-policy.component')
+        .then(m => m.PrivacyPolicyComponent)
   },
   {
-    path: 'compare',
-    redirectTo: 'products/compare',
+    path: 'terms-and-conditions',
+    loadComponent: () =>
+      import('./public/pages/legal/terms-and-conditions/terms-and-conditions.component')
+        .then(m => m.TermsAndConditionsComponent)
+  },
+  {
+    path: 'terms',
+    redirectTo: 'terms-and-conditions',
     pathMatch: 'full'
+  },
+  {
+    path: 'security-compliance',
+    loadComponent: () =>
+      import('./public/pages/legal/security-compliance/security-compliance.component')
+        .then(m => m.SecurityComplianceComponent)
   },
 
   // =============================================
@@ -80,6 +59,8 @@ export const routes: Routes = [
   { path: 'admin/login', redirectTo: 'login', pathMatch: 'full' },
   { path: 'sales/login', redirectTo: 'login', pathMatch: 'full' },
   { path: 'pricing', redirectTo: 'products', pathMatch: 'full' },
+  { path: 'compare', redirectTo: 'products', pathMatch: 'full' },
+  { path: 'products/compare', redirectTo: 'products', pathMatch: 'full' },
 
   // =============================================
   // ADMIN ROUTES (protected)
@@ -116,12 +97,12 @@ export const routes: Routes = [
           import('./public/pages/admin/campaigns/campaign-list/campaign-list.component')
             .then(m => m.CampaignListComponent) 
       },
-        { 
-          path: 'campaigns/new', 
-          loadComponent: () => 
-            import('./public/pages/admin/campaigns/campaign-form/campaign-form.component')
-              .then(m => m.CampaignFormComponent) 
-        },
+      { 
+        path: 'campaigns/new', 
+        loadComponent: () => 
+          import('./public/pages/admin/campaigns/campaign-form/campaign-form.component')
+            .then(m => m.CampaignFormComponent) 
+      },
       { 
         path: 'campaigns/:id', 
         loadComponent: () => 

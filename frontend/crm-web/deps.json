@@ -1,0 +1,282 @@
+{
+  "admin/admin-layout/admin-layout.component.ts": [
+    "app/core/services/auth.service.ts"
+  ],
+  "admin/admin.routes.ts": [
+    "admin/admin-layout/admin-layout.component.ts",
+    "admin/audit-logs/audit-logs.component.ts",
+    "admin/auth/login.component.ts",
+    "admin/campaigns/campaign-hub.component.ts",
+    "admin/categories/category-management.component.ts",
+    "admin/dashboard/dashboard.component.ts",
+    "admin/handoff/handoff-hub.component.ts",
+    "admin/leads/lead-pipeline.component.ts",
+    "admin/products/product-management.component.ts",
+    "admin/prospects/prospect-hub.component.ts",
+    "admin/scoring/scoring-hub.component.ts",
+    "admin/users/user-management.component.ts",
+    "app/core/guards/auth.guard.ts",
+    "app/core/guards/role.guard.ts"
+  ],
+  "admin/audit-logs/audit-logs.component.ts": [
+    "app/core/services/admin-api.services.ts"
+  ],
+  "admin/auth/login.component.ts": [
+    "app/core/services/auth.service.ts"
+  ],
+  "admin/campaigns/campaign-hub.component.ts": [
+    "app/core/services/admin-api.services.ts"
+  ],
+  "admin/categories/category-management.component.ts": [
+    "app/core/services/admin-api.services.ts",
+    "app/core/services/auth.service.ts"
+  ],
+  "admin/dashboard/dashboard.component.ts": [
+    "app/core/services/admin-api.services.ts"
+  ],
+  "admin/handoff/handoff-hub.component.ts": [
+    "app/core/services/admin-api.services.ts"
+  ],
+  "admin/leads/lead-pipeline.component.ts": [
+    "app/core/services/admin-api.services.ts"
+  ],
+  "admin/products/product-management.component.ts": [
+    "app/core/services/admin-api.services.ts",
+    "app/core/services/auth.service.ts"
+  ],
+  "admin/prospects/prospect-hub.component.ts": [
+    "app/core/services/admin-api.services.ts"
+  ],
+  "admin/scoring/scoring-hub.component.ts": [
+    "app/core/services/admin-api.services.ts"
+  ],
+  "admin/users/user-management.component.ts": [
+    "app/core/services/admin-api.services.ts",
+    "app/core/services/auth.service.ts"
+  ],
+  "app/app.component.spec.ts": [
+    "app/app.component.ts"
+  ],
+  "app/app.component.ts": [
+    "app/components/contact-form/contact-form.component.ts",
+    "app/components/floating-contact-button/floating-contact-button.component.ts",
+    "app/core/services/contact.service.ts",
+    "app/core/services/visitor-tracking.service.ts"
+  ],
+  "app/app.config.ts": [
+    "app/app.routes.ts",
+    "app/core/interceptors/jwt.interceptor.ts"
+  ],
+  "app/app.routes.ts": [
+    "app/core/guards/auth.guard.ts",
+    "app/public/home/home.component.ts",
+    "app/public/layouts/admin-layout/admin-layout.component.ts",
+    "app/public/layouts/sales-layout/sales-layout.component.ts",
+    "app/public/pages/admin/campaigns/campaign-form/campaign-form.component.ts",
+    "app/public/pages/admin/campaigns/campaign-list/campaign-list.component.ts",
+    "app/public/pages/admin/categories/category-list/category-list.component.ts",
+    "app/public/pages/admin/dashboard/dashboard.component.ts",
+    "app/public/pages/admin/leads/lead-detail/lead-detail.component.ts",
+    "app/public/pages/admin/leads/lead-list/lead-list.component.ts",
+    "app/public/pages/admin/products/product-list/product-list.component.ts",
+    "app/public/pages/admin/rules/rule-list/rule-list.component.ts",
+    "app/public/pages/admin/salespersons/salesperson-list/salesperson-list.component.ts",
+    "app/public/pages/login/login.component.ts",
+    "app/public/pages/sales/dashboard/dashboard.component.ts",
+    "app/public/pages/sales/leads/lead-detail/lead-detail.component.ts",
+    "app/public/pages/sales/leads/sales-lead-list/sales-lead-list.component.ts",
+    "app/public/products/compare/compare.component.ts",
+    "app/public/products/product-details/product-details.component.ts",
+    "app/public/products/product-list/product-list.component.ts"
+  ],
+  "app/components/contact-form/contact-form.component.spec.ts": [
+    "app/components/contact-form/contact-form.component.ts"
+  ],
+  "app/components/contact-form/contact-form.component.ts": [
+    "app/core/models/product.model.ts",
+    "app/core/services/api.service.ts",
+    "app/core/services/visitor-tracking.service.ts"
+  ],
+  "app/components/floating-contact-button/floating-contact-button.component.spec.ts": [
+    "app/components/floating-contact-button/floating-contact-button.component.ts"
+  ],
+  "app/components/floating-contact-button/floating-contact-button.component.ts": [],
+  "app/core/guards/auth.guard.ts": [
+    "app/core/services/auth.service.ts"
+  ],
+  "app/core/guards/role.guard.ts": [
+    "app/core/services/auth.service.ts"
+  ],
+  "app/core/interceptors/auth.interceptor.ts": [
+    "app/core/services/auth.service.ts"
+  ],
+  "app/core/interceptors/jwt.interceptor.ts": [
+    "app/core/services/auth.service.ts"
+  ],
+  "app/core/models/activity.model.ts": [],
+  "app/core/models/auth-response.model.ts": [],
+  "app/core/models/category.model.ts": [],
+  "app/core/models/product.model.ts": [],
+  "app/core/models/user.model.ts": [],
+  "app/core/models/visitor.model.ts": [],
+  "app/core/services/admin-api.services.ts": [],
+  "app/core/services/ai.service.spec.ts": [
+    "app/core/services/ai.service.ts"
+  ],
+  "app/core/services/ai.service.ts": [],
+  "app/core/services/api.service.ts": [
+    "app/core/models/product.model.ts"
+  ],
+  "app/core/services/auth.service.ts": [],
+  "app/core/services/campaign.service.ts": [],
+  "app/core/services/category.service.ts": [
+    "app/core/models/category.model.ts"
+  ],
+  "app/core/services/contact.service.ts": [],
+  "app/core/services/employee.service.ts": [],
+  "app/core/services/lead.service.ts": [],
+  "app/core/services/product.service.ts": [],
+  "app/core/services/rule.service.ts": [],
+  "app/core/services/visitor-tracking.service.ts": [
+    "app/core/services/api.service.ts"
+  ],
+  "app/public/home/home.component.spec.ts": [
+    "app/public/home/home.component.ts"
+  ],
+  "app/public/home/home.component.ts": [
+    "app/core/services/api.service.ts"
+  ],
+  "app/public/layouts/admin-layout/admin-layout.component.spec.ts": [
+    "app/public/layouts/admin-layout/admin-layout.component.ts"
+  ],
+  "app/public/layouts/admin-layout/admin-layout.component.ts": [
+    "app/core/services/auth.service.ts"
+  ],
+  "app/public/layouts/sales-layout/sales-layout.component.spec.ts": [
+    "app/public/layouts/sales-layout/sales-layout.component.ts"
+  ],
+  "app/public/layouts/sales-layout/sales-layout.component.ts": [
+    "app/core/services/auth.service.ts"
+  ],
+  "app/public/pages/admin/campaigns/campaign-form/campaign-form.component.spec.ts": [
+    "app/public/pages/admin/campaigns/campaign-form/campaign-form.component.ts"
+  ],
+  "app/public/pages/admin/campaigns/campaign-form/campaign-form.component.ts": [
+    "app/core/services/campaign.service.ts"
+  ],
+  "app/public/pages/admin/campaigns/campaign-list/campaign-list.component.spec.ts": [
+    "app/public/pages/admin/campaigns/campaign-list/campaign-list.component.ts"
+  ],
+  "app/public/pages/admin/campaigns/campaign-list/campaign-list.component.ts": [
+    "app/core/services/campaign.service.ts"
+  ],
+  "app/public/pages/admin/categories/category-list/category-list.component.spec.ts": [
+    "app/public/pages/admin/categories/category-list/category-list.component.ts"
+  ],
+  "app/public/pages/admin/categories/category-list/category-list.component.ts": [
+    "app/core/models/category.model.ts",
+    "app/core/services/category.service.ts",
+    "app/core/services/employee.service.ts"
+  ],
+  "app/public/pages/admin/dashboard/dashboard.component.spec.ts": [
+    "app/public/pages/admin/dashboard/dashboard.component.ts"
+  ],
+  "app/public/pages/admin/dashboard/dashboard.component.ts": [
+    "app/core/services/campaign.service.ts",
+    "app/core/services/category.service.ts",
+    "app/core/services/employee.service.ts",
+    "app/core/services/lead.service.ts"
+  ],
+  "app/public/pages/admin/leads/lead-detail/lead-detail.component.spec.ts": [
+    "app/public/pages/admin/leads/lead-detail/lead-detail.component.ts"
+  ],
+  "app/public/pages/admin/leads/lead-detail/lead-detail.component.ts": [
+    "app/core/services/ai.service.ts",
+    "app/core/services/employee.service.ts",
+    "app/core/services/lead.service.ts"
+  ],
+  "app/public/pages/admin/leads/lead-list/lead-list.component.spec.ts": [
+    "app/public/pages/admin/leads/lead-list/lead-list.component.ts"
+  ],
+  "app/public/pages/admin/leads/lead-list/lead-list.component.ts": [
+    "app/core/services/employee.service.ts",
+    "app/core/services/lead.service.ts"
+  ],
+  "app/public/pages/admin/products/product-list/product-list.component.spec.ts": [
+    "app/public/pages/admin/products/product-list/product-list.component.ts"
+  ],
+  "app/public/pages/admin/products/product-list/product-list.component.ts": [
+    "app/core/services/category.service.ts",
+    "app/core/services/product.service.ts"
+  ],
+  "app/public/pages/admin/rules/rule-list/rule-list.component.ts": [
+    "app/core/services/rule.service.ts"
+  ],
+  "app/public/pages/admin/salespersons/salesperson-list/salesperson-list.component.spec.ts": [
+    "app/public/pages/admin/salespersons/salesperson-list/salesperson-list.component.ts"
+  ],
+  "app/public/pages/admin/salespersons/salesperson-list/salesperson-list.component.ts": [
+    "app/core/services/category.service.ts",
+    "app/core/services/employee.service.ts"
+  ],
+  "app/public/pages/login/login.component.spec.ts": [
+    "app/public/pages/login/login.component.ts"
+  ],
+  "app/public/pages/login/login.component.ts": [
+    "app/core/services/auth.service.ts"
+  ],
+  "app/public/pages/sales/dashboard/dashboard.component.spec.ts": [
+    "app/public/pages/sales/dashboard/dashboard.component.ts"
+  ],
+  "app/public/pages/sales/dashboard/dashboard.component.ts": [
+    "app/core/services/auth.service.ts",
+    "app/core/services/lead.service.ts"
+  ],
+  "app/public/pages/sales/leads/lead-detail/lead-detail.component.spec.ts": [
+    "app/public/pages/sales/leads/lead-detail/lead-detail.component.ts"
+  ],
+  "app/public/pages/sales/leads/lead-detail/lead-detail.component.ts": [
+    "app/core/services/lead.service.ts"
+  ],
+  "app/public/pages/sales/leads/sales-lead-list/sales-lead-list.component.spec.ts": [
+    "app/public/pages/sales/leads/sales-lead-list/sales-lead-list.component.ts"
+  ],
+  "app/public/pages/sales/leads/sales-lead-list/sales-lead-list.component.ts": [
+    "app/core/services/auth.service.ts",
+    "app/core/services/lead.service.ts"
+  ],
+  "app/public/pages/sales/leads/sales/sales.component.spec.ts": [
+    "app/public/pages/sales/leads/sales/sales.component.ts"
+  ],
+  "app/public/pages/sales/leads/sales/sales.component.ts": [],
+  "app/public/pricing/pricing.component.spec.ts": [
+    "app/public/pricing/pricing.component.ts"
+  ],
+  "app/public/pricing/pricing.component.ts": [],
+  "app/public/products/compare/compare.component.spec.ts": [
+    "app/public/products/compare/compare.component.ts"
+  ],
+  "app/public/products/compare/compare.component.ts": [],
+  "app/public/products/product-details/product-details.component.spec.ts": [
+    "app/public/products/product-details/product-details.component.ts"
+  ],
+  "app/public/products/product-details/product-details.component.ts": [
+    "app/core/models/product.model.ts",
+    "app/core/services/api.service.ts",
+    "app/core/services/contact.service.ts",
+    "app/core/services/visitor-tracking.service.ts"
+  ],
+  "app/public/products/product-list/product-list.component.spec.ts": [
+    "app/public/products/product-list/product-list.component.ts"
+  ],
+  "app/public/products/product-list/product-list.component.ts": [
+    "app/core/models/product.model.ts",
+    "app/core/services/api.service.ts",
+    "app/core/services/contact.service.ts",
+    "app/core/services/visitor-tracking.service.ts"
+  ],
+  "main.ts": [
+    "app/app.component.ts",
+    "app/app.config.ts"
+  ]
+}

@@ -25,6 +25,9 @@ export class RuleListComponent implements OnInit {
   categoryFilter = '';
   statusFilter = '';
 
+  sortColumn: string = 'name';
+  sortDirection: 'asc' | 'desc' = 'asc';
+
   // Stats
   totalRulesCount = 0;
   activeRulesCount = 0;
@@ -106,7 +109,7 @@ export class RuleListComponent implements OnInit {
   }
 
   applyFilter(): void {
-    this.filteredRules = this.rules.filter((rule) => {
+    let list = this.rules.filter((rule) => {
       const matchesSearch =
         !this.searchQuery ||
         rule.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
@@ -125,6 +128,37 @@ export class RuleListComponent implements OnInit {
 
       return matchesSearch && matchesCat && matchesStatus;
     });
+
+    if (this.sortColumn) {
+      list.sort((a: any, b: any) => {
+        let valA = a[this.sortColumn];
+        let valB = b[this.sortColumn];
+
+        if (valA == null) valA = '';
+        if (valB == null) valB = '';
+
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        let comparison = 0;
+        if (valA > valB) comparison = 1;
+        else if (valA < valB) comparison = -1;
+
+        return this.sortDirection === 'asc' ? comparison : -comparison;
+      });
+    }
+
+    this.filteredRules = list;
+  }
+
+  toggleSort(column: string): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applyFilter();
   }
 
   openCreateModal(): void {

@@ -157,7 +157,10 @@ export class CampaignFormComponent implements OnInit {
     );
   }
 
+  hasDownloadedTemplate = false;
+
   downloadTemplate(): void {
+    this.hasDownloadedTemplate = true;
     window.open(this.campaignService.downloadCsvTemplateUrl(), '_blank');
   }
 
@@ -192,27 +195,43 @@ export class CampaignFormComponent implements OnInit {
   }
 
   onSubmit(): void {
-    console.log('=== onSubmit called ===');
-    console.log('Form valid?', this.form.valid);
-    console.log('Form value:', this.form.value);
-
     if (this.form.invalid) {
-      console.warn('Form is invalid – returning.');
+      alert('Please fill out all required fields marked with *');
       return;
     }
 
-    this.saving = true;
     const formVal = this.form.value;
+    const now = new Date();
+
+    if (formVal.scheduleStartDate) {
+      const startDate = new Date(formVal.scheduleStartDate);
+      // Allow up to 2 minutes grace period for current time selection
+      if (startDate.getTime() < now.getTime() - 120000 && !this.isEdit) {
+        alert('Scheduled Start Date cannot be in the past. Please select a valid future date and time.');
+        return;
+      }
+    }
+
+    if (formVal.scheduleStartDate && formVal.scheduleEndDate) {
+      const startDate = new Date(formVal.scheduleStartDate);
+      const endDate = new Date(formVal.scheduleEndDate);
+      if (endDate <= startDate) {
+        alert('Scheduled End Date must be strictly after the Scheduled Start Date.');
+        return;
+      }
+    }
+
+    this.saving = true;
 
     const payload = {
       name: formVal.name?.trim(),
       description: formVal.description?.trim() || null,
       status: formVal.status || 'ACTIVE',
       scheduleStartDate: formVal.scheduleStartDate
-        ? new Date(formVal.scheduleStartDate).toISOString()
+        ? formVal.scheduleStartDate
         : null,
       scheduleEndDate: formVal.scheduleEndDate
-        ? new Date(formVal.scheduleEndDate).toISOString()
+        ? formVal.scheduleEndDate
         : null,
       steps: [
         {
@@ -228,7 +247,7 @@ export class CampaignFormComponent implements OnInit {
           delayHours: 0,
         },
       ],
-      prospectIds: Array.from(this.selectedProspectIds), // <-- CRITICAL: send all selected IDs
+      prospectIds: Array.from(this.selectedProspectIds),
     };
 
     console.log('🔸 Payload:', payload);

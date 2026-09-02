@@ -10,10 +10,19 @@
         type="text" 
         [(ngModel)]="searchTerm" 
         (input)="applyFilters()" 
-        placeholder="Search by name, company, or email..."
+        placeholder="Search by name, company, email, or rep..."
         class="search-input"
       />
 
+      <!-- Sales Representative Filter -->
+      <select [(ngModel)]="salespersonFilter" (change)="applyFilters()" class="filter-select">
+        <option value="">All Representatives</option>
+        <option *ngFor="let emp of employees" [ngValue]="emp.userId">
+          {{ emp.fullName }} ({{ emp.categoryName || 'General' }})
+        </option>
+      </select>
+
+      <!-- Routing Type Filter -->
       <select [(ngModel)]="assignmentFilter" (change)="applyFilters()" class="filter-select">
         <option value="">All Routing Types</option>
         <option value="AUTO_ASSIGNED">Auto-Assigned (Single Category)</option>
@@ -21,6 +30,7 @@
         <option value="UNASSIGNED">Unassigned Leads</option>
       </select>
 
+      <!-- Status Filter -->
       <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="filter-select">
         <option value="">All Statuses</option>
         <option value="NEW">NEW</option>
@@ -40,12 +50,54 @@
     <table class="data-table">
       <thead>
         <tr>
-          <th>Lead / Contact</th>
-          <th>Organization & Categories</th>
-          <th>Score</th>
-          <th>Status</th>
-          <th>Assigned Representative</th>
-          <th>Next Follow-up</th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'fullName'" (click)="toggleSort('fullName')">
+            Lead / Contact
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'fullName' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'fullName' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'fullName'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'companyName'" (click)="toggleSort('companyName')">
+            Organization & Categories
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'companyName' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'companyName' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'companyName'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'score'" (click)="toggleSort('score')">
+            Score
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'score' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'score' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'score'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'status'" (click)="toggleSort('status')">
+            Status
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'status' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'status' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'status'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'assignedSalespersonName'" (click)="toggleSort('assignedSalespersonName')">
+            Assigned Representative
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'assignedSalespersonName' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'assignedSalespersonName' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'assignedSalespersonName'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'nextFollowUpDate'" (click)="toggleSort('nextFollowUpDate')">
+            Next Follow-up
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'nextFollowUpDate' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'nextFollowUpDate' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'nextFollowUpDate'">↕</span>
+            </span>
+          </th>
           <th class="text-right">Actions</th>
         </tr>
       </thead>

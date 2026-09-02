@@ -5,6 +5,7 @@
       <h1 class="lead-title">{{ lead.fullName }}</h1>
       <span class="status-pill" [class]="lead.status">{{ lead.status }}</span>
       <span class="score-pill">{{ lead.score || 0 }} pts</span>
+      <span class="multi-pill" *ngIf="lead.isMultiCategory">Multi-Category Request</span>
     </div>
   </div>
 
@@ -35,12 +36,20 @@
             <div class="val">{{ lead.phone || '—' }}</div>
           </div>
           <div class="info-item">
+            <label>Domain</label>
+            <div class="val">{{ lead.domain || '—' }}</div>
+          </div>
+          <div class="info-item">
             <label>Industry</label>
             <div class="val">{{ lead.industry || 'General' }}</div>
           </div>
           <div class="info-item">
             <label>Country / Location</label>
             <div class="val">{{ lead.country || 'Global' }}</div>
+          </div>
+          <div class="info-item">
+            <label>Acquisition Source</label>
+            <div class="val">{{ lead.source || 'Website Inquiry' }}</div>
           </div>
         </div>
       </div>
@@ -50,7 +59,7 @@
         <p class="requirement-box">{{ lead.businessRequirement }}</p>
         <div class="meta-row" *ngIf="lead.timeline || lead.quantity">
           <span *ngIf="lead.timeline"><strong>Timeline:</strong> {{ lead.timeline }}</span>
-          <span *ngIf="lead.quantity"><strong>Units:</strong> {{ lead.quantity }}</span>
+          <span *ngIf="lead.quantity"><strong>Units Requested:</strong> {{ lead.quantity }}</span>
         </div>
       </div>
 
@@ -116,7 +125,7 @@
       </div>
     </div>
 
-    <!-- Right Column: Status & Follow-up Actions -->
+    <!-- Right Column: Status, Scoring & AI Intelligence -->
     <div class="side-column">
       <div class="card action-card">
         <h2 class="card-title">Status & Pipeline Action</h2>
@@ -167,10 +176,11 @@
         </button>
       </div>
 
-      <div class="card score-card" *ngIf="lead.scoreHistories && lead.scoreHistories.length">
+      <!-- Scoring Attribution -->
+      <div class="card score-card" *ngIf="scoreHistories && scoreHistories.length">
         <h2 class="card-title">Scoring Attribution</h2>
         <div class="score-list">
-          <div class="score-item" *ngFor="let sh of lead.scoreHistories">
+          <div class="score-item" *ngFor="let sh of scoreHistories">
             <span class="score-delta">+{{ sh.delta }}</span>
             <div class="score-details">
               <strong>{{ sh.ruleName }}</strong>
@@ -179,6 +189,125 @@
           </div>
         </div>
       </div>
+
+      <!-- ======================== -->
+      <!-- AI LEAD INTELLIGENCE CARD -->
+      <!-- ======================== -->
+      <div class="card ai-card">
+        <h2 class="card-title">🤖 AI Lead Intelligence & ARI Enrichment</h2>
+
+        <button
+          (click)="triggerAnalysis()"
+          [disabled]="aiLoading"
+          class="btn-primary full-width-btn"
+        >
+          {{ aiLoading ? "Analyzing..." : "Run AI Analysis" }}
+        </button>
+
+        <div *ngIf="aiLoading" class="ai-loading">
+          ⏳ Processing lead with AI... (may take a few seconds)
+        </div>
+
+        <div *ngIf="aiError" class="ai-error">
+          {{ aiError }}
+        </div>
+
+        <!-- Show existing analysis -->
+        <div *ngIf="analysis && !aiLoading" class="ai-result">
+          <div class="ai-summary">
+            <p>
+              <strong>Intent:</strong>
+              {{ analysis.analysis?.intent || analysis.intent }}
+            </p>
+            <p>
+              <strong>Confidence:</strong>
+              {{
+                analysis.analysis?.confidenceScore || analysis.confidenceScore
+              }}%
+            </p>
+            <p>
+              <strong>Priority:</strong>
+              {{
+                analysis.analysis?.priorityRecommendation ||
+                  analysis.priorityRecommendation
+              }}
+            </p>
+            <p>
+              <strong>Summary:</strong>
+              {{ analysis.analysis?.leadSummary || analysis.leadSummary }}
+            </p>
+            <p>
+              <strong>Recommended Next Action:</strong>
+              {{
+                analysis.analysis?.recommendedNextAction ||
+                  analysis.recommendedNextAction
+              }}
+            </p>
+          </div>
+
+          <div
+            *ngIf="analysis.profile || analysis.professionalSummary"
+            class="ai-profile"
+          >
+            <h4>📌 Enriched Profile</h4>
+            <p>
+              {{
+                analysis.profile?.professionalSummary ||
+                  analysis.professionalSummary
+              }}
+            </p>
+            <p>
+              <strong>Industry:</strong>
+              {{ analysis.profile?.likelyIndustry || analysis.likelyIndustry }}
+            </p>
+            <p>
+              <strong>Company Size:</strong>
+              {{ analysis.profile?.companySize || analysis.companySize }}
+            </p>
+            <p>
+              <strong>Location:</strong>
+              {{ analysis.profile?.likelyLocation || analysis.likelyLocation }}
+            </p>
+            <p>
+              <strong>Role:</strong>
+              {{ analysis.profile?.potentialRole || analysis.potentialRole }}
+            </p>
+          </div>
+
+          <div
+            *ngIf="
+              analysis.analysis?.insights?.length || analysis.insights?.length
+            "
+            class="ai-insights"
+          >
+            <h4>💡 Insights</h4>
+            <ul>
+              <li
+                *ngFor="
+                  let insight of analysis.analysis?.insights ||
+                    analysis.insights
+                "
+              >
+                <strong>{{ insight.insightType }}</strong
+                >: {{ insight.insightText }}
+                <span *ngIf="insight.confidenceScore">
+                  ({{ insight.confidenceScore }}% confidence)</span
+                >
+              </li>
+            </ul>
+          </div>
+
+          <small class="ai-date">
+            Analysis date:
+            {{ analysis.analyzedAt || analysis.analysisDate | date: "medium" }}
+          </small>
+        </div>
+
+        <div *ngIf="!analysisExists && !aiLoading && !aiError" class="ai-empty">
+          No AI analysis found. Click the button to generate one.
+        </div>
+      </div>
+      <!-- END AI CARD -->
     </div>
   </div>
 </div>

@@ -1,9 +1,11 @@
 import { Component, EventEmitter, Input, Output, OnInit, ElementRef, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../core/services/api.service';
 import { Product } from '../../core/models/product.model';
 import { VisitorTrackingService } from '../../core/services/visitor-tracking.service';
+import { COUNTRY_DATA, CountryCodeItem } from './country-data';
 
 export interface ContactFormData {
   companyName: string;
@@ -39,8 +41,13 @@ export class ContactFormComponent implements OnInit {
   @ViewChild('dropdownContainer') dropdownContainer!: ElementRef;
 
   availableProducts: Product[] = [];
+  countries: CountryCodeItem[] = COUNTRY_DATA;
+  selectedCountry: CountryCodeItem = COUNTRY_DATA[0]; // Default India (+91)
+  phoneLocalNumber = '';
+
   isLoading = false;
   isDropdownOpen = false;
+  isCountryDropdownOpen = false;
   submitError = '';
   searchQuery = '';
 
@@ -51,7 +58,7 @@ export class ContactFormComponent implements OnInit {
     jobTitle: '',
     domain: '',
     industry: '',
-    country: '',
+    country: 'India',
     phone: '',
     products: [],
     quantity: null,
@@ -71,12 +78,113 @@ export class ContactFormComponent implements OnInit {
   formErrors: any = {};
 
   constructor(
+    private http: HttpClient,
     private apiService: ApiService,
     private visitorTrackingService: VisitorTrackingService
   ) {}
 
   ngOnInit(): void {
     this.loadProducts();
+    this.detectUserCountry();
+  }
+
+  private detectUserCountry(): void {
+    // 1. Primary: Use free external IP geolocation API
+    this.http.get<any>('https://ipapi.co/json/').subscribe({
+      next: (res) => {
+        if (res && res.country_code) {
+          const matched = this.countries.find(
+            c => c.code.toUpperCase() === res.country_code.toUpperCase() ||
+                 (res.country_calling_code && c.dialCode === res.country_calling_code)
+          );
+          if (matched) {
+            this.selectedCountry = matched;
+            this.formData.country = matched.name === 'Other / International' ? res.country_name || '' : matched.name;
+          } else if (res.country_name) {
+            const dynamicItem: CountryCodeItem = {
+              name: res.country_name,
+              code: res.country_code,
+              dialCode: res.country_calling_code || '+',
+              flag: '🌐',
+              patternLength: 10
+            };
+            this.countries.unshift(dynamicItem);
+            this.selectedCountry = dynamicItem;
+            this.formData.country = res.country_name;
+          }
+          this.updateFullPhoneNumber();
+        }
+      },
+      error: () => {
+        // 2. Secondary Fallback: Browser timezone detection
+        try {
+          const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+          if (timezone.includes('Calcutta') || timezone.includes('Kolkata') || timezone.includes('Asia/Colombo')) {
+            this.selectCountryByCode('IN');
+          } else if (timezone.includes('New_York') || timezone.includes('Chicago') || timezone.includes('Los_Angeles') || timezone.includes('America')) {
+            this.selectCountryByCode('US');
+          } else if (timezone.includes('London') || timezone.includes('Europe/London')) {
+            this.selectCountryByCode('GB');
+          } else if (timezone.includes('Dubai')) {
+            this.selectCountryByCode('AE');
+          } else if (timezone.includes('Singapore')) {
+            this.selectCountryByCode('SG');
+          }
+        } catch {
+          // Default India
+        }
+      }
+    });
+  }
+
+  selectCountryByCode(code: string): void {
+    const found = this.countries.find(c => c.code === code);
+    if (found) {
+      this.selectedCountry = found;
+      this.formData.country = found.name === 'Other / International' ? '' : found.name;
+      this.updateFullPhoneNumber();
+    }
+  }
+
+  onCountryChange(): void {
+    const found = this.countries.find(c => c.name.toLowerCase() === (this.formData.country || '').toLowerCase());
+    if (found) {
+      this.selectedCountry = found;
+    }
+    this.updateFullPhoneNumber();
+    this.validateField('country');
+    this.validateField('phone');
+  }
+
+  onCountryCodeSelect(country: CountryCodeItem): void {
+    this.selectedCountry = country;
+    if (country.code !== 'OTHER') {
+      this.formData.country = country.name;
+    }
+    this.isCountryDropdownOpen = false;
+    this.updateFullPhoneNumber();
+    this.validateField('country');
+    this.validateField('phone');
+  }
+
+  onPhoneInput(): void {
+    // Only allow digits, spaces, and hyphens in local input
+    this.phoneLocalNumber = this.phoneLocalNumber.replace(/[^\d\s-]/g, '');
+    this.updateFullPhoneNumber();
+    this.validateField('phone');
+  }
+
+  private updateFullPhoneNumber(): void {
+    const rawLocal = this.phoneLocalNumber.replace(/\D/g, '');
+    if (rawLocal) {
+      if (this.selectedCountry.dialCode === '+') {
+        this.formData.phone = '+' + rawLocal;
+      } else {
+        this.formData.phone = `${this.selectedCountry.dialCode} ${rawLocal}`;
+      }
+    } else {
+      this.formData.phone = '';
+    }
   }
 
   private loadProducts(): void {
@@ -97,10 +205,18 @@ export class ContactFormComponent implements OnInit {
   toggleDropdown(event: Event): void {
     event.stopPropagation();
     this.isDropdownOpen = !this.isDropdownOpen;
+    this.isCountryDropdownOpen = false;
+  }
+
+  toggleCountryDropdown(event: Event): void {
+    event.stopPropagation();
+    this.isCountryDropdownOpen = !this.isCountryDropdownOpen;
+    this.isDropdownOpen = false;
   }
 
   closeDropdown(): void {
     this.isDropdownOpen = false;
+    this.isCountryDropdownOpen = false;
   }
 
   get filteredProducts(): Product[] {
@@ -147,9 +263,9 @@ export class ContactFormComponent implements OnInit {
     const index = this.formData.products.indexOf(productId);
     if (index > -1) {
       this.formData.products.splice(index, 1);
-      this.updateSelectedProductNames();
-      this.validateField('products');
     }
+    this.updateSelectedProductNames();
+    this.validateField('products');
   }
 
   clearAllProducts(event: Event): void {
@@ -163,61 +279,102 @@ export class ContactFormComponent implements OnInit {
     const value = this.getFieldValue(fieldName);
     switch(fieldName) {
       case 'companyName':
-        this.formErrors.companyName = !value ? 'Company name is required' : '';
+        if (!value || !value.trim()) {
+          this.formErrors.companyName = 'Company name is required';
+        } else if (value.trim().length < 2) {
+          this.formErrors.companyName = 'Company name must be at least 2 characters';
+        } else {
+          this.formErrors.companyName = '';
+        }
         break;
+
       case 'fullName':
-        this.formErrors.fullName = !value ? 'Full name is required' : '';
+        if (!value || !value.trim()) {
+          this.formErrors.fullName = 'Full name is required';
+        } else if (value.trim().length < 2) {
+          this.formErrors.fullName = 'Please enter a valid full name';
+        } else {
+          this.formErrors.fullName = '';
+        }
         break;
+
       case 'email':
-        if (!value) {
-          this.formErrors.email = 'Email is required';
-        } else if (!this.isValidEmail(value)) {
-          this.formErrors.email = 'Please enter a valid email address';
+        if (!value || !value.trim()) {
+          this.formErrors.email = 'Email address is required';
+        } else if (!this.isValidEmail(value.trim())) {
+          this.formErrors.email = 'Please enter a valid business email address (e.g. name@company.com)';
         } else {
           this.formErrors.email = '';
         }
         break;
+
       case 'jobTitle':
-        this.formErrors.jobTitle = !value ? 'Job title is required' : '';
+        if (!value || !value.trim()) {
+          this.formErrors.jobTitle = 'Job title is required';
+        } else {
+          this.formErrors.jobTitle = '';
+        }
         break;
+
       case 'domain':
-        this.formErrors.domain = !value ? 'Domain is required' : '';
+        if (!value || !value.trim()) {
+          this.formErrors.domain = 'Domain is required (e.g. Technology, Finance, Healthcare)';
+        } else {
+          this.formErrors.domain = '';
+        }
         break;
+
       case 'industry':
-        this.formErrors.industry = !value ? 'Industry is required' : '';
+        if (!value || !value.trim()) {
+          this.formErrors.industry = 'Industry is required';
+        } else {
+          this.formErrors.industry = '';
+        }
         break;
+
       case 'country':
-        this.formErrors.country = !value ? 'Country is required' : '';
+        if (!value || !value.trim()) {
+          this.formErrors.country = 'Country is required';
+        } else {
+          this.formErrors.country = '';
+        }
         break;
-      case 'phone':
-        if (!value) {
+
+      case 'phone': {
+        const rawDigits = this.phoneLocalNumber.replace(/\D/g, '');
+        if (!rawDigits) {
           this.formErrors.phone = 'Phone number is required';
-        } else if (!this.isValidPhone(value)) {
-          this.formErrors.phone = 'Please enter a valid phone number';
+        } else if (rawDigits.length < 7 || rawDigits.length > 15) {
+          this.formErrors.phone = `Please enter a valid phone number (7-15 digits)`;
         } else {
           this.formErrors.phone = '';
         }
         break;
+      }
+
       case 'products':
         this.formErrors.products = this.formData.products.length === 0 ? 'Please select at least one product' : '';
         break;
+
       case 'quantity':
         if (!value) {
           this.formErrors.quantity = 'Quantity is required';
         } else if (value < 1) {
-          this.formErrors.quantity = 'Quantity must be at least 1';
+          this.formErrors.quantity = 'Quantity must be at least 1 unit';
         } else {
           this.formErrors.quantity = '';
         }
         break;
+
       case 'timeline':
-        this.formErrors.timeline = !value ? 'Please select a timeline' : '';
+        this.formErrors.timeline = !value ? 'Please specify your implementation timeline' : '';
         break;
+
       case 'businessRequirement':
-        if (!value) {
-          this.formErrors.businessRequirement = 'Business requirement is required';
-        } else if (value.length < 20) {
-          this.formErrors.businessRequirement = 'Please provide at least 20 characters';
+        if (!value || !value.trim()) {
+          this.formErrors.businessRequirement = 'Business requirement description is required';
+        } else if (value.trim().length < 20) {
+          this.formErrors.businessRequirement = `Please provide at least 20 characters (${value.trim().length}/20)`;
         } else {
           this.formErrors.businessRequirement = '';
         }
@@ -247,11 +404,6 @@ export class ContactFormComponent implements OnInit {
     return emailRegex.test(email);
   }
 
-  private isValidPhone(phone: string): boolean {
-    const phoneRegex = /^[\+\d\s\-\(\)]{10,}$/;
-    return phoneRegex.test(phone.replace(/\s/g, ''));
-  }
-
   isFormValid(): boolean {
     this.validateAllFields();
     for (const key in this.formErrors) {
@@ -259,22 +411,24 @@ export class ContactFormComponent implements OnInit {
         return false;
       }
     }
-    return !!(this.formData.companyName &&
-              this.formData.fullName &&
-              this.formData.email &&
-              this.isValidEmail(this.formData.email) &&
-              this.formData.jobTitle &&
-              this.formData.domain &&
-              this.formData.industry &&
-              this.formData.country &&
-              this.formData.phone &&
-              this.isValidPhone(this.formData.phone) &&
-              this.formData.products.length > 0 &&
-              this.formData.quantity &&
-              this.formData.quantity >= 1 &&
-              this.formData.timeline &&
-              this.formData.businessRequirement &&
-              this.formData.businessRequirement.length >= 20);
+    const rawPhoneDigits = this.phoneLocalNumber.replace(/\D/g, '');
+    return !!(
+      this.formData.companyName?.trim() &&
+      this.formData.fullName?.trim() &&
+      this.formData.email?.trim() &&
+      this.isValidEmail(this.formData.email.trim()) &&
+      this.formData.jobTitle?.trim() &&
+      this.formData.domain?.trim() &&
+      this.formData.industry?.trim() &&
+      this.formData.country?.trim() &&
+      rawPhoneDigits.length >= 7 &&
+      this.formData.products.length > 0 &&
+      this.formData.quantity &&
+      this.formData.quantity >= 1 &&
+      this.formData.timeline &&
+      this.formData.businessRequirement?.trim() &&
+      this.formData.businessRequirement.trim().length >= 20
+    );
   }
 
   private validateAllFields(): void {
@@ -291,6 +445,7 @@ export class ContactFormComponent implements OnInit {
 
   onSubmit(form: any): void {
     this.submitError = '';
+    this.updateFullPhoneNumber();
     this.validateAllFields();
 
     if (this.isFormValid()) {
@@ -310,19 +465,19 @@ export class ContactFormComponent implements OnInit {
       }
 
       const payload = {
-        companyName: this.formData.companyName,
-        fullName: this.formData.fullName,
-        email: this.formData.email,
-        jobTitle: this.formData.jobTitle,
-        domain: this.formData.domain,
-        industry: this.formData.industry,
-        country: this.formData.country,
-        phone: this.formData.phone,
+        companyName: this.formData.companyName.trim(),
+        fullName: this.formData.fullName.trim(),
+        email: this.formData.email.trim(),
+        jobTitle: this.formData.jobTitle.trim(),
+        domain: this.formData.domain.trim(),
+        industry: this.formData.industry.trim(),
+        country: this.formData.country.trim(),
+        phone: this.formData.phone.trim(),
         products: this.formData.products,
         productIds: this.formData.products,
         quantity: this.formData.quantity,
         timeline: this.formData.timeline,
-        businessRequirement: this.formData.businessRequirement,
+        businessRequirement: this.formData.businessRequirement.trim(),
         source: 'WEBSITE_FORM',
         visitorId: anonymousId
       };
@@ -349,8 +504,8 @@ export class ContactFormComponent implements OnInit {
         }
       });
     } else {
-      Object.keys(form.controls).forEach(key => {
-        form.controls[key].markAsTouched();
+      Object.keys(form.controls || {}).forEach(key => {
+        form.controls[key]?.markAsTouched();
       });
     }
   }
@@ -363,15 +518,17 @@ export class ContactFormComponent implements OnInit {
       jobTitle: '',
       domain: '',
       industry: '',
-      country: '',
+      country: 'India',
       phone: '',
       products: [],
       quantity: null,
       timeline: '',
       businessRequirement: ''
     };
+    this.phoneLocalNumber = '';
     this.selectedProductNames = 'Select products...';
     this.isDropdownOpen = false;
+    this.isCountryDropdownOpen = false;
     this.formErrors = {};
     this.submitError = '';
     this.searchQuery = '';

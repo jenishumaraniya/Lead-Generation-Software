@@ -36,11 +36,46 @@
     <table class="leads-table">
       <thead>
         <tr>
-          <th>Lead Name</th>
-          <th>Organization</th>
-          <th>Contact Information</th>
-          <th>Score</th>
-          <th>Status</th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'fullName'" (click)="toggleSort('fullName')">
+            Lead Name
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'fullName' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'fullName' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'fullName'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'companyName'" (click)="toggleSort('companyName')">
+            Organization
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'companyName' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'companyName' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'companyName'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'email'" (click)="toggleSort('email')">
+            Contact Information
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'email' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'email' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'email'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'score'" (click)="toggleSort('score')">
+            Score
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'score' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'score' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'score'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'status'" (click)="toggleSort('status')">
+            Status
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'status' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'status' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'status'">↕</span>
+            </span>
+          </th>
           <th>Update Status</th>
           <th class="text-right">Action</th>
         </tr>

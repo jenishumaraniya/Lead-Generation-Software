@@ -23,7 +23,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetProducts([FromQuery] int? categoryId = null, [FromQuery] bool includeInactive = false)
+    public async Task<IActionResult> GetProducts([FromQuery] int? categoryId = null, [FromQuery] bool includeInactive = true)
     {
         var query = _context.Products.AsQueryable();
 

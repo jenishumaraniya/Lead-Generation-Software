@@ -85,10 +85,38 @@
     <table class="data-table">
       <thead>
         <tr>
-          <th>Rule Name &amp; Event</th>
-          <th>Category</th>
-          <th>Points / Impact</th>
-          <th>Status</th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'name'" (click)="toggleSort('name')">
+            Rule Name &amp; Event
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'name' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'name' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'name'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'category'" (click)="toggleSort('category')">
+            Category
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'category' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'category' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'category'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'points'" (click)="toggleSort('points')">
+            Points / Impact
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'points' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'points' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'points'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'isActive'" (click)="toggleSort('isActive')">
+            Status
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'isActive' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'isActive' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'isActive'">↕</span>
+            </span>
+          </th>
           <th>Description</th>
           <th class="text-right">Actions</th>
         </tr>

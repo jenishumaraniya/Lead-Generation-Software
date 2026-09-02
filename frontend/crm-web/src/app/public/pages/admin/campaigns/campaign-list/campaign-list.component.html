@@ -108,9 +108,6 @@
           </span>
           <span class="count-pill">👥 {{ campaign.recipientsCount || 0 }} Prospects</span>
         </div>
-        <div class="card-actions-dropdown">
-          <a [routerLink]="['/admin/campaigns', campaign.campaignId]" class="btn-icon-action" title="Edit Campaign">✏️</a>
-        </div>
       </div>
 
       <!-- Card Body -->
@@ -184,22 +181,63 @@
     </div>
   </div>
 
-  <!-- 2. TABLE VIEW (Fallback) -->
+  <!-- 2. TABLE VIEW (With Synchronized Dual Sliders: Top & Bottom + Pagination) -->
   <div *ngIf="!loading && filteredCampaigns.length > 0 && viewMode === 'table'" class="card table-card">
-    <div class="table-responsive">
+    <!-- Top Horizontal Slider Bar -->
+    <div class="table-top-slider-wrapper" #topScroll>
+      <div class="table-top-slider-dummy"></div>
+    </div>
+
+    <!-- Main Table Container (Bottom Slider) -->
+    <div class="table-responsive" #tableScroll>
       <table class="data-table">
         <thead>
           <tr>
-            <th>Campaign Name</th>
-            <th>Status</th>
-            <th>Audience</th>
-            <th>Scheduled Start</th>
-            <th>Scheduled End</th>
+            <th class="sortable" [class.sort-active]="sortColumn === 'name'" (click)="toggleSort('name')">
+              Campaign Name
+              <span class="sort-icon">
+                <span *ngIf="sortColumn === 'name' && sortDirection === 'asc'">▲</span>
+                <span *ngIf="sortColumn === 'name' && sortDirection === 'desc'">▼</span>
+                <span *ngIf="sortColumn !== 'name'">↕</span>
+              </span>
+            </th>
+            <th class="sortable" [class.sort-active]="sortColumn === 'status'" (click)="toggleSort('status')">
+              Status
+              <span class="sort-icon">
+                <span *ngIf="sortColumn === 'status' && sortDirection === 'asc'">▲</span>
+                <span *ngIf="sortColumn === 'status' && sortDirection === 'desc'">▼</span>
+                <span *ngIf="sortColumn !== 'status'">↕</span>
+              </span>
+            </th>
+            <th class="sortable" [class.sort-active]="sortColumn === 'recipientsCount'" (click)="toggleSort('recipientsCount')">
+              Audience
+              <span class="sort-icon">
+                <span *ngIf="sortColumn === 'recipientsCount' && sortDirection === 'asc'">▲</span>
+                <span *ngIf="sortColumn === 'recipientsCount' && sortDirection === 'desc'">▼</span>
+                <span *ngIf="sortColumn !== 'recipientsCount'">↕</span>
+              </span>
+            </th>
+            <th class="sortable" [class.sort-active]="sortColumn === 'scheduleStartDate'" (click)="toggleSort('scheduleStartDate')">
+              Scheduled Start
+              <span class="sort-icon">
+                <span *ngIf="sortColumn === 'scheduleStartDate' && sortDirection === 'asc'">▲</span>
+                <span *ngIf="sortColumn === 'scheduleStartDate' && sortDirection === 'desc'">▼</span>
+                <span *ngIf="sortColumn !== 'scheduleStartDate'">↕</span>
+              </span>
+            </th>
+            <th class="sortable" [class.sort-active]="sortColumn === 'scheduleEndDate'" (click)="toggleSort('scheduleEndDate')">
+              Scheduled End
+              <span class="sort-icon">
+                <span *ngIf="sortColumn === 'scheduleEndDate' && sortDirection === 'asc'">▲</span>
+                <span *ngIf="sortColumn === 'scheduleEndDate' && sortDirection === 'desc'">▼</span>
+                <span *ngIf="sortColumn !== 'scheduleEndDate'">↕</span>
+              </span>
+            </th>
             <th style="text-align: right;">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let campaign of filteredCampaigns">
+          <tr *ngFor="let campaign of paginatedCampaigns">
             <td>
               <div class="campaign-name-cell">
                 <span class="campaign-name">{{ campaign.name }}</span>
@@ -235,5 +273,13 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Table Pagination -->
+    <app-pagination
+      [totalItems]="filteredCampaigns.length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage"
+      (pageChange)="currentPage = $event"
+    ></app-pagination>
   </div>
 </div>

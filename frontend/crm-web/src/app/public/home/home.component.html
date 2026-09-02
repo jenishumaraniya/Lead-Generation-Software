@@ -17,9 +17,6 @@
         <button class="btn btn-primary" (click)="exploreProducts()">
           Explore Product Catalog →
         </button>
-        <button class="btn btn-secondary" routerLink="/products/compare">
-          ⚖️ Compare Solutions
-        </button>
       </div>
       
       <!-- Trust Metrics -->
@@ -149,19 +146,16 @@
     </div>
   </section>
 
-  <!-- Comparison & Procurement CTA -->
+  <!-- Procurement CTA -->
   <section class="cta-section">
     <div class="cta-card">
       <div class="cta-content">
         <h2>Ready to upgrade your enterprise technology stack?</h2>
-        <p>Compare specifications side-by-side or request a custom procurement proposal tailored to your company's headcount and budget.</p>
+        <p>Explore our catalog specifications or request a custom procurement proposal tailored to your company's headcount and budget.</p>
       </div>
       <div class="cta-actions">
         <button class="btn btn-light" (click)="exploreProducts()">
           Browse Products
-        </button>
-        <button class="btn btn-outline-light" routerLink="/products/compare">
-          Compare Specifications
         </button>
       </div>
     </div>
@@ -181,10 +175,14 @@
       <div class="footer-col">
         <h4>Solutions</h4>
         <ul>
-          <li><a (click)="exploreProducts(1)">Enterprise Laptops</a></li>
-          <li><a (click)="exploreProducts(2)">High-End Workstations</a></li>
-          <li><a (click)="exploreProducts(3)">Data Center Servers</a></li>
-          <li><a (click)="exploreProducts(4)">Managed Networking</a></li>
+          <li *ngFor="let cat of (categories.length ? categories.slice(0, 5) : [
+            { categoryId: 1, categoryName: 'Enterprise Laptops' },
+            { categoryId: 2, categoryName: 'Workstation Desktops' },
+            { categoryId: 3, categoryName: 'Enterprise Servers' },
+            { categoryId: 4, categoryName: 'Networking Systems' }
+          ])">
+            <a (click)="exploreProducts(cat.categoryId)">{{ cat.categoryName }}</a>
+          </li>
         </ul>
       </div>
 
@@ -192,24 +190,23 @@
         <h4>Platform</h4>
         <ul>
           <li><a routerLink="/products">Full Catalog</a></li>
-          <li><a routerLink="/products/compare">Product Comparison</a></li>
           <li><a routerLink="/">Enterprise Overview</a></li>
+          <li><a routerLink="/security-compliance">Security & Trust</a></li>
         </ul>
       </div>
 
       <div class="footer-col">
         <h4>Headquarters</h4>
         <p class="f-text">Tech Gateway Tower, Suite 400<br/>Business Bay District</p>
-        <p class="f-contact">📧 contact&#64;leadflow-enterprise.com<br/>📞 +91 (800) 555-0199</p>
       </div>
     </div>
 
     <div class="footer-bottom">
       <p>© 2026 LeadFlow Enterprise Technologies. All rights reserved.</p>
       <div class="footer-links">
-        <span>Privacy Policy</span>
-        <span>Terms of Service</span>
-        <span>Security Compliance</span>
+        <a routerLink="/privacy-policy">Privacy Policy</a>
+        <a routerLink="/terms-and-conditions">Terms of Service</a>
+        <a routerLink="/security-compliance">Security Compliance</a>
       </div>
     </div>
   </footer>

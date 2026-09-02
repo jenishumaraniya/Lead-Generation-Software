@@ -28,6 +28,9 @@ export class ProductListComponent implements OnInit {
   selectedCategory: string = 'ALL';
   selectedStatus: string = 'ALL';
 
+  sortColumn: string = 'name';
+  sortDirection: 'asc' | 'desc' = 'asc';
+
   currentPage = 1;
   pageSize = 10;
 
@@ -94,7 +97,7 @@ export class ProductListComponent implements OnInit {
     this.currentPage = 1;
     const term = this.searchTerm.trim().toLowerCase();
 
-    this.filteredProducts = this.products.filter(p => {
+    let list = this.products.filter(p => {
       // Category filter
       if (this.selectedCategory !== 'ALL') {
         if (this.selectedCategory === 'UNCATEGORIZED') {
@@ -119,6 +122,42 @@ export class ProductListComponent implements OnInit {
 
       return nameMatch || descMatch || catMatch;
     });
+
+    if (this.sortColumn) {
+      list.sort((a: any, b: any) => {
+        let valA = a[this.sortColumn];
+        let valB = b[this.sortColumn];
+
+        if (this.sortColumn === 'category') {
+          valA = this.getCategoryName(a.categoryId);
+          valB = this.getCategoryName(b.categoryId);
+        }
+
+        if (valA == null) valA = '';
+        if (valB == null) valB = '';
+
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        let comparison = 0;
+        if (valA > valB) comparison = 1;
+        else if (valA < valB) comparison = -1;
+
+        return this.sortDirection === 'asc' ? comparison : -comparison;
+      });
+    }
+
+    this.filteredProducts = list;
+  }
+
+  toggleSort(column: string): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applyFilter();
   }
 
   openModal(): void {
