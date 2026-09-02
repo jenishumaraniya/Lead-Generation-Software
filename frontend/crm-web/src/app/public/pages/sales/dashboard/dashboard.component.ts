@@ -12,6 +12,7 @@ import { AuthService } from '../../../../core/services/auth.service';
   styleUrls: ['./dashboard.component.css']
 })
 export class SalesDashboardComponent implements OnInit {
+  allLeads: any[] = [];
   leads: any[] = [];
   stats = {
     total: 0,
@@ -21,6 +22,9 @@ export class SalesDashboardComponent implements OnInit {
     won: 0
   };
   loading = false;
+
+  sortColumn: string = 'createdAt';
+  sortDirection: 'asc' | 'desc' = 'desc';
 
   constructor(
     private leadService: LeadService,
@@ -39,14 +43,16 @@ export class SalesDashboardComponent implements OnInit {
     this.leadService.getLeads(userId).subscribe({
       next: (data: Lead[]) => {
         if (userId) {
-          this.leads = (data || []).filter(l => l.assignedTo === userId);
+          this.allLeads = (data || []).filter(l => l.assignedTo === userId);
         } else {
-          this.leads = data || [];
+          this.allLeads = data || [];
         }
         this.computeStats();
+        this.applySort();
         this.loading = false;
       },
       error: () => {
+        this.allLeads = [];
         this.leads = [];
         this.loading = false;
       }
@@ -54,10 +60,43 @@ export class SalesDashboardComponent implements OnInit {
   }
 
   computeStats(): void {
-    this.stats.total = this.leads.length;
-    this.stats.newLeads = this.leads.filter(l => l.status === 'NEW').length;
-    this.stats.contacted = this.leads.filter(l => l.status === 'CONTACTED').length;
-    this.stats.qualified = this.leads.filter(l => l.status === 'QUALIFIED').length;
-    this.stats.won = this.leads.filter(l => l.status === 'WON').length;
+    this.stats.total = this.allLeads.length;
+    this.stats.newLeads = this.allLeads.filter(l => l.status === 'NEW').length;
+    this.stats.contacted = this.allLeads.filter(l => l.status === 'CONTACTED').length;
+    this.stats.qualified = this.allLeads.filter(l => l.status === 'QUALIFIED').length;
+    this.stats.won = this.allLeads.filter(l => l.status === 'WON').length;
+  }
+
+  applySort(): void {
+    let list = [...this.allLeads];
+    if (this.sortColumn) {
+      list.sort((a: any, b: any) => {
+        let valA = a[this.sortColumn];
+        let valB = b[this.sortColumn];
+
+        if (valA == null) valA = '';
+        if (valB == null) valB = '';
+
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        let comparison = 0;
+        if (valA > valB) comparison = 1;
+        else if (valA < valB) comparison = -1;
+
+        return this.sortDirection === 'asc' ? comparison : -comparison;
+      });
+    }
+    this.leads = list;
+  }
+
+  toggleSort(column: string): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applySort();
   }
 }

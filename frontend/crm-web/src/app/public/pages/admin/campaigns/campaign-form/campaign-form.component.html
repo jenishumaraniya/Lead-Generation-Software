@@ -47,7 +47,7 @@
           <input
             type="datetime-local"
             formControlName="scheduleEndDate"
-            [min]="minDateTime"
+            [min]="form.get('scheduleStartDate')?.value || minDateTime"
           />
         </div>
 
@@ -127,11 +127,14 @@
             type="button"
             (click)="downloadTemplate()"
             class="btn-secondary"
+            [class.btn-download-highlight]="!hasDownloadedTemplate"
+            [title]="!hasDownloadedTemplate ? 'Recommended: Download standard template first' : 'Download CSV Template'"
           >
-            Download CSV Template
+            <span *ngIf="!hasDownloadedTemplate" class="step-badge">Step 1</span>
+            📥 Download CSV Template
           </button>
           <label class="btn-upload">
-            Upload Prospects CSV
+            📤 Upload Prospects CSV
             <input
               type="file"
               (change)="onCsvFileSelected($event)"

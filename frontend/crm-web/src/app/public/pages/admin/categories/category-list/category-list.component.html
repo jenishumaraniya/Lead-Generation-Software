@@ -151,7 +151,7 @@
         <button (click)="openEditModal(cat)" class="btn-action edit">
           ✏️ Edit
         </button>
-        <button (click)="deleteCategory(cat.categoryId)" class="btn-action delete">
+        <button (click)="deleteCategory(cat)" class="btn-action delete">
           🗑️ Delete
         </button>
       </div>
@@ -159,20 +159,48 @@
     </div>
   </div>
 
-  <!-- 2. TABLE VIEW (Fallback) -->
+  <!-- 2. TABLE VIEW (With Pagination) -->
   <div class="card table-card" *ngIf="!loading && filteredCategories.length > 0 && viewMode === 'table'">
     <table class="data-table">
       <thead>
         <tr>
-          <th style="width: 80px;">ID</th>
-          <th>Category Name</th>
-          <th>Assigned Sales Rep</th>
-          <th>Created At</th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'categoryId'" (click)="toggleSort('categoryId')" style="width: 80px;">
+            ID
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'categoryId' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'categoryId' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'categoryId'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'categoryName'" (click)="toggleSort('categoryName')">
+            Category Name
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'categoryName' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'categoryName' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'categoryName'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'rep'" (click)="toggleSort('rep')">
+            Assigned Sales Rep
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'rep' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'rep' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'rep'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'createdAt'" (click)="toggleSort('createdAt')">
+            Created At
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'createdAt' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'createdAt' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'createdAt'">↕</span>
+            </span>
+          </th>
           <th class="text-right">Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let cat of filteredCategories">
+        <tr *ngFor="let cat of paginatedCategories">
           <td><span class="id-badge">#{{ cat.categoryId }}</span></td>
           <td><strong>{{ cat.categoryName }}</strong></td>
           <td>
@@ -187,11 +215,18 @@
           <td>{{ cat.createdAt | date:'mediumDate' }}</td>
           <td class="text-right actions-cell">
             <button (click)="openEditModal(cat)" class="btn-action edit">Edit</button>
-            <button (click)="deleteCategory(cat.categoryId)" class="btn-action delete">Delete</button>
+            <button (click)="deleteCategory(cat)" class="btn-action delete">Delete</button>
           </td>
         </tr>
       </tbody>
     </table>
+
+    <app-pagination
+      [totalItems]="filteredCategories.length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage"
+      (pageChange)="currentPage = $event"
+    ></app-pagination>
   </div>
 
   <!-- Add/Edit Category Modal -->

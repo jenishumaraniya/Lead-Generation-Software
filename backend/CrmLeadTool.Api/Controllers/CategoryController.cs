@@ -101,6 +101,15 @@ public class CategoryController : ControllerBase
         var category = await _context.Categories.FindAsync(id);
         if (category == null) return NotFound(new { error = "Category not found." });
 
+        var productCount = await _context.Products.CountAsync(p => p.CategoryId == id);
+        if (productCount > 0)
+        {
+            return BadRequest(new 
+            { 
+                error = $"Cannot delete category '{category.CategoryName}' because it contains {productCount} associated product(s). Please reassign or delete the products first." 
+            });
+        }
+
         _context.Categories.Remove(category);
         await _context.SaveChangesAsync();
 

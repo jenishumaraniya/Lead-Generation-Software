@@ -7,7 +7,9 @@ export class ProductService {
   private base = 'http://localhost:5234/api/product';
   constructor(private http: HttpClient) {}
 
-  getProducts(): Observable<any[]> { return this.http.get<any[]>(this.base); }
+  getProducts(includeInactive: boolean = true): Observable<any[]> { 
+    return this.http.get<any[]>(`${this.base}?includeInactive=${includeInactive}`); 
+  }
   getProduct(id: number): Observable<any> { return this.http.get(`${this.base}/${id}`); }
   createProduct(data: any): Observable<any> { return this.http.post(this.base, data); }
   updateProduct(id: number, data: any): Observable<any> { return this.http.put(`${this.base}/${id}`, data); }

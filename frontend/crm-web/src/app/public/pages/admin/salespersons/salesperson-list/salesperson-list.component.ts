@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { EmployeeService, Salesperson } from '../../../../../core/services/employee.service';
 import { CategoryService, Category } from '../../../../../core/services/category.service';
+import { PaginationComponent } from '../../../../../components/pagination/pagination.component';
 
 @Component({
   selector: 'app-salesperson-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, PaginationComponent],
   templateUrl: './salesperson-list.component.html',
   styleUrls: ['./salesperson-list.component.css']
 })
@@ -23,6 +24,17 @@ export class SalespersonListComponent implements OnInit {
   searchTerm: string = '';
   selectedFilter: string = 'ALL';
   viewMode: 'cards' | 'table' = 'cards';
+
+  sortColumn: string = 'fullName';
+  sortDirection: 'asc' | 'desc' = 'asc';
+
+  currentPage = 1;
+  pageSize = 10;
+
+  get paginatedSalespersons(): Salesperson[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredSalespersons.slice(start, start + this.pageSize);
+  }
 
   stats = {
     totalReps: 0,
@@ -98,12 +110,14 @@ export class SalespersonListComponent implements OnInit {
 
   setViewMode(mode: 'cards' | 'table'): void {
     this.viewMode = mode;
+    this.currentPage = 1;
   }
 
   applyFilter(): void {
+    this.currentPage = 1;
     const term = this.searchTerm.trim().toLowerCase();
 
-    this.filteredSalespersons = this.salespersons.filter(rep => {
+    let list = this.salespersons.filter(rep => {
       // Filter logic
       if (this.selectedFilter === 'ASSIGNED' && !rep.categoryId) return false;
       if (this.selectedFilter === 'UNASSIGNED' && rep.categoryId) return false;
@@ -118,6 +132,37 @@ export class SalespersonListComponent implements OnInit {
 
       return nameMatch || emailMatch || catMatch;
     });
+
+    if (this.sortColumn) {
+      list.sort((a: any, b: any) => {
+        let valA = a[this.sortColumn];
+        let valB = b[this.sortColumn];
+
+        if (valA == null) valA = '';
+        if (valB == null) valB = '';
+
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        let comparison = 0;
+        if (valA > valB) comparison = 1;
+        else if (valA < valB) comparison = -1;
+
+        return this.sortDirection === 'asc' ? comparison : -comparison;
+      });
+    }
+
+    this.filteredSalespersons = list;
+  }
+
+  toggleSort(column: string): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applyFilter();
   }
 
   getInitials(name?: string): string {

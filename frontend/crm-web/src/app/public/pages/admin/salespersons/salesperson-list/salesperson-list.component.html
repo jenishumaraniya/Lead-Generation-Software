@@ -181,21 +181,56 @@
     </div>
   </div>
 
-  <!-- 2. TABLE VIEW (Fallback) -->
+  <!-- 2. TABLE VIEW (With Pagination) -->
   <div class="card table-card" *ngIf="!loading && filteredSalespersons.length > 0 && viewMode === 'table'">
     <table class="data-table">
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Email Address</th>
-          <th>Assigned Category</th>
-          <th>Status</th>
-          <th>Joined</th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'fullName'" (click)="toggleSort('fullName')">
+            Name
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'fullName' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'fullName' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'fullName'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'email'" (click)="toggleSort('email')">
+            Email Address
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'email' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'email' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'email'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'categoryName'" (click)="toggleSort('categoryName')">
+            Assigned Category
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'categoryName' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'categoryName' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'categoryName'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'isActive'" (click)="toggleSort('isActive')">
+            Status
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'isActive' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'isActive' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'isActive'">↕</span>
+            </span>
+          </th>
+          <th class="sortable" [class.sort-active]="sortColumn === 'createdAt'" (click)="toggleSort('createdAt')">
+            Joined
+            <span class="sort-icon">
+              <span *ngIf="sortColumn === 'createdAt' && sortDirection === 'asc'">▲</span>
+              <span *ngIf="sortColumn === 'createdAt' && sortDirection === 'desc'">▼</span>
+              <span *ngIf="sortColumn !== 'createdAt'">↕</span>
+            </span>
+          </th>
           <th class="text-right">Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let rep of filteredSalespersons">
+        <tr *ngFor="let rep of paginatedSalespersons">
           <td>
             <div class="rep-table-name">
               <div class="mini-avatar">{{ getInitials(rep.fullName) }}</div>
@@ -239,6 +274,13 @@
         </tr>
       </tbody>
     </table>
+
+    <app-pagination
+      [totalItems]="filteredSalespersons.length"
+      [pageSize]="pageSize"
+      [currentPage]="currentPage"
+      (pageChange)="currentPage = $event"
+    ></app-pagination>
   </div>
 
   <!-- Add Salesperson Modal -->
@@ -269,7 +311,14 @@
           <div class="password-input-wrapper">
             <input [type]="showInitialPassword ? 'text' : 'password'" [(ngModel)]="newRep.password" placeholder="Minimum 6 characters" />
             <button type="button" class="btn-eye" (click)="showInitialPassword = !showInitialPassword" [title]="showInitialPassword ? 'Hide password' : 'Show password'">
-              {{ showInitialPassword ? '🔒' : '👁️' }}
+              <svg *ngIf="!showInitialPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg *ngIf="showInitialPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
             </button>
           </div>
         </div>
@@ -318,7 +367,14 @@
           <div class="password-input-wrapper">
             <input [type]="showNewPassword ? 'text' : 'password'" [(ngModel)]="newPassword" placeholder="Enter new password (min 6 characters)" />
             <button type="button" class="btn-eye" (click)="showNewPassword = !showNewPassword" [title]="showNewPassword ? 'Hide password' : 'Show password'">
-              {{ showNewPassword ? '🔒' : '👁️' }}
+              <svg *ngIf="!showNewPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg *ngIf="showNewPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
             </button>
           </div>
         </div>

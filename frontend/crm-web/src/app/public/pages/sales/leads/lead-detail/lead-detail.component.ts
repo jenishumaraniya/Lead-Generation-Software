@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Lead, LeadService } from '../../../../../core/services/lead.service';
+import { AIService } from '../../../../../core/services/ai.service';
 
 @Component({
   selector: 'app-sales-lead-detail',
@@ -21,10 +22,17 @@ export class LeadDetailComponent implements OnInit {
   saveMessage = '';
   followUpDateString = '';
 
+  // AI properties
+  analysis: any = null;
+  aiLoading = false;
+  aiError = '';
+  analysisExists = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private leadService: LeadService
+    private leadService: LeadService,
+    private aiService: AIService
   ) {}
 
   ngOnInit(): void {
@@ -34,6 +42,7 @@ export class LeadDetailComponent implements OnInit {
       return;
     }
     this.loadLead(id);
+    this.loadExistingAnalysis(id);
   }
 
   loadLead(id: number): void {
@@ -56,6 +65,37 @@ export class LeadDetailComponent implements OnInit {
       error: (err) => {
         console.error('Failed to load lead', err);
         this.router.navigate(['/sales/leads']);
+      }
+    });
+  }
+
+  loadExistingAnalysis(leadId: number): void {
+    this.aiService.getAnalysis(leadId).subscribe({
+      next: (data) => {
+        this.analysis = data;
+        this.analysisExists = true;
+      },
+      error: () => {
+        this.analysisExists = false;
+        this.analysis = null;
+      }
+    });
+  }
+
+  triggerAnalysis(): void {
+    if (!this.lead) return;
+    this.aiLoading = true;
+    this.aiError = '';
+    this.aiService.analyzeLead(this.lead.leadId).subscribe({
+      next: (result) => {
+        this.analysis = result;
+        this.analysisExists = true;
+        this.aiLoading = false;
+        this.loadLead(this.lead.leadId);
+      },
+      error: (err) => {
+        this.aiError = err.error?.error || 'AI analysis failed. Please try again.';
+        this.aiLoading = false;
       }
     });
   }

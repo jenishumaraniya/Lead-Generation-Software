@@ -5,11 +5,12 @@ import { RouterModule } from '@angular/router';
 import { Category } from '../../../../../core/models/category.model';
 import { CategoryService } from '../../../../../core/services/category.service';
 import { EmployeeService } from '../../../../../core/services/employee.service';
+import { PaginationComponent } from '../../../../../components/pagination/pagination.component';
 
 @Component({
   selector: 'app-category-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, PaginationComponent],
   templateUrl: './category-list.component.html',
   styleUrls: ['./category-list.component.css']
 })
@@ -22,6 +23,17 @@ export class CategoryListComponent implements OnInit {
   searchTerm: string = '';
   selectedFilter: string = 'ALL';
   viewMode: 'cards' | 'table' = 'cards';
+
+  sortColumn: string = 'categoryName';
+  sortDirection: 'asc' | 'desc' = 'asc';
+
+  currentPage = 1;
+  pageSize = 10;
+
+  get paginatedCategories(): Category[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredCategories.slice(start, start + this.pageSize);
+  }
 
   stats = {
     totalCategories: 0,
@@ -92,12 +104,14 @@ export class CategoryListComponent implements OnInit {
 
   setViewMode(mode: 'cards' | 'table'): void {
     this.viewMode = mode;
+    this.currentPage = 1;
   }
 
   applyFilter(): void {
+    this.currentPage = 1;
     const term = this.searchTerm.trim().toLowerCase();
 
-    this.filteredCategories = this.categories.filter(cat => {
+    let list = this.categories.filter(cat => {
       const assignedRep = this.getAssignedSalesperson(cat.categoryId);
 
       if (this.selectedFilter === 'ASSIGNED' && !assignedRep) return false;
@@ -109,6 +123,44 @@ export class CategoryListComponent implements OnInit {
       const repMatch = assignedRep?.fullName?.toLowerCase().includes(term);
       return nameMatch || repMatch;
     });
+
+    if (this.sortColumn) {
+      list.sort((a: any, b: any) => {
+        let valA = a[this.sortColumn];
+        let valB = b[this.sortColumn];
+
+        if (this.sortColumn === 'rep') {
+          const repA = this.getAssignedSalesperson(a.categoryId);
+          const repB = this.getAssignedSalesperson(b.categoryId);
+          valA = repA ? repA.fullName : '';
+          valB = repB ? repB.fullName : '';
+        }
+
+        if (valA == null) valA = '';
+        if (valB == null) valB = '';
+
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        let comparison = 0;
+        if (valA > valB) comparison = 1;
+        else if (valA < valB) comparison = -1;
+
+        return this.sortDirection === 'asc' ? comparison : -comparison;
+      });
+    }
+
+    this.filteredCategories = list;
+  }
+
+  toggleSort(column: string): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applyFilter();
   }
 
   openAddModal(): void {
@@ -155,16 +207,21 @@ export class CategoryListComponent implements OnInit {
     });
   }
 
-  deleteCategory(id: number): void {
-    if (confirm('Are you sure you want to delete this category?')) {
+  deleteCategory(cat: any): void {
+    if (cat.productsCount && cat.productsCount > 0) {
+      alert(`Cannot delete category '${cat.categoryName}' because it contains ${cat.productsCount} associated product(s). Please delete or reassign the products first.`);
+      return;
+    }
+
+    if (confirm(`Are you sure you want to delete the category '${cat.categoryName}'?`)) {
       this.loading = true;
-      this.categoryService.deleteCategory(id).subscribe({
+      this.categoryService.deleteCategory(cat.categoryId).subscribe({
         next: () => {
           this.loadData();
           this.loading = false;
         },
-        error: () => {
-          alert('Failed to delete category');
+        error: (err) => {
+          alert(err.error?.error || 'Failed to delete category');
           this.loading = false;
         }
       });

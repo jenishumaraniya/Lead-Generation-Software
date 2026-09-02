@@ -1,18 +1,22 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { CampaignService } from '../../../../../core/services/campaign.service';
 import { SidebarService } from '../../../../../core/services/sidebar.service';
+import { PaginationComponent } from '../../../../../components/pagination/pagination.component';
 
 @Component({
   selector: 'app-campaign-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, PaginationComponent],
   templateUrl: './campaign-list.component.html',
   styleUrls: ['./campaign-list.component.css']
 })
-export class CampaignListComponent implements OnInit {
+export class CampaignListComponent implements OnInit, AfterViewInit {
+  @ViewChild('topScroll') topScrollRef!: ElementRef<HTMLDivElement>;
+  @ViewChild('tableScroll') tableScrollRef!: ElementRef<HTMLDivElement>;
+
   campaigns: any[] = [];
   filteredCampaigns: any[] = [];
   loading = false;
@@ -22,6 +26,17 @@ export class CampaignListComponent implements OnInit {
   searchTerm: string = '';
   selectedStatus: string = 'ALL';
 
+  sortColumn: string = 'name';
+  sortDirection: 'asc' | 'desc' = 'asc';
+
+  currentPage = 1;
+  pageSize = 10;
+
+  get paginatedCampaigns(): any[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredCampaigns.slice(start, start + this.pageSize);
+  }
+
   stats = {
     total: 0,
     active: 0,
@@ -29,6 +44,8 @@ export class CampaignListComponent implements OnInit {
     completed: 0,
     totalProspects: 0
   };
+
+  private isSyncingScroll = false;
 
   constructor(
     private campaignService: CampaignService,
@@ -39,6 +56,10 @@ export class CampaignListComponent implements OnInit {
     this.loadCampaigns();
   }
 
+  ngAfterViewInit() {
+    this.setupScrollSync();
+  }
+
   loadCampaigns() {
     this.loading = true;
     this.campaignService.getCampaigns().subscribe({
@@ -47,6 +68,7 @@ export class CampaignListComponent implements OnInit {
         this.calculateStats();
         this.applyFilter();
         this.loading = false;
+        setTimeout(() => this.setupScrollSync(), 100);
       },
       error: () => {
         this.campaigns = [];
@@ -67,17 +89,20 @@ export class CampaignListComponent implements OnInit {
 
   setViewMode(mode: 'cards' | 'table') {
     this.viewMode = mode;
+    this.currentPage = 1;
     if (mode === 'table') {
       this.sidebarService.setCollapsed(true);
+      setTimeout(() => this.setupScrollSync(), 150);
     } else {
       this.sidebarService.setCollapsed(false);
     }
   }
 
   applyFilter() {
+    this.currentPage = 1;
     const term = this.searchTerm.trim().toLowerCase();
 
-    this.filteredCampaigns = this.campaigns.filter(c => {
+    let list = this.campaigns.filter(c => {
       // Status filter
       if (this.selectedStatus !== 'ALL') {
         const cStatus = (c.status || '').toUpperCase();
@@ -91,6 +116,60 @@ export class CampaignListComponent implements OnInit {
       const descMatch = c.description?.toLowerCase().includes(term);
       return nameMatch || descMatch;
     });
+
+    if (this.sortColumn) {
+      list.sort((a: any, b: any) => {
+        let valA = a[this.sortColumn];
+        let valB = b[this.sortColumn];
+
+        if (valA == null) valA = '';
+        if (valB == null) valB = '';
+
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        let comparison = 0;
+        if (valA > valB) comparison = 1;
+        else if (valA < valB) comparison = -1;
+
+        return this.sortDirection === 'asc' ? comparison : -comparison;
+      });
+    }
+
+    this.filteredCampaigns = list;
+    setTimeout(() => this.setupScrollSync(), 100);
+  }
+
+  toggleSort(column: string) {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applyFilter();
+  }
+
+  setupScrollSync() {
+    if (!this.topScrollRef || !this.tableScrollRef) return;
+    const topEl = this.topScrollRef.nativeElement;
+    const tableEl = this.tableScrollRef.nativeElement;
+
+    topEl.onscroll = () => {
+      if (!this.isSyncingScroll) {
+        this.isSyncingScroll = true;
+        tableEl.scrollLeft = topEl.scrollLeft;
+        setTimeout(() => this.isSyncingScroll = false, 20);
+      }
+    };
+
+    tableEl.onscroll = () => {
+      if (!this.isSyncingScroll) {
+        this.isSyncingScroll = true;
+        topEl.scrollLeft = tableEl.scrollLeft;
+        setTimeout(() => this.isSyncingScroll = false, 20);
+      }
+    };
   }
 
   pauseCampaign(id: number) {
@@ -124,4 +203,4 @@ export class CampaignListComponent implements OnInit {
       });
     }
   }
-}
+}

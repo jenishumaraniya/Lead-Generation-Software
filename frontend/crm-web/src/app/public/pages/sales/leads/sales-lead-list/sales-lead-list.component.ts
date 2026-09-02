@@ -20,6 +20,9 @@ export class SalesLeadListComponent implements OnInit {
   searchTerm = '';
   loading = false;
 
+  sortColumn: string = 'createdAt';
+  sortDirection: 'asc' | 'desc' = 'desc';
+
   currentPage = 1;
   pageSize = 10;
 
@@ -63,7 +66,7 @@ export class SalesLeadListComponent implements OnInit {
 
   applyFilters(): void {
     this.currentPage = 1;
-    this.filteredLeads = this.leads.filter(lead => {
+    let list = this.leads.filter(lead => {
       const statusMatch = !this.statusFilter || lead.status === this.statusFilter;
       const searchMatch = !this.searchTerm ||
         (lead.fullName && lead.fullName.toLowerCase().includes(this.searchTerm.toLowerCase())) ||
@@ -71,6 +74,37 @@ export class SalesLeadListComponent implements OnInit {
         (lead.email && lead.email.toLowerCase().includes(this.searchTerm.toLowerCase()));
       return statusMatch && searchMatch;
     });
+
+    if (this.sortColumn) {
+      list.sort((a: any, b: any) => {
+        let valA = a[this.sortColumn];
+        let valB = b[this.sortColumn];
+
+        if (valA == null) valA = '';
+        if (valB == null) valB = '';
+
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        let comparison = 0;
+        if (valA > valB) comparison = 1;
+        else if (valA < valB) comparison = -1;
+
+        return this.sortDirection === 'asc' ? comparison : -comparison;
+      });
+    }
+
+    this.filteredLeads = list;
+  }
+
+  toggleSort(column: string): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applyFilters();
   }
 
   updateLeadStatus(lead: Lead, event: Event): void {

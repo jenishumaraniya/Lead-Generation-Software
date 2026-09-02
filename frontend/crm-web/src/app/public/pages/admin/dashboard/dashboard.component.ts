@@ -22,8 +22,12 @@ export class AdminDashboardComponent implements OnInit {
     categoriesCount: 0
   };
 
+  allRecentLeads: Lead[] = [];
   recentLeads: Lead[] = [];
   loading = false;
+
+  sortColumn: string = 'createdAt';
+  sortDirection: 'asc' | 'desc' = 'desc';
 
   constructor(
     private leadService: LeadService,
@@ -45,12 +49,14 @@ export class AdminDashboardComponent implements OnInit {
         const leadList = leads || [];
         this.stats.totalLeads = leadList.length;
         this.stats.newLeads = leadList.filter(l => l.status === 'NEW').length;
-        this.recentLeads = leadList.slice(0, 6);
+        this.allRecentLeads = leadList;
+        this.applySort();
         this.loading = false;
       },
       error: () => {
         this.stats.totalLeads = 0;
         this.stats.newLeads = 0;
+        this.allRecentLeads = [];
         this.recentLeads = [];
         this.loading = false;
       }
@@ -87,5 +93,38 @@ export class AdminDashboardComponent implements OnInit {
         this.stats.categoriesCount = 0;
       }
     });
+  }
+
+  applySort(): void {
+    let list = [...this.allRecentLeads];
+    if (this.sortColumn) {
+      list.sort((a: any, b: any) => {
+        let valA = a[this.sortColumn];
+        let valB = b[this.sortColumn];
+
+        if (valA == null) valA = '';
+        if (valB == null) valB = '';
+
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        let comparison = 0;
+        if (valA > valB) comparison = 1;
+        else if (valA < valB) comparison = -1;
+
+        return this.sortDirection === 'asc' ? comparison : -comparison;
+      });
+    }
+    this.recentLeads = list.slice(0, 6);
+  }
+
+  toggleSort(column: string): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applySort();
   }
 }

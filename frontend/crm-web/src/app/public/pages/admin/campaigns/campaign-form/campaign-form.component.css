@@ -98,11 +98,42 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .btn-secondary:hover {
   background: #f8fafc;
+}
+
+.btn-download-highlight {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 2px solid #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25), 0 2px 4px rgba(0, 0, 0, 0.05);
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+.step-badge {
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.4);
+  }
 }
 
 .btn-upload {

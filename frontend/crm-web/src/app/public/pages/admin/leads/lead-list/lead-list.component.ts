@@ -19,9 +19,13 @@ export class LeadListComponent implements OnInit {
   employees: Salesperson[] = [];
   statusFilter = '';
   assignmentFilter = '';
+  salespersonFilter: number | '' = '';
   searchTerm = '';
   successToast = '';
   loading = false;
+
+  sortColumn: string = 'createdAt';
+  sortDirection: 'asc' | 'desc' = 'desc';
 
   currentPage = 1;
   pageSize = 10;
@@ -70,8 +74,9 @@ export class LeadListComponent implements OnInit {
 
   applyFilters(): void {
     this.currentPage = 1;
-    this.filteredLeads = this.leads.filter(lead => {
+    let list = this.leads.filter(lead => {
       const statusMatch = !this.statusFilter || lead.status === this.statusFilter;
+      
       let assignmentMatch = true;
       if (this.assignmentFilter === 'UNASSIGNED') {
         assignmentMatch = !lead.assignedTo;
@@ -83,13 +88,51 @@ export class LeadListComponent implements OnInit {
         assignmentMatch = !!lead.assignedTo;
       }
 
+      let salespersonMatch = true;
+      if (this.salespersonFilter !== '') {
+        salespersonMatch = lead.assignedTo === this.salespersonFilter;
+      }
+
       const searchMatch = !this.searchTerm ||
         (lead.fullName && lead.fullName.toLowerCase().includes(this.searchTerm.toLowerCase())) ||
         (lead.companyName && lead.companyName.toLowerCase().includes(this.searchTerm.toLowerCase())) ||
-        (lead.email && lead.email.toLowerCase().includes(this.searchTerm.toLowerCase()));
+        (lead.email && lead.email.toLowerCase().includes(this.searchTerm.toLowerCase())) ||
+        (lead.assignedSalespersonName && lead.assignedSalespersonName.toLowerCase().includes(this.searchTerm.toLowerCase()));
 
-      return statusMatch && assignmentMatch && searchMatch;
+      return statusMatch && assignmentMatch && salespersonMatch && searchMatch;
     });
+
+    // Apply sorting
+    if (this.sortColumn) {
+      list.sort((a: any, b: any) => {
+        let valA = a[this.sortColumn];
+        let valB = b[this.sortColumn];
+
+        if (valA == null) valA = '';
+        if (valB == null) valB = '';
+
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        let comparison = 0;
+        if (valA > valB) comparison = 1;
+        else if (valA < valB) comparison = -1;
+
+        return this.sortDirection === 'asc' ? comparison : -comparison;
+      });
+    }
+
+    this.filteredLeads = list;
+  }
+
+  toggleSort(column: string): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applyFilters();
   }
 
   assignLead(lead: Lead, employeeId: number | null): void {
