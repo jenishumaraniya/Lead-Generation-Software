@@ -146,11 +146,18 @@ export class ContactFormComponent implements OnInit {
     }
   }
 
+  get maxPhoneDigits(): number {
+    return this.selectedCountry && this.selectedCountry.patternLength
+      ? this.selectedCountry.patternLength
+      : 15;
+  }
+
   onCountryChange(): void {
     const found = this.countries.find(c => c.name.toLowerCase() === (this.formData.country || '').toLowerCase());
     if (found) {
       this.selectedCountry = found;
     }
+    this.enforcePhoneDigitLimit();
     this.updateFullPhoneNumber();
     this.validateField('country');
     this.validateField('phone');
@@ -162,14 +169,51 @@ export class ContactFormComponent implements OnInit {
       this.formData.country = country.name;
     }
     this.isCountryDropdownOpen = false;
+    this.enforcePhoneDigitLimit();
     this.updateFullPhoneNumber();
     this.validateField('country');
     this.validateField('phone');
   }
 
+  private enforcePhoneDigitLimit(): void {
+    let rawDigits = this.phoneLocalNumber.replace(/\D/g, '');
+    const maxDigits = this.maxPhoneDigits;
+    if (rawDigits.length > maxDigits) {
+      this.phoneLocalNumber = rawDigits.slice(0, maxDigits);
+    }
+  }
+
+  onPhoneKeyDown(event: KeyboardEvent): void {
+    const allowedKeys = ['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Enter'];
+    if (allowedKeys.includes(event.key) || event.ctrlKey || event.metaKey) {
+      return;
+    }
+    // Block any non-numeric key press
+    if (!/^[0-9]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  onPhonePaste(event: ClipboardEvent): void {
+    event.preventDefault();
+    const pastedText = event.clipboardData?.getData('text') || '';
+    let digits = pastedText.replace(/[^0-9]/g, '');
+    const maxDigits = this.maxPhoneDigits;
+    if (digits.length > maxDigits) {
+      digits = digits.slice(0, maxDigits);
+    }
+    this.phoneLocalNumber = digits;
+    this.updateFullPhoneNumber();
+    this.validateField('phone');
+  }
+
   onPhoneInput(): void {
-    // Only allow digits, spaces, and hyphens in local input
-    this.phoneLocalNumber = this.phoneLocalNumber.replace(/[^\d\s-]/g, '');
+    let rawDigits = this.phoneLocalNumber.replace(/[^0-9]/g, '');
+    const maxDigits = this.maxPhoneDigits;
+    if (rawDigits.length > maxDigits) {
+      rawDigits = rawDigits.slice(0, maxDigits);
+    }
+    this.phoneLocalNumber = rawDigits;
     this.updateFullPhoneNumber();
     this.validateField('phone');
   }
@@ -342,12 +386,30 @@ export class ContactFormComponent implements OnInit {
 
       case 'phone': {
         const rawDigits = this.phoneLocalNumber.replace(/\D/g, '');
+        const country = this.selectedCountry;
+
         if (!rawDigits) {
           this.formErrors.phone = 'Phone number is required';
-        } else if (rawDigits.length < 7 || rawDigits.length > 15) {
-          this.formErrors.phone = `Please enter a valid phone number (7-15 digits)`;
+        } else if (country && country.code === 'IN') {
+          if (rawDigits.length !== 10) {
+            this.formErrors.phone = 'Indian phone number must be exactly 10 digits';
+          } else if (!/^[6-9]\d{9}$/.test(rawDigits)) {
+            this.formErrors.phone = 'Indian mobile number must start with 6, 7, 8, or 9';
+          } else {
+            this.formErrors.phone = '';
+          }
+        } else if (country && country.patternLength && country.code !== 'OTHER') {
+          if (rawDigits.length !== country.patternLength) {
+            this.formErrors.phone = `${country.name} phone number must be exactly ${country.patternLength} digits`;
+          } else {
+            this.formErrors.phone = '';
+          }
         } else {
-          this.formErrors.phone = '';
+          if (rawDigits.length < 7 || rawDigits.length > 15) {
+            this.formErrors.phone = 'Please enter a valid phone number (7-15 digits)';
+          } else {
+            this.formErrors.phone = '';
+          }
         }
         break;
       }

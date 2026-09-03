@@ -25,7 +25,7 @@
         </div>
 
         <div class="form-group full-width">
-          <label>Description & Objectives</label>
+          <label>Description &amp; Objectives</label>
           <textarea
             formControlName="description"
             rows="2"
@@ -67,7 +67,7 @@
     <div class="card section-card">
       <div class="section-header-flex">
         <div>
-          <h2 class="section-title">Email Sequence & Message Content</h2>
+          <h2 class="section-title">Email Sequence &amp; Message Content</h2>
           <p class="section-desc" ngNonBindable>
             Customize the outbound email dispatched to enrolled prospects.
             Supported template tags: <code>{{ Name }}</code
@@ -117,7 +117,7 @@
     <div class="card section-card">
       <div class="section-header-flex">
         <div>
-          <h2 class="section-title">Audience & Prospect Selection</h2>
+          <h2 class="section-title">Audience &amp; Prospect Selection</h2>
           <p class="section-desc">
             Upload a standard CSV sheet or select prospects from your database
           </p>
@@ -131,10 +131,12 @@
             [title]="!hasDownloadedTemplate ? 'Recommended: Download standard template first' : 'Download CSV Template'"
           >
             <span *ngIf="!hasDownloadedTemplate" class="step-badge">Step 1</span>
-            📥 Download CSV Template
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download CSV Template
           </button>
           <label class="btn-upload">
-            📤 Upload Prospects CSV
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload Prospects CSV
             <input
               type="file"
               (change)="onCsvFileSelected($event)"

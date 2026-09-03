@@ -21,7 +21,9 @@
 
   <!-- All-rules-configured info banner (shown when no undefined event types remain) -->
   <div class="info-banner" *ngIf="!loading && rules.length >= 12 && !showModal">
-    <span class="info-icon">ℹ️</span>
+    <span class="info-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    </span>
     All 12 predefined scoring events are configured. Edit an existing rule to
     adjust its score or status.
   </div>
@@ -219,7 +221,8 @@
         <div class="event-type-readonly">
           <span class="event-code-badge large">{{ ruleForm.eventType }}</span>
           <small class="field-hint locked-hint">
-            🔒 Event type cannot be changed — it defines the system behaviour
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Event type cannot be changed — it defines the system behaviour
             this rule responds to. Delete this rule and recreate if needed.
           </small>
         </div>

@@ -10,28 +10,36 @@
   <!-- Stats Grid Bar -->
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-icon icon-blue">📢</div>
+      <div class="stat-icon icon-blue">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M22 12A10 10 0 0 0 12 2v10z"/><path d="M12 12L2.1 10a10 10 0 0 0 16.3 9.4z"/><path d="M12 12V22a10 10 0 0 0 9.9-10z"/></svg>
+      </div>
       <div class="stat-info">
         <span class="stat-label">Total Campaigns</span>
         <span class="stat-value">{{ stats.total }}</span>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon icon-green">🚀</div>
+      <div class="stat-icon icon-green">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
       <div class="stat-info">
         <span class="stat-label">Active Running</span>
         <span class="stat-value">{{ stats.active }}</span>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon icon-purple">👥</div>
+      <div class="stat-icon icon-purple">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9333ea" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
       <div class="stat-info">
         <span class="stat-label">Total Prospects</span>
         <span class="stat-value">{{ stats.totalProspects }}</span>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon icon-gray">⏸️</div>
+      <div class="stat-icon icon-gray">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      </div>
       <div class="stat-info">
         <span class="stat-label">Draft / Closed</span>
         <span class="stat-value">{{ stats.draft + stats.completed }}</span>
@@ -42,7 +50,9 @@
   <!-- Filters & View Switcher Toolbar -->
   <div class="toolbar">
     <div class="search-box">
-      <span class="search-icon">🔍</span>
+      <span class="search-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
       <input 
         type="text" 
         [(ngModel)]="searchTerm" 
@@ -68,7 +78,7 @@
           (click)="setViewMode('cards')" 
           title="Grid View"
         >
-          <span>⊞ Grid</span>
+          <span>Grid</span>
         </button>
         <button 
           type="button" 
@@ -76,7 +86,7 @@
           (click)="setViewMode('table')" 
           title="Table View"
         >
-          <span>☰ Table</span>
+          <span>Table</span>
         </button>
       </div>
     </div>
@@ -90,7 +100,9 @@
 
   <!-- Empty State -->
   <div *ngIf="!loading && filteredCampaigns.length === 0" class="card empty-state">
-    <div class="empty-icon">📢</div>
+    <div class="empty-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    </div>
     <p class="empty-title">No campaigns found</p>
     <p class="empty-desc">Create your first outbound email campaign to start engaging target prospects.</p>
     <a routerLink="/admin/campaigns/new" class="btn-create">+ Create Campaign</a>
@@ -106,7 +118,10 @@
           <span class="status-badge" [ngClass]="(campaign.status || 'draft').toLowerCase()">
             {{ campaign.status || 'DRAFT' }}
           </span>
-          <span class="count-pill">👥 {{ campaign.recipientsCount || 0 }} Prospects</span>
+          <span class="count-pill">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 3px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            {{ campaign.recipientsCount || 0 }} Prospects
+          </span>
         </div>
       </div>
 
@@ -122,14 +137,14 @@
         <!-- Schedule / Timeline Info -->
         <div class="schedule-box">
           <div class="schedule-item">
-            <span class="schedule-label">📅 Start:</span>
+            <span class="schedule-label">Start:</span>
             <span class="schedule-val" *ngIf="campaign.scheduleStartDate">
               {{ campaign.scheduleStartDate | date:'MMM d, y, h:mm a' }}
             </span>
             <span class="schedule-val text-muted" *ngIf="!campaign.scheduleStartDate">—</span>
           </div>
           <div class="schedule-item">
-            <span class="schedule-label">🏁 End:</span>
+            <span class="schedule-label">End:</span>
             <span class="schedule-val" *ngIf="campaign.scheduleEndDate">
               {{ campaign.scheduleEndDate | date:'MMM d, y, h:mm a' }}
             </span>
@@ -250,7 +265,10 @@
               </span>
             </td>
             <td>
-              <span class="count-pill">👥 {{ campaign.recipientsCount || 0 }} prospects</span>
+              <span class="count-pill">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 3px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                {{ campaign.recipientsCount || 0 }} prospects
+              </span>
             </td>
             <td class="date-cell">
               <span *ngIf="campaign.scheduleStartDate">{{ campaign.scheduleStartDate | date:'MMM d, y, h:mm a' }}</span>

@@ -172,9 +172,12 @@
               name="phone"
               [(ngModel)]="phoneLocalNumber" 
               required
+              [attr.maxlength]="maxPhoneDigits"
+              (keydown)="onPhoneKeyDown($event)"
+              (paste)="onPhonePaste($event)"
               (blur)="validateField('phone')"
               (input)="onPhoneInput()"
-              placeholder="e.g. 9876543210"
+              [placeholder]="'e.g. ' + (selectedCountry.code === 'IN' ? '9876543210' : '1234567890') + ' (' + maxPhoneDigits + ' digits)'"
               class="phone-inner-control"
             >
 
@@ -196,7 +199,7 @@
           <div class="error-message" *ngIf="formErrors.phone && (contactForm.controls['phone'].touched || contactForm.submitted)">
             {{ formErrors.phone }}
           </div>
-          <small class="hint">International format: {{ selectedCountry.dialCode }} {{ phoneLocalNumber || 'XXXXXXXXXX' }}</small>
+          <small class="hint">Format: {{ selectedCountry.dialCode }} {{ phoneLocalNumber || 'XXXXXXXXXX' }} (Max {{ maxPhoneDigits }} digits)</small>
         </div>
 
         <!-- Products of Interest (Multi-Select Dropdown) -->
