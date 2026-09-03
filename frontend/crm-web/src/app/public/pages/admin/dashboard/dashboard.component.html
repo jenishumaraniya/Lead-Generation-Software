@@ -1,4 +1,5 @@
 <div class="dashboard-container">
+  <!-- Header Bar -->
   <div class="header-bar">
     <div>
       <h1 class="page-title">Admin Dashboard</h1>
@@ -45,6 +46,198 @@
       </div>
       <div class="stat-value">{{ stats.salesTeamCount }}</div>
       <div class="stat-sub">Assigned category representatives</div>
+    </div>
+  </div>
+
+  <!-- Charts & Analytics Section -->
+  <div class="charts-section-header">
+    <div>
+      <h2 class="section-heading">Analytics &amp; Pipeline Performance</h2>
+      <p class="section-subheading">Visual breakdown of lead trends, qualification tiers, and category distribution</p>
+    </div>
+
+    <!-- Timeframe Filter Selector -->
+    <div class="timeframe-toggle-group">
+      <button 
+        type="button" 
+        class="timeframe-btn" 
+        [class.active]="selectedTimeframe === '24H'" 
+        (click)="setTimeframe('24H')"
+      >
+        24 Hours
+      </button>
+      <button 
+        type="button" 
+        class="timeframe-btn" 
+        [class.active]="selectedTimeframe === 'WEEK'" 
+        (click)="setTimeframe('WEEK')"
+      >
+        This Week
+      </button>
+      <button 
+        type="button" 
+        class="timeframe-btn" 
+        [class.active]="selectedTimeframe === 'MONTH'" 
+        (click)="setTimeframe('MONTH')"
+      >
+        This Month
+      </button>
+      <button 
+        type="button" 
+        class="timeframe-btn" 
+        [class.active]="selectedTimeframe === 'ALL'" 
+        (click)="setTimeframe('ALL')"
+      >
+        All Time
+      </button>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <!-- Chart 1: Monthly Lead Volume Trend (Bar Chart) -->
+    <div class="card chart-card">
+      <div class="chart-header">
+        <div>
+          <h3 class="chart-title">Monthly Lead Inflow Trend</h3>
+          <p class="chart-subtitle">Lead volume growth over the past 6 months</p>
+        </div>
+        <span class="chart-badge">Live Trend</span>
+      </div>
+
+      <div class="bar-chart-container">
+        <div class="chart-y-axis">
+          <span>High</span>
+          <span>Mid</span>
+          <span>0</span>
+        </div>
+        <div class="bar-chart-bars">
+          <div 
+            *ngFor="let item of monthlyTrend" 
+            class="bar-item"
+            (mouseenter)="activeBarHover = item"
+            (mouseleave)="activeBarHover = null"
+          >
+            <div class="bar-val" [class.visible]="activeBarHover === item">{{ item.count }}</div>
+            <div class="bar-fill-wrap">
+              <div 
+                class="bar-fill" 
+                [style.height.%]="item.barHeightPercent"
+                [class.hovered]="activeBarHover === item"
+              ></div>
+            </div>
+            <span class="bar-label">{{ item.month }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart 2: Qualification Tier Distribution (Doughnut Chart) -->
+    <div class="card chart-card">
+      <div class="chart-header">
+        <div>
+          <h3 class="chart-title">Qualification Distribution</h3>
+          <p class="chart-subtitle">Leads categorized by AI score tiers</p>
+        </div>
+        <span class="chart-badge purple">AI Scoring</span>
+      </div>
+
+      <div class="doughnut-chart-layout">
+        <!-- SVG Doughnut Ring -->
+        <div class="doughnut-wrapper">
+          <svg class="doughnut-svg" viewBox="0 0 120 120">
+            <circle class="doughnut-bg" cx="60" cy="60" r="50"></circle>
+            <circle
+              *ngFor="let seg of qualSegments"
+              class="doughnut-segment"
+              cx="60"
+              cy="60"
+              r="50"
+              [style.stroke]="seg.color"
+              [style.strokeDasharray]="seg.dashArray"
+              [style.strokeDashoffset]="seg.dashOffset"
+            ></circle>
+          </svg>
+          <div class="doughnut-center-info">
+            <span class="center-val">{{ stats.totalLeads }}</span>
+            <span class="center-lbl">Total</span>
+          </div>
+        </div>
+
+        <!-- Doughnut Legend -->
+        <div class="doughnut-legend">
+          <div *ngFor="let seg of qualSegments" class="legend-item">
+            <div class="legend-dot-wrap">
+              <span class="legend-dot" [style.background]="seg.color"></span>
+              <span class="legend-name">{{ seg.label }}</span>
+            </div>
+            <div class="legend-meta">
+              <span class="legend-count">{{ seg.count }}</span>
+              <span class="legend-pct">{{ seg.percentage }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart 3: Category Lead Distribution (Horizontal Progress Bars) -->
+    <div class="card chart-card">
+      <div class="chart-header">
+        <div>
+          <h3 class="chart-title">Product Category Breakdown</h3>
+          <p class="chart-subtitle">Distribution of inquiries across business units</p>
+        </div>
+        <span class="chart-badge green">Coverage</span>
+      </div>
+
+      <div class="category-bars-list" *ngIf="categoryDistribution.length > 0">
+        <div *ngFor="let cat of categoryDistribution" class="cat-bar-item">
+          <div class="cat-bar-header">
+            <span class="cat-name">{{ cat.categoryName }}</span>
+            <span class="cat-count"><strong>{{ cat.count }}</strong> leads ({{ cat.percentage }}%)</span>
+          </div>
+          <div class="cat-progress-track">
+            <div 
+              class="cat-progress-fill" 
+              [style.width.%]="cat.percentage" 
+              [style.background]="cat.color"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-empty-state" *ngIf="categoryDistribution.length === 0">
+        <p>No category lead data recorded for this timeframe</p>
+      </div>
+    </div>
+
+    <!-- Chart 4: Pipeline Status Breakdown -->
+    <div class="card chart-card">
+      <div class="chart-header">
+        <div>
+          <h3 class="chart-title">Pipeline Status Breakdown</h3>
+          <p class="chart-subtitle">Lead conversion stages across sales funnels</p>
+        </div>
+        <span class="chart-badge orange">Pipeline</span>
+      </div>
+
+      <div class="status-funnel-list" *ngIf="statusDistribution.length > 0">
+        <div *ngFor="let st of statusDistribution" class="status-funnel-item">
+          <div class="status-funnel-left">
+            <span class="status-indicator-dot" [style.background]="st.color"></span>
+            <span class="status-funnel-label">{{ st.label }}</span>
+          </div>
+          <div class="status-funnel-right">
+            <div class="status-funnel-track">
+              <div class="status-funnel-fill" [style.width.%]="st.percentage" [style.background]="st.color"></div>
+            </div>
+            <span class="status-funnel-val">{{ st.count }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-empty-state" *ngIf="statusDistribution.length === 0">
+        <p>No status pipeline data recorded for this timeframe</p>
+      </div>
     </div>
   </div>
 
