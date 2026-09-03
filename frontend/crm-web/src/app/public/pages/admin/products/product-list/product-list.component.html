@@ -13,28 +13,36 @@
   <!-- Stats Grid -->
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-icon icon-blue">📦</div>
+      <div class="stat-icon icon-blue">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      </div>
       <div class="stat-info">
         <span class="stat-label">Total Products</span>
         <span class="stat-value">{{ stats.total }}</span>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon icon-green">⚡</div>
+      <div class="stat-icon icon-green">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
       <div class="stat-info">
         <span class="stat-label">Active Products</span>
         <span class="stat-value">{{ stats.active }}</span>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon icon-purple">🏷️</div>
+      <div class="stat-icon icon-purple">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9333ea" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      </div>
       <div class="stat-info">
         <span class="stat-label">Categories Covered</span>
         <span class="stat-value">{{ stats.categoriesCount }}</span>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon icon-orange">💰</div>
+      <div class="stat-icon icon-orange">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      </div>
       <div class="stat-info">
         <span class="stat-label">Average Starting Price</span>
         <span class="stat-value">₹{{ stats.avgPrice | number }}</span>
@@ -45,7 +53,9 @@
   <!-- Toolbar: Search, Filters & View Toggle -->
   <div class="toolbar">
     <div class="search-box">
-      <span class="search-icon">🔍</span>
+      <span class="search-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
       <input 
         type="text" 
         [(ngModel)]="searchTerm" 
@@ -80,7 +90,7 @@
           (click)="setViewMode('cards')" 
           title="Grid View"
         >
-          <span>⊞ Grid</span>
+          <span>Grid</span>
         </button>
         <button 
           type="button" 
@@ -88,7 +98,7 @@
           (click)="setViewMode('table')" 
           title="Table View"
         >
-          <span>☰ Table</span>
+          <span>Table</span>
         </button>
       </div>
     </div>
@@ -102,7 +112,9 @@
 
   <!-- Empty State -->
   <div *ngIf="!loading && filteredProducts.length === 0" class="card empty-state">
-    <div class="empty-icon">📦</div>
+    <div class="empty-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+    </div>
     <p class="empty-title">No products found</p>
     <p class="empty-desc">No products matched your search or category filter. Click "Add Product" to add a new one.</p>
     <button (click)="openModal()" class="btn-primary">+ Add Product</button>
@@ -115,7 +127,9 @@
       <!-- Card Header -->
       <div class="product-card-top">
         <div class="product-icon-wrap">
-          <span class="product-icon">💻</span>
+          <span class="product-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+          </span>
         </div>
         <span class="status-badge" [class.active]="(p.status || 'ACTIVE') === 'ACTIVE'">
           {{ p.status || 'ACTIVE' }}
@@ -125,7 +139,7 @@
       <!-- Card Body -->
       <div class="product-card-body">
         <div class="category-tag">
-          🏷️ {{ getCategoryName(p.categoryId) }}
+          {{ getCategoryName(p.categoryId) }}
         </div>
         <h3 class="product-card-title">{{ p.name }}</h3>
         <p class="product-card-desc">
@@ -141,12 +155,8 @@
 
       <!-- Card Footer Actions -->
       <div class="product-card-footer">
-        <button (click)="editProduct(p)" class="btn-action edit">
-          ✏️ Edit
-        </button>
-        <button (click)="deleteProduct(p.productId)" class="btn-action delete">
-          🗑️ Delete
-        </button>
+        <button (click)="editProduct(p)" class="btn-action edit">Edit</button>
+        <button (click)="deleteProduct(p.productId)" class="btn-action delete">Delete</button>
       </div>
 
     </div>

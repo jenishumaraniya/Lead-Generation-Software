@@ -25,28 +25,36 @@
   <!-- Stats Grid -->
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-icon icon-blue">🏷️</div>
+      <div class="stat-icon icon-blue">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      </div>
       <div class="stat-info">
         <span class="stat-label">Total Categories</span>
         <span class="stat-value">{{ stats.totalCategories }}</span>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon icon-green">✅</div>
+      <div class="stat-icon icon-green">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
       <div class="stat-info">
         <span class="stat-label">Covered Categories</span>
         <span class="stat-value">{{ stats.coveredCount }}</span>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon icon-orange">⚠️</div>
+      <div class="stat-icon icon-orange">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
       <div class="stat-info">
         <span class="stat-label">Unassigned Categories</span>
         <span class="stat-value">{{ stats.unassignedCount }}</span>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon icon-purple">👥</div>
+      <div class="stat-icon icon-purple">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9333ea" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
       <div class="stat-info">
         <span class="stat-label">Sales Reps Available</span>
         <span class="stat-value">{{ stats.totalReps }}</span>
@@ -57,7 +65,9 @@
   <!-- Toolbar: Search, Filters & View Toggle -->
   <div class="toolbar">
     <div class="search-box">
-      <span class="search-icon">🔍</span>
+      <span class="search-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
       <input 
         type="text" 
         [(ngModel)]="searchTerm" 
@@ -81,7 +91,7 @@
           (click)="setViewMode('cards')" 
           title="Grid View"
         >
-          <span>⊞ Grid</span>
+          <span>Grid</span>
         </button>
         <button 
           type="button" 
@@ -89,7 +99,7 @@
           (click)="setViewMode('table')" 
           title="Table View"
         >
-          <span>☰ Table</span>
+          <span>Table</span>
         </button>
       </div>
     </div>
@@ -103,7 +113,9 @@
 
   <!-- Empty State -->
   <div *ngIf="!loading && filteredCategories.length === 0" class="card empty-state">
-    <div class="empty-icon">🏷️</div>
+    <div class="empty-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+    </div>
     <p class="empty-title">No categories found</p>
     <p class="empty-desc">No categories matched your search. Click "Add Category" to create your first category.</p>
     <button (click)="openAddModal()" class="btn-primary">+ Add Category</button>
@@ -116,7 +128,9 @@
       <!-- Card Header -->
       <div class="cat-card-top">
         <div class="cat-icon-wrap">
-          <span class="cat-icon">🏷️</span>
+          <span class="cat-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          </span>
         </div>
         <span class="id-badge">#{{ cat.categoryId }}</span>
       </div>
@@ -127,7 +141,7 @@
 
         <!-- Salesperson Alignment Box -->
         <div class="rep-alignment-box">
-          <div class="rep-box-label">👤 Assigned Sales Rep (1:1)</div>
+          <div class="rep-box-label">Assigned Sales Rep (1:1)</div>
           <div *ngIf="getAssignedSalesperson(cat.categoryId) as rep" class="assigned-rep-info">
             <div class="rep-chip">
               <span class="rep-dot active"></span>
@@ -136,7 +150,7 @@
             <span class="rep-sub">{{ rep.email }}</span>
           </div>
           <div *ngIf="!getAssignedSalesperson(cat.categoryId)" class="unassigned-rep-info">
-            <span class="unassigned-badge">⚠️ No Sales Rep Assigned</span>
+            <span class="unassigned-badge">No Sales Rep Assigned</span>
             <a routerLink="/admin/salespersons" class="assign-link">Assign Rep →</a>
           </div>
         </div>
@@ -148,12 +162,8 @@
 
       <!-- Card Footer Actions -->
       <div class="cat-card-footer">
-        <button (click)="openEditModal(cat)" class="btn-action edit">
-          ✏️ Edit
-        </button>
-        <button (click)="deleteCategory(cat)" class="btn-action delete">
-          🗑️ Delete
-        </button>
+        <button (click)="openEditModal(cat)" class="btn-action edit">Edit</button>
+        <button (click)="deleteCategory(cat)" class="btn-action delete">Delete</button>
       </div>
 
     </div>
@@ -209,7 +219,7 @@
               <div class="text-muted" style="font-size: 12px;">{{ rep.email }}</div>
             </div>
             <span *ngIf="!getAssignedSalesperson(cat.categoryId)" class="text-orange" style="font-size: 12px; font-weight: 600;">
-              ⚠️ Unassigned
+              Unassigned
             </span>
           </td>
           <td>{{ cat.createdAt | date:'mediumDate' }}</td>

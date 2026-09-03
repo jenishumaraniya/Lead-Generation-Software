@@ -1,24 +1,31 @@
 <div class="home-container">
   <!-- Hero Section -->
   <section class="hero-section">
+    <!-- Futuristic Abstract Glowing Particles & Line Canvas Background -->
+    <div class="hero-bg-anim" aria-hidden="true">
+      <canvas #particleCanvas class="particle-canvas"></canvas>
+      <div class="hero-gradient-overlay"></div>
+    </div>
+
     <div class="hero-content">
       <div class="hero-badge">
         <span class="pulse-dot"></span>
-        Enterprise Hardware & Technology Infrastructure
+        Enterprise Hardware &amp; Technology Infrastructure
       </div>
       <h1 class="hero-title">
-        High-Performance IT Solutions <br/>
+        High-Performance IT Solutions <br />
         <span class="highlight">Built for Growing Businesses</span>
       </h1>
       <p class="hero-subtitle">
-        Equip your team with enterprise laptops, workstation desktops, high-availability servers, and resilient networking gear backed by dedicated enterprise warranties.
+        Equip your team with enterprise laptops, workstation desktops, high-availability servers, and resilient
+        networking gear backed by dedicated enterprise warranties.
       </p>
       <div class="hero-actions">
         <button class="btn btn-primary" (click)="exploreProducts()">
           Explore Product Catalog →
         </button>
       </div>
-      
+
       <!-- Trust Metrics -->
       <div class="hero-stats">
         <div class="stat-item">
@@ -49,49 +56,74 @@
     <div class="section-header">
       <span class="section-tag">CATALOG CATEGORIES</span>
       <h2 class="section-title">Enterprise Infrastructure by Category</h2>
-      <p class="section-desc">Tailored configurations engineered for developer workstations, high-compute server rooms, and distributed office networks.</p>
+      <p class="section-desc">Tailored configurations engineered for developer workstations, high-compute server rooms,
+        and distributed office networks.</p>
     </div>
 
     <div class="category-grid">
       @if (categories && categories.length > 0) {
-        @for (cat of categories; track cat.categoryId) {
-          <div class="category-card" (click)="exploreProducts(cat.categoryId)">
-            <div class="category-icon-wrapper">
-              <span class="category-icon">{{ getCategoryIcon(cat.categoryName) }}</span>
-            </div>
-            <h3 class="category-name">{{ cat.categoryName }}</h3>
-            <p class="category-info">{{ cat.productsCount || 0 }} Models Available</p>
-            <div class="category-action">
-              <span>View Specifications</span>
-              <span class="arrow">→</span>
-            </div>
-          </div>
-        }
+      @for (cat of categories; track cat.categoryId) {
+      <div class="category-card" (click)="exploreProducts(cat.categoryId)">
+        <div class="category-icon-wrapper">
+          <span class="category-icon">
+            <ng-container [ngSwitch]="getCategoryType(cat.categoryName)">
+              <svg *ngSwitchCase="'laptop'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+              <svg *ngSwitchCase="'desktop'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              <svg *ngSwitchCase="'server'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+              <svg *ngSwitchCase="'network'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              <svg *ngSwitchDefault width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            </ng-container>
+          </span>
+        </div>
+        <h3 class="category-name">{{ cat.categoryName }}</h3>
+        <p class="category-info">{{ cat.productsCount || 0 }} Models Available</p>
+        <div class="category-action">
+          <span>View Specifications</span>
+          <span class="arrow">→</span>
+        </div>
+      </div>
+      }
       } @else {
-        <div class="category-card" (click)="exploreProducts(1)">
-          <div class="category-icon-wrapper"><span class="category-icon">💻</span></div>
-          <h3 class="category-name">Enterprise Laptops</h3>
-          <p class="category-info">Lightweight, high-security notebooks with extended battery life.</p>
-          <div class="category-action"><span>Explore Models</span> <span class="arrow">→</span></div>
+      <div class="category-card" (click)="exploreProducts(1)">
+        <div class="category-icon-wrapper">
+          <span class="category-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+          </span>
         </div>
-        <div class="category-card" (click)="exploreProducts(2)">
-          <div class="category-icon-wrapper"><span class="category-icon">🖥️</span></div>
-          <h3 class="category-name">Workstation Desktops</h3>
-          <p class="category-info">Multi-display, GPU-accelerated desktops for engineering & design.</p>
-          <div class="category-action"><span>Explore Models</span> <span class="arrow">→</span></div>
+        <h3 class="category-name">Enterprise Laptops</h3>
+        <p class="category-info">Lightweight, high-security notebooks with extended battery life.</p>
+        <div class="category-action"><span>Explore Models</span> <span class="arrow">→</span></div>
+      </div>
+      <div class="category-card" (click)="exploreProducts(2)">
+        <div class="category-icon-wrapper">
+          <span class="category-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </span>
         </div>
-        <div class="category-card" (click)="exploreProducts(3)">
-          <div class="category-icon-wrapper"><span class="category-icon">🗄️</span></div>
-          <h3 class="category-name">Enterprise Servers</h3>
-          <p class="category-info">Rackmount & tower servers optimized for database and virtualization.</p>
-          <div class="category-action"><span>Explore Models</span> <span class="arrow">→</span></div>
+        <h3 class="category-name">Workstation Desktops</h3>
+        <p class="category-info">Multi-display, GPU-accelerated desktops for engineering &amp; design.</p>
+        <div class="category-action"><span>Explore Models</span> <span class="arrow">→</span></div>
+      </div>
+      <div class="category-card" (click)="exploreProducts(3)">
+        <div class="category-icon-wrapper">
+          <span class="category-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+          </span>
         </div>
-        <div class="category-card" (click)="exploreProducts(4)">
-          <div class="category-icon-wrapper"><span class="category-icon">🌐</span></div>
-          <h3 class="category-name">Networking Systems</h3>
-          <p class="category-info">Managed switches, firewalls, and enterprise Wi-Fi mesh solutions.</p>
-          <div class="category-action"><span>Explore Models</span> <span class="arrow">→</span></div>
+        <h3 class="category-name">Enterprise Servers</h3>
+        <p class="category-info">Rackmount &amp; tower servers optimized for database and virtualization.</p>
+        <div class="category-action"><span>Explore Models</span> <span class="arrow">→</span></div>
+      </div>
+      <div class="category-card" (click)="exploreProducts(4)">
+        <div class="category-icon-wrapper">
+          <span class="category-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </span>
         </div>
+        <h3 class="category-name">Networking Systems</h3>
+        <p class="category-info">Managed switches, firewalls, and enterprise Wi-Fi mesh solutions.</p>
+        <div class="category-action"><span>Explore Models</span> <span class="arrow">→</span></div>
+      </div>
       }
     </div>
   </section>
@@ -101,28 +133,35 @@
     <div class="about-container">
       <div class="about-text">
         <span class="section-tag">ABOUT LEADFLOW ENTERPRISE</span>
-        <h2 class="section-title">Bridging Hardware Precision & Commercial Growth</h2>
+        <h2 class="section-title">Bridging Hardware Precision &amp; Commercial Growth</h2>
         <p class="about-lead">
-          LeadFlow Enterprise is a leading provider of end-to-end B2B computing hardware and IT lifecycle management. We partner with organizations ranging from fast-growing startups to Fortune 500 corporations.
+          LeadFlow Enterprise is a leading provider of end-to-end B2B computing hardware and IT lifecycle management. We
+          partner with organizations ranging from fast-growing startups to Fortune 500 corporations.
         </p>
-        
+
         <div class="features-list">
           <div class="feature-item">
-            <div class="feature-icon">🛡️</div>
+            <div class="feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+            </div>
             <div>
               <h4>Tier-1 Verified Hardware</h4>
               <p>All devices undergo multi-stage stress testing with genuine enterprise warranties.</p>
             </div>
           </div>
           <div class="feature-item">
-            <div class="feature-icon">💼</div>
+            <div class="feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            </div>
             <div>
               <h4>Transparent Volume Pricing</h4>
               <p>Direct wholesale quotes with scalable leasing and flexible payment schedules.</p>
             </div>
           </div>
           <div class="feature-item">
-            <div class="feature-icon">⚡</div>
+            <div class="feature-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
             <div>
               <h4>Dedicated Account Engineers</h4>
               <p>Personal technical specialists assigned to configure, deploy, and support your fleet.</p>
@@ -133,7 +172,7 @@
 
       <div class="about-visual">
         <div class="visual-card main-card">
-          <div class="card-header-badge">✓ ISO 9001 & 27001 Certified</div>
+          <div class="card-header-badge">✓ ISO 9001 &amp; 27001 Certified</div>
           <h3>Enterprise Grade Supply Chain</h3>
           <p>Over 50,000+ units delivered across 15+ industry sectors with 99.98% operational compliance.</p>
           <div class="card-pills">
@@ -151,7 +190,8 @@
     <div class="cta-card">
       <div class="cta-content">
         <h2>Ready to upgrade your enterprise technology stack?</h2>
-        <p>Explore our catalog specifications or request a custom procurement proposal tailored to your company's headcount and budget.</p>
+        <p>Explore our catalog specifications or request a custom procurement proposal tailored to your company's
+          headcount and budget.</p>
       </div>
       <div class="cta-actions">
         <button class="btn btn-light" (click)="exploreProducts()">
@@ -191,13 +231,13 @@
         <ul>
           <li><a routerLink="/products">Full Catalog</a></li>
           <li><a routerLink="/">Enterprise Overview</a></li>
-          <li><a routerLink="/security-compliance">Security & Trust</a></li>
+          <li><a routerLink="/security-compliance">Security &amp; Trust</a></li>
         </ul>
       </div>
 
       <div class="footer-col">
         <h4>Headquarters</h4>
-        <p class="f-text">Tech Gateway Tower, Suite 400<br/>Business Bay District</p>
+        <p class="f-text">Tech Gateway Tower, Suite 400<br />Business Bay District</p>
       </div>
     </div>
 
