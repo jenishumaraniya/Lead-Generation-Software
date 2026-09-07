@@ -117,35 +117,26 @@ export class ApiService {
     return this.http.get<any[]>(`${this.baseUrl}/categories`);
   }
 
-  getProducts(categoryId?: number): Observable<Product[]> {
+  getProducts(categoryId?: number, includeInactive: boolean = false): Observable<Product[]> {
+    let params = new HttpParams();
 
-  let params = new HttpParams();
+    if (categoryId !== undefined && categoryId !== null) {
+      params = params.set('categoryId', categoryId.toString());
+    }
 
-  if (
-    categoryId !== undefined &&
-    categoryId !== null
-  ) {
+    params = params.set('includeInactive', includeInactive.toString());
 
-    params = params.set(
-      'categoryId',
-      categoryId.toString()
-    );
-
-  }
-
-  return this.http.get<any[]>(
-    `${this.baseUrl}/product`,
-    { params }
-  ).pipe(
-
-    map(products =>
-      products.map(product =>
-        this.normalizeProduct(product)
+    return this.http.get<any[]>(
+      `${this.baseUrl}/product`,
+      { params }
+    ).pipe(
+      map(products =>
+        products.map(product =>
+          this.normalizeProduct(product)
+        )
       )
-    )
-
-  );
-}
+    );
+  }
 
    submitLead(data: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/lead/submit`, data);

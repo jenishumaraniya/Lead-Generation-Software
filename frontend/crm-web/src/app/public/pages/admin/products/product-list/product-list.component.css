@@ -281,6 +281,18 @@
   border-color: #a7f3d0;
 }
 
+.status-badge.inactive {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.status-badge.draft {
+  background: #fffbeb;
+  color: #d97706;
+  border-color: #fde68a;
+}
+
 .product-card-body {
   flex: 1;
   margin-bottom: 16px;
@@ -580,6 +592,14 @@
   padding: 16px 24px;
   background: #f8fafc;
   border-top: 1px solid #e2e8f0;
+}
+
+.pagination-wrapper {
+  margin-top: 24px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 @media (max-width: 768px) {
