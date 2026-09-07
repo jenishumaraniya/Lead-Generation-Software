@@ -131,7 +131,10 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
           </span>
         </div>
-        <span class="status-badge" [class.active]="(p.status || 'ACTIVE') === 'ACTIVE'">
+        <span class="status-badge" 
+              [class.active]="(p.status || 'ACTIVE').toUpperCase() === 'ACTIVE'"
+              [class.inactive]="(p.status || 'ACTIVE').toUpperCase() === 'INACTIVE'"
+              [class.draft]="(p.status || 'ACTIVE').toUpperCase() === 'DRAFT'">
           {{ p.status || 'ACTIVE' }}
         </span>
       </div>
@@ -215,7 +218,10 @@
             <strong class="price-text">₹{{ p.pricing | number:'1.2-2' }}</strong>
           </td>
           <td>
-            <span class="status-badge" [class.active]="(p.status || 'ACTIVE') === 'ACTIVE'">
+            <span class="status-badge" 
+                  [class.active]="(p.status || 'ACTIVE').toUpperCase() === 'ACTIVE'"
+                  [class.inactive]="(p.status || 'ACTIVE').toUpperCase() === 'INACTIVE'"
+                  [class.draft]="(p.status || 'ACTIVE').toUpperCase() === 'DRAFT'">
               {{ p.status || 'ACTIVE' }}
             </span>
           </td>
@@ -226,7 +232,10 @@
         </tr>
       </tbody>
     </table>
+  </div>
 
+  <!-- Shared Pagination for both Grid and Table Views -->
+  <div *ngIf="!loading && filteredProducts.length > pageSize" class="pagination-wrapper">
     <app-pagination
       [totalItems]="filteredProducts.length"
       [pageSize]="pageSize"
