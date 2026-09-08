@@ -29,7 +29,7 @@ export class SalespersonListComponent implements OnInit {
   sortDirection: 'asc' | 'desc' = 'asc';
 
   currentPage = 1;
-  pageSize = 6;
+  pageSize = 10;
 
   get paginatedSalespersons(): Salesperson[] {
     const start = (this.currentPage - 1) * this.pageSize;
@@ -153,11 +153,6 @@ export class SalespersonListComponent implements OnInit {
     }
 
     this.filteredSalespersons = list;
-  }
-
-  clearSearch(): void {
-    this.searchTerm = '';
-    this.applyFilter();
   }
 
   toggleSort(column: string): void {

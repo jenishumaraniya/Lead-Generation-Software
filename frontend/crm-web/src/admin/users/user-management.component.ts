@@ -65,11 +65,6 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
-  clearSearch(): void {
-    this.searchTerm = '';
-    this.applyFilter();
-  }
-
   openCreateModal(): void {
     this.userForm = {
       fullName: '',

@@ -31,13 +31,6 @@
         placeholder="Search products by name or details..."
         class="form-control"
       />
-      <button 
-        *ngIf="searchTerm" 
-        type="button" 
-        (click)="clearSearch()" 
-        class="btn-clear-search" 
-        title="Clear search"
-      >&times;</button>
     </div>
 
     <div class="category-filter">
@@ -128,10 +121,7 @@
           </div>
           <div class="form-group">
             <label>Price ($ USD) *</label>
-            <input type="number" [(ngModel)]="productForm.pricing" class="form-control" min="0.01" step="0.01" placeholder="e.g. 49999" />
-            <span *ngIf="productForm.pricing !== null && productForm.pricing !== undefined && productForm.pricing <= 0" style="color: #ef4444; font-size: 11px; margin-top: 4px; display: block;">
-              ⚠️ Price must be greater than zero.
-            </span>
+            <input type="number" [(ngModel)]="productForm.pricing" class="form-control" min="0" step="0.01" />
           </div>
         </div>
 
@@ -157,7 +147,7 @@
 
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="closeModal()">Cancel</button>
-        <button class="btn btn-primary" (click)="saveProduct()" [disabled]="!productForm.name?.trim() || !productForm.pricing || productForm.pricing <= 0">
+        <button class="btn btn-primary" (click)="saveProduct()">
           {{ isEditing ? 'Save Changes' : 'Create Product' }}
         </button>
       </div>

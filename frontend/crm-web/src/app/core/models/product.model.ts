@@ -18,5 +18,4 @@ export interface Product {
   status: string;
   categoryId?: number;      // optional
   categoryName?: string;    // optional
-  imageUrl?: string | null; // optional custom image url or server path
 }

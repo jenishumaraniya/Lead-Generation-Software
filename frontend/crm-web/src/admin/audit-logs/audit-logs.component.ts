@@ -38,9 +38,4 @@ export class AuditLogsComponent implements OnInit {
   onSearch(): void {
     this.loadLogs();
   }
-
-  clearSearch(): void {
-    this.searchTerm = '';
-    this.loadLogs();
-  }
 }

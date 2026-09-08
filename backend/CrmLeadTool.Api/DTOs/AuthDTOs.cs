@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace CrmLeadTool.Api.DTOs;
 
 public class LoginRequestDto
@@ -94,30 +92,22 @@ public class AuditLogDto
 
 public class CreateProductRequestDto
 {
-    [Required(ErrorMessage = "Product name is required.")]
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
-
-    [Range(0.01, (double)decimal.MaxValue, ErrorMessage = "Product price must be greater than zero.")]
     public decimal Pricing { get; set; }
     public string? Features { get; set; }
     public string? Specifications { get; set; }
-    public string? ImageUrl { get; set; }
     public int? CategoryId { get; set; }
 }
 
 public class UpdateProductRequestDto
 {
-    [Required(ErrorMessage = "Product name is required.")]
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
-
-    [Range(0.01, (double)decimal.MaxValue, ErrorMessage = "Product price must be greater than zero.")]
     public decimal Pricing { get; set; }
     public string? Features { get; set; }
     public string? Specifications { get; set; }
     public string Status { get; set; } = "ACTIVE";
-    public string? ImageUrl { get; set; }
     public int? CategoryId { get; set; }
 }
 
