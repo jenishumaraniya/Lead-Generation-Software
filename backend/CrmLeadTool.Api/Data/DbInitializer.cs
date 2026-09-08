@@ -264,6 +264,10 @@ public static class DbInitializer
 
             @"IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='Campaign_CRM' AND COLUMN_NAME='ScheduleEndDate')
               ALTER TABLE Campaign_CRM ADD ScheduleEndDate DATETIME2 NULL",
+
+            // Product_CRM: Check constraint ensuring Pricing > 0
+            @"IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = 'CK_Product_Pricing_Positive')
+              ALTER TABLE Product_CRM ADD CONSTRAINT CK_Product_Pricing_Positive CHECK (Pricing > 0)",
         };
 
         foreach (var sql in columnMigrations)
@@ -278,10 +282,10 @@ public static class DbInitializer
             }
         }
 
-        // Seed Default Users if empty
+        // Seed Root Administrator only if no admin exists in the system
         try
         {
-            if (!await context.Users.AnyAsync(u => u.Email == "admin@leadgen.com"))
+            if (!await context.Users.AnyAsync(u => u.Role == "ADMIN" || u.Email == "admin@leadgen.com"))
             {
                 var (hash, salt) = PasswordHasher.HashPassword("Admin@123");
                 context.Users.Add(new User
@@ -294,93 +298,12 @@ public static class DbInitializer
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 });
+                await context.SaveChangesAsync();
             }
-
-            if (!await context.Users.AnyAsync(u => u.Email == "sales@leadgen.com"))
-            {
-                var (hash, salt) = PasswordHasher.HashPassword("Sales@123");
-                context.Users.Add(new User
-                {
-                    FullName = "Alex Carter (Sales Rep)",
-                    Email = "sales@leadgen.com",
-                    PasswordHash = hash,
-                    Salt = salt,
-                    Role = "SALES_REP",
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                });
-            }
-
-            if (!await context.Users.AnyAsync(u => u.Email == "sutharharshit695@gmail.com"))
-            {
-                var (hash, salt) = PasswordHasher.HashPassword("Sales@123");
-                context.Users.Add(new User
-                {
-                    FullName = "Harshit Suthar (Sales Rep)",
-                    Email = "sutharharshit695@gmail.com",
-                    PasswordHash = hash,
-                    Salt = salt,
-                    Role = "SALES_REP",
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                });
-            }
-
-            // Ensure all existing users are active and unlocked
-            var allUsers = await context.Users.ToListAsync();
-            var (defaultSalesHash, defaultSalesSalt) = PasswordHasher.HashPassword("Sales@123");
-            foreach (var u in allUsers)
-            {
-                u.FailedLoginAttempts = 0;
-                u.LockoutEnd = null;
-                u.IsActive = true;
-                if (string.IsNullOrEmpty(u.PasswordHash) || string.IsNullOrEmpty(u.Salt))
-                {
-                    u.PasswordHash = defaultSalesHash;
-                    u.Salt = defaultSalesSalt;
-                }
-            }
-            await context.SaveChangesAsync();
-
-            // Seed Default Categories if missing
-            var defaultCategoryNames = new[] { "Laptops", "Desktops", "Servers", "Networking", "Cloud Solutions" };
-            foreach (var catName in defaultCategoryNames)
-            {
-                if (!await context.Categories.AnyAsync(c => c.CategoryName == catName))
-                {
-                    context.Categories.Add(new Category
-                    {
-                        CategoryName = catName,
-                        CreatedAt = DateTime.UtcNow
-                    });
-                }
-            }
-            await context.SaveChangesAsync();
-
-            // Link existing products to matching categories if CategoryId is null
-            var allCats = await context.Categories.ToListAsync();
-            var laptopCat = allCats.FirstOrDefault(c => c.CategoryName.Contains("Laptop"));
-            var desktopCat = allCats.FirstOrDefault(c => c.CategoryName.Contains("Desktop"));
-            var serverCat = allCats.FirstOrDefault(c => c.CategoryName.Contains("Server"));
-            var netCat = allCats.FirstOrDefault(c => c.CategoryName.Contains("Network") || c.CategoryName.Contains("Cloud"));
-
-            var productsToUpdate = await context.Products.Where(p => p.CategoryId == null).ToListAsync();
-            foreach (var p in productsToUpdate)
-            {
-                if (p.Name.Contains("Laptop", StringComparison.OrdinalIgnoreCase) && laptopCat != null)
-                    p.CategoryId = laptopCat.CategoryId;
-                else if (p.Name.Contains("Desktop", StringComparison.OrdinalIgnoreCase) && desktopCat != null)
-                    p.CategoryId = desktopCat.CategoryId;
-                else if (p.Name.Contains("Server", StringComparison.OrdinalIgnoreCase) && serverCat != null)
-                    p.CategoryId = serverCat.CategoryId;
-                else if (netCat != null)
-                    p.CategoryId = netCat.CategoryId;
-            }
-            await context.SaveChangesAsync();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[DbInitializer] User/Category seed error: {ex.Message}");
+            Console.WriteLine($"[DbInitializer] Admin initialization error: {ex.Message}");
         }
     }
 }
