@@ -177,19 +177,19 @@ export class ApiService {
   }
  
   private normalizeProduct(product: any): Product {
-
-  return {
-    productId: product.productId ?? product.id,
-    name: product.name ?? 'Product',
-    description: product.description ?? '',
-    pricing: Number(product.pricing ?? 0),
-    features: this.parseList(product.features),
-    specifications: this.parseList(product.specifications),
-    status: product.status ?? 'Available',
-    categoryId: product.categoryId ?? null,
-    categoryName: product.categoryName ?? null
-  };
-}
+    return {
+      productId: product.productId ?? product.id,
+      name: product.name ?? 'Product',
+      description: product.description ?? '',
+      pricing: Number(product.pricing ?? 0),
+      features: this.parseList(product.features),
+      specifications: this.parseList(product.specifications),
+      status: product.status ?? 'Available',
+      categoryId: product.categoryId ?? null,
+      categoryName: product.categoryName ?? null,
+      imageUrl: product.imageUrl ?? product.ImageUrl ?? null
+    };
+  }
 
  
   private parseList(value: string | string[] | null | undefined): string[] {

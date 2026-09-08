@@ -152,7 +152,7 @@
 
 .search-box input {
   width: 100%;
-  padding: 10px 14px 10px 36px;
+  padding: 10px 36px 10px 36px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   font-size: 14px;
@@ -165,6 +165,32 @@
   border-color: #2563eb;
   outline: none;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.btn-clear-search {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+  z-index: 10;
+}
+
+.btn-clear-search:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+  border-color: #94a3b8;
 }
 
 .filter-actions {
@@ -246,20 +272,39 @@
 .product-card-top {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 14px;
+  position: relative;
 }
 
-.product-icon-wrap {
-  width: 42px;
-  height: 42px;
+.product-img-wrap {
+  width: 100%;
+  height: 140px;
   border-radius: 10px;
-  background: #eff6ff;
+  overflow: hidden;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  border: 1px solid #dbeafe;
+}
+
+.product-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.25s ease;
+}
+
+.product-card:hover .product-cover-img {
+  transform: scale(1.03);
+}
+
+.product-card-top .status-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  backdrop-filter: blur(4px);
 }
 
 .status-badge {
@@ -515,20 +560,25 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(15, 23, 42, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(4px);
+  padding: 24px 16px;
+  box-sizing: border-box;
 }
 
 .modal-card {
   background: #ffffff;
   width: 100%;
-  max-width: 500px;
-  border-radius: 12px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  max-width: 520px;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  box-shadow: 0 20px 30px -10px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
 
@@ -536,8 +586,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: 18px 24px;
   border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+  background: #ffffff;
 }
 
 .modal-header h2 {
@@ -556,7 +608,28 @@
 }
 
 .form-body {
-  padding: 24px;
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+  max-height: calc(100vh - 170px);
+}
+
+.form-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.form-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.form-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.form-body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .form-field {
@@ -592,6 +665,7 @@
   padding: 16px 24px;
   background: #f8fafc;
   border-top: 1px solid #e2e8f0;
+  flex-shrink: 0;
 }
 
 .pagination-wrapper {
@@ -600,6 +674,170 @@
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   overflow: hidden;
+}
+
+.prod-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.prod-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  flex-shrink: 0;
+}
+
+/* ======================================================== */
+/* IMAGE UPLOADER IN MODAL                                  */
+/* ======================================================== */
+.image-uploader-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.preview-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.preview-thumb-wrap {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+.preview-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.btn-clear-image {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  background: rgba(15, 23, 42, 0.8);
+  color: #ffffff;
+  border: none;
+  border-radius: 50%;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-clear-image:hover {
+  background: #ef4444;
+}
+
+.preview-status-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #059669;
+}
+
+.upload-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.file-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.btn-file-select {
+  display: inline-flex;
+  align-items: center;
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-file-select:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #2563eb;
+}
+
+.btn-file-select.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.file-spec-hint {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.url-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin: 4px 0;
+}
+
+.url-divider::before,
+.url-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.url-divider span {
+  padding: 0 8px;
+}
+
+.img-url-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.upload-error-msg {
+  font-size: 12px;
+  color: #dc2626;
+  margin-top: 6px;
 }
 
 @media (max-width: 768px) {

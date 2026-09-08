@@ -97,6 +97,11 @@ export class SalesLeadListComponent implements OnInit {
     this.filteredLeads = list;
   }
 
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.applyFilters();
+  }
+
   toggleSort(column: string): void {
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
