@@ -3,6 +3,12 @@ using CrmLeadTool.Api.Services;
 using CrmLeadTool.Api.Workers;
 using Microsoft.EntityFrameworkCore;
 
+// Pre-create wwwroot and uploads directory before host builder initializes static web assets
+var webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+var uploadsPath = Path.Combine(webRootPath, "uploads");
+if (!Directory.Exists(webRootPath)) Directory.CreateDirectory(webRootPath);
+if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services
@@ -12,7 +18,13 @@ builder.Services.AddSwaggerGen();
 
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlServerOptions =>
+        {
+            sqlServerOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+            sqlServerOptions.EnableRetryOnFailure();
+        }));
 
 // Register Domain & Application Services
 builder.Services.AddScoped<VisitorService>();
@@ -64,8 +76,19 @@ using (var scope = app.Services.CreateScope())
 // Configure pipeline
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.UseStaticFiles(); // Serves files from wwwroot
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads"
+});
+
 app.UseCors("Frontend");
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.MapControllers();
 
 app.Run();

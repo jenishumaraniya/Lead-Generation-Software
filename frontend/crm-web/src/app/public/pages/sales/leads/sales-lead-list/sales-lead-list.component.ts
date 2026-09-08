@@ -64,6 +64,11 @@ export class SalesLeadListComponent implements OnInit {
     });
   }
 
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.applyFilters();
+  }
+
   applyFilters(): void {
     this.currentPage = 1;
     let list = this.leads.filter(lead => {

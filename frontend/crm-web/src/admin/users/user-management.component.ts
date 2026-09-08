@@ -54,6 +54,11 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.applyFilter();
+  }
+
   applyFilter(): void {
     this.filteredUsers = this.users.filter(u => {
       const matchSearch = !this.searchTerm ||

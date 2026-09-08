@@ -156,14 +156,23 @@
       </div>
 
       <div class="prospects-filter-bar">
-        <input
-          type="text"
-          placeholder="Filter prospects by name, company, email, or title..."
-          [(ngModel)]="prospectSearchTerm"
-          [ngModelOptions]="{ standalone: true }"
-          (input)="applyProspectFilter()"
-          class="search-input"
-        />
+        <div class="prospect-search-box">
+          <input
+            type="text"
+            placeholder="Filter prospects by name, company, email, or title..."
+            [(ngModel)]="prospectSearchTerm"
+            [ngModelOptions]="{ standalone: true }"
+            (input)="applyProspectFilter()"
+            class="search-input"
+          />
+          <button 
+            *ngIf="prospectSearchTerm" 
+            type="button" 
+            (click)="clearProspectSearch()" 
+            class="btn-clear-search" 
+            title="Clear search"
+          >&times;</button>
+        </div>
         <div class="selected-count">
           Selected: <strong>{{ selectedProspectIds.size }}</strong> of
           {{ allProspects.length }} prospects

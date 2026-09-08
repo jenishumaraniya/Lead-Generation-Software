@@ -6,13 +6,22 @@
     </div>
 
     <div class="filter-controls">
-      <input 
-        type="text" 
-        [(ngModel)]="searchTerm" 
-        (input)="applyFilters()" 
-        placeholder="Search by name, company, email, or rep..."
-        class="search-input"
-      />
+      <div class="search-box">
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm" 
+          (input)="applyFilters()" 
+          placeholder="Search by name, company, email, or rep..."
+          class="search-input"
+        />
+        <button 
+          *ngIf="searchTerm" 
+          type="button" 
+          (click)="clearSearch()" 
+          class="btn-clear-search" 
+          title="Clear search"
+        >&times;</button>
+      </div>
 
       <!-- Sales Representative Filter -->
       <select [(ngModel)]="salespersonFilter" (change)="applyFilters()" class="filter-select">

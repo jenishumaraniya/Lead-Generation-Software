@@ -118,6 +118,11 @@ export class CampaignFormComponent implements OnInit {
     });
   }
 
+  clearProspectSearch(): void {
+    this.prospectSearchTerm = '';
+    this.applyProspectFilter();
+  }
+
   applyProspectFilter(): void {
     if (!this.prospectSearchTerm) {
       this.filteredProspects = [...this.allProspects];

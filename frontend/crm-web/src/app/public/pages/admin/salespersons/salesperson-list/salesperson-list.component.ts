@@ -155,6 +155,11 @@ export class SalespersonListComponent implements OnInit {
     this.filteredSalespersons = list;
   }
 
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.applyFilter();
+  }
+
   toggleSort(column: string): void {
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';

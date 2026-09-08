@@ -108,6 +108,11 @@ export class RuleListComponent implements OnInit {
     this.penaltyRulesCount = this.rules.filter((r) => r.points < 0).length;
   }
 
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.applyFilter();
+  }
+
   applyFilter(): void {
     let list = this.rules.filter((rule) => {
       const matchesSearch =
