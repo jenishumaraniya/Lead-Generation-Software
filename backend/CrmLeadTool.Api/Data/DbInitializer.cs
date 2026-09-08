@@ -223,52 +223,6 @@ public static class DbInitializer
                   Metadata NVARCHAR(MAX) NULL,
                   CreatedBy NVARCHAR(255) NULL,
                   CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
-              )",
-
-            @"IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'AIAnalysis_CRM')
-              CREATE TABLE AIAnalysis_CRM (
-                  AIAnalysisId INT IDENTITY(1,1) PRIMARY KEY,
-                  LeadId INT NOT NULL,
-                  Intent NVARCHAR(50) NOT NULL DEFAULT 'AWARENESS',
-                  ConfidenceScore DECIMAL(5,2) NOT NULL DEFAULT 50.00,
-                  LeadSummary NVARCHAR(MAX) NULL,
-                  PriorityRecommendation NVARCHAR(50) NOT NULL DEFAULT 'MEDIUM',
-                  RecommendedNextAction NVARCHAR(MAX) NULL,
-                  ProfessionalSummary NVARCHAR(MAX) NULL,
-                  LikelyIndustry NVARCHAR(255) NULL,
-                  CompanySize NVARCHAR(100) NULL,
-                  LikelyLocation NVARCHAR(255) NULL,
-                  PotentialRole NVARCHAR(255) NULL,
-                  ModelVersion NVARCHAR(100) NULL,
-                  RawResponse NVARCHAR(MAX) NULL,
-                  AnalysisDate DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-                  CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
-              )",
-
-            @"IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'AIInsight_CRM')
-              CREATE TABLE AIInsight_CRM (
-                  AIInsightId INT IDENTITY(1,1) PRIMARY KEY,
-                  LeadId INT NOT NULL,
-                  AIAnalysisId INT NULL,
-                  InsightType NVARCHAR(100) NOT NULL,
-                  InsightText NVARCHAR(MAX) NOT NULL,
-                  ConfidenceScore DECIMAL(5,2) NULL,
-                  IsAccepted BIT NOT NULL DEFAULT 0,
-                  IsUsed BIT NOT NULL DEFAULT 0,
-                  CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE()
-              )",
-
-            @"IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'AIAnalysisHistory_CRM')
-              CREATE TABLE AIAnalysisHistory_CRM (
-                  AIAnalysisHistoryId INT IDENTITY(1,1) PRIMARY KEY,
-                  LeadId INT NOT NULL,
-                  PreviousIntent NVARCHAR(50) NULL,
-                  NewIntent NVARCHAR(50) NULL,
-                  PreviousPriority NVARCHAR(50) NULL,
-                  NewPriority NVARCHAR(50) NULL,
-                  ChangedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
-                  ChangedBy NVARCHAR(255) NULL,
-                  Reason NVARCHAR(500) NULL
               )"
         };
 
