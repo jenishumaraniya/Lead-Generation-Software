@@ -47,6 +47,7 @@
           <tr>
             <th>Lead Name</th>
             <th>Company & Domain</th>
+            <th>Interested Product(s)</th>
             <th>Role</th>
             <th>Score</th>
             <th>Stage</th>
@@ -67,6 +68,12 @@
               <div class="company-cell">
                 <strong>{{ lead.companyName }}</strong>
                 <span class="email-sub">{{ lead.domain || 'N/A' }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="product-cell">
+                <span class="prod-badge" *ngFor="let pName of (lead.productNames || [])">{{ pName }}</span>
+                <span class="lead-meta" *ngIf="!lead.productNames?.length">{{ lead.productNamesFormatted || 'None Specified' }}</span>
               </div>
             </td>
             <td><span class="role-badge">{{ lead.jobTitle || 'Decision Maker' }}</span></td>
@@ -156,6 +163,23 @@
               <span class="score-denom">{{ selectedLead.status }}</span>
             </div>
           </div>
+        </div>
+
+        <!-- Interested Product(s) / Project(s) -->
+        <div class="info-card">
+          <h4>📦 Interested Product(s) / Project(s)</h4>
+          <div class="intent-text-box" *ngIf="selectedLead.products?.length; else textProducts">
+            <div *ngFor="let prod of selectedLead.products" style="margin-bottom: 6px;">
+              <strong>• {{ prod.name }}</strong>
+              <span *ngIf="prod.categoryName" style="color: #64748b; font-size: 0.85rem;"> (Category: {{ prod.categoryName }})</span>
+              <span *ngIf="prod.pricing" style="color: #10b981; font-weight: 600; font-size: 0.85rem;"> — ₹{{ prod.pricing | number }}</span>
+            </div>
+          </div>
+          <ng-template #textProducts>
+            <div class="intent-text-box">
+              {{ selectedLead.productNamesFormatted || 'No specific product selected.' }}
+            </div>
+          </ng-template>
         </div>
 
         <!-- Business Requirement Intent -->

@@ -21,6 +21,9 @@ export interface Lead {
   assignedCategoryName?: string | null;
   isMultiCategory?: boolean;
   productIds?: number[];
+  products?: any[];
+  productNames?: string[];
+  productNamesFormatted?: string;
   quantity?: number;
   timeline?: string;
   businessRequirement?: string;

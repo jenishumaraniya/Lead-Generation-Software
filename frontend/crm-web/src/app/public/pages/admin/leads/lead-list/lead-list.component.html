@@ -114,6 +114,9 @@
               <span class="industry-tag" *ngIf="lead.industry">{{ lead.industry }}</span>
               <span class="multi-badge" *ngIf="lead.isMultiCategory">Multi-Category</span>
             </div>
+            <div class="product-names-line" style="font-size: 0.8rem; color: #2563eb; font-weight: 500; margin-top: 4px;">
+              📦 Interested in: {{ lead.productNamesFormatted || 'General Inquiry' }}
+            </div>
           </td>
           <td>
             <span class="score-pill">

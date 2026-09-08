@@ -270,47 +270,66 @@ public class LeadService
             leads = leads.Where(l => l.AssignedTo == assignedTo.Value).ToList();
         }
 
-        return leads.Select(l => new
-        {
-            l.LeadId,
-            l.FullName,
-            l.Email,
-            l.CompanyName,
-            l.JobTitle,
-            l.Domain,
-            l.Industry,
-            l.Country,
-            l.Phone,
-            l.Quantity,
-            l.Timeline,
-            l.BusinessRequirement,
-            l.Source,
-            l.Status,
-            l.Score,
-            l.Qualification,
-            l.AssignedTo,
-            AssignedSalespersonName = l.AssignedUser?.FullName,
-            AssignedSalespersonEmail = l.AssignedUser?.Email,
-            AssignedCategoryName = l.AssignedUser?.Category?.CategoryName,
-            l.IsMultiCategory,
-            l.NextFollowUpDate,
-            l.Notes,
-            l.CreatedAt,
-            l.UpdatedAt,
-            ProductIds = l.GetProductIdList(),
-            Visitor = l.Visitor != null ? new
+        return leads.Select(l => {
+            var pids = l.GetProductIdList();
+            var interestedProds = allProds
+                .Where(p => pids.Contains(p.ProductId))
+                .Select(p => new
+                {
+                    p.ProductId,
+                    p.Name,
+                    p.Pricing,
+                    CategoryName = p.Category != null ? p.Category.CategoryName : "Uncategorized"
+                })
+                .ToList();
+            var productNames = interestedProds.Select(p => p.Name).ToList();
+            var productNamesFormatted = productNames.Count > 0 ? string.Join(", ", productNames) : "None Specified";
+
+            return new
             {
-                l.Visitor.AnonymousId,
-                l.Visitor.FirstSeenAt,
-                l.Visitor.LastSeenAt
-            } : null,
-            Prospect = l.Prospect != null ? new
-            {
-                l.Prospect.ProspectId,
-                l.Prospect.Name,
-                l.Prospect.Email,
-                l.Prospect.Status
-            } : null
+                l.LeadId,
+                l.FullName,
+                l.Email,
+                l.CompanyName,
+                l.JobTitle,
+                l.Domain,
+                l.Industry,
+                l.Country,
+                l.Phone,
+                l.Quantity,
+                l.Timeline,
+                l.BusinessRequirement,
+                l.Source,
+                l.Status,
+                l.Score,
+                l.Qualification,
+                l.AssignedTo,
+                AssignedSalespersonName = l.AssignedUser?.FullName,
+                AssignedSalespersonEmail = l.AssignedUser?.Email,
+                AssignedCategoryName = l.AssignedUser?.Category?.CategoryName,
+                l.IsMultiCategory,
+                l.NextFollowUpDate,
+                l.Notes,
+                l.CreatedAt,
+                l.UpdatedAt,
+                ProductIds = pids,
+                Products = interestedProds,
+                ProductNames = productNames,
+                ProductNamesFormatted = productNamesFormatted,
+                Visitor = l.Visitor != null ? new
+                {
+                    l.Visitor.AnonymousId,
+                    l.Visitor.FirstSeenAt,
+                    l.Visitor.LastSeenAt
+                } : null,
+                Prospect = l.Prospect != null ? new
+                {
+                    l.Prospect.ProspectId,
+                    l.Prospect.Name,
+                    l.Prospect.Email,
+                    l.Prospect.Status
+                } : null
+            };
         }).ToList<object>();
     }
 
@@ -334,6 +353,24 @@ public class LeadService
             .FirstOrDefaultAsync(l => l.LeadId == id);
 
         if (lead == null) return null;
+
+        var pids = lead.GetProductIdList();
+        var allProds = await _context.Products
+            .Include(p => p.Category)
+            .ToListAsync();
+
+        var interestedProds = allProds
+            .Where(p => pids.Contains(p.ProductId))
+            .Select(p => new
+            {
+                p.ProductId,
+                p.Name,
+                p.Pricing,
+                CategoryName = p.Category != null ? p.Category.CategoryName : "Uncategorized"
+            })
+            .ToList();
+        var productNames = interestedProds.Select(p => p.Name).ToList();
+        var productNamesFormatted = productNames.Count > 0 ? string.Join(", ", productNames) : "None Specified";
 
         return new
         {
@@ -362,7 +399,10 @@ public class LeadService
             lead.Notes,
             lead.CreatedAt,
             lead.UpdatedAt,
-            ProductIds = lead.GetProductIdList(),
+            ProductIds = pids,
+            Products = interestedProds,
+            ProductNames = productNames,
+            ProductNamesFormatted = productNamesFormatted,
             Visitor = lead.Visitor != null ? new
             {
                 lead.Visitor.AnonymousId,
@@ -373,6 +413,8 @@ public class LeadService
                     a.ActivityId,
                     a.ActivityType,
                     a.PageUrl,
+                    a.ProductId,
+                    ProductName = a.ProductId.HasValue ? allProds.FirstOrDefault(p => p.ProductId == a.ProductId.Value)?.Name : null,
                     a.Timestamp
                 })
             } : null,

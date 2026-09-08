@@ -54,6 +54,21 @@
         </div>
       </div>
 
+      <!-- Interested Product(s) / Project(s) Card -->
+      <div class="card">
+        <h2 class="card-title">📦 Interested Product(s) / Project(s)</h2>
+        <div *ngIf="lead.products?.length; else textProdDetail" class="product-cards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-top: 8px;">
+          <div *ngFor="let p of lead.products" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px;">
+            <div style="font-weight: 700; color: #0f172a; font-size: 0.95rem;">{{ p.name }}</div>
+            <div style="color: #64748b; font-size: 0.8rem; margin-top: 2px;">Category: {{ p.categoryName || 'General' }}</div>
+            <div style="color: #10b981; font-weight: 700; font-size: 0.9rem; margin-top: 4px;" *ngIf="p.pricing">₹{{ p.pricing | number }}</div>
+          </div>
+        </div>
+        <ng-template #textProdDetail>
+          <p class="requirement-box">{{ lead.productNamesFormatted || 'No specific product selected.' }}</p>
+        </ng-template>
+      </div>
+
       <div class="card" *ngIf="lead.businessRequirement">
         <h2 class="card-title">Stated Commercial Requirement</h2>
         <p class="requirement-box">{{ lead.businessRequirement }}</p>
