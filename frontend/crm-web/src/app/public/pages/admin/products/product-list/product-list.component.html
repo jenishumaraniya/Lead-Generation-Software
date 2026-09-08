@@ -62,6 +62,13 @@
         (ngModelChange)="applyFilter()" 
         placeholder="Search products by name, description, or category..." 
       />
+      <button 
+        *ngIf="searchTerm" 
+        type="button" 
+        (click)="clearSearch()" 
+        class="btn-clear-search" 
+        title="Clear search"
+      >&times;</button>
     </div>
 
     <div class="filter-actions">

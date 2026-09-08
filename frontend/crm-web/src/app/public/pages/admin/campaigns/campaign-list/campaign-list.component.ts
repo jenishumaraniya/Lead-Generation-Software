@@ -140,6 +140,11 @@ export class CampaignListComponent implements OnInit, AfterViewInit {
     setTimeout(() => this.setupScrollSync(), 100);
   }
 
+  clearSearch() {
+    this.searchTerm = '';
+    this.applyFilter();
+  }
+
   toggleSort(column: string) {
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';

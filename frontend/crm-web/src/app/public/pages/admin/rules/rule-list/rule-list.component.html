@@ -54,13 +54,22 @@
 
   <!-- Controls Bar -->
   <div class="filter-controls">
-    <input
-      type="text"
-      class="search-input"
-      placeholder="Search rules, event code, or description..."
-      [(ngModel)]="searchQuery"
-      (ngModelChange)="applyFilter()"
-    />
+    <div class="search-box">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search rules, event code, or description..."
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="applyFilter()"
+      />
+      <button 
+        *ngIf="searchQuery" 
+        type="button" 
+        (click)="clearSearch()" 
+        class="btn-clear-search" 
+        title="Clear search"
+      >&times;</button>
+    </div>
     <select
       class="filter-select"
       [(ngModel)]="categoryFilter"

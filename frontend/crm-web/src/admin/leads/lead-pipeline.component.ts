@@ -50,6 +50,11 @@ export class LeadPipelineComponent implements OnInit {
     this.applyFilter();
   }
 
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.applyFilter();
+  }
+
   applyFilter(): void {
     this.filteredLeads = this.leads.filter(l => {
       const stageMatch = this.selectedStage === 'ALL' ||

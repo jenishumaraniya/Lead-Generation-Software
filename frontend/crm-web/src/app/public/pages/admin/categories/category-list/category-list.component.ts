@@ -107,6 +107,11 @@ export class CategoryListComponent implements OnInit {
     this.currentPage = 1;
   }
 
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.applyFilter();
+  }
+
   applyFilter(): void {
     this.currentPage = 1;
     const term = this.searchTerm.trim().toLowerCase();

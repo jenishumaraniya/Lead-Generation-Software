@@ -5,13 +5,22 @@
       <p class="page-subtitle">Track prospect interactions, update pipeline stages, and manage customer communications</p>
     </div>
     <div class="filter-controls">
-      <input 
-        type="text" 
-        placeholder="Search by name, company, or email..." 
-        [(ngModel)]="searchTerm" 
-        (input)="applyFilters()" 
-        class="search-input"
-      />
+      <div class="search-box">
+        <input 
+          type="text" 
+          placeholder="Search by name, company, or email..." 
+          [(ngModel)]="searchTerm" 
+          (input)="applyFilters()" 
+          class="search-input"
+        />
+        <button 
+          *ngIf="searchTerm" 
+          type="button" 
+          (click)="clearSearch()" 
+          class="btn-clear-search" 
+          title="Clear search"
+        >&times;</button>
+      </div>
       <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="status-select">
         <option value="">All Statuses</option>
         <option value="NEW">New</option>

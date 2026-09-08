@@ -53,6 +53,11 @@ export class ProspectHubComponent implements OnInit {
     });
   }
 
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.applyFilter();
+  }
+
   applyFilter(): void {
     this.filteredProspects = this.prospects.filter(p => {
       const matchesSearch = !this.searchTerm ||

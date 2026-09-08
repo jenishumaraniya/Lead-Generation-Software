@@ -65,6 +65,11 @@ export class ProductManagementComponent implements OnInit {
     });
   }
 
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.applyFilter();
+  }
+
   applyFilter(): void {
     this.filteredProducts = this.products.filter(p => {
       const matchSearch = !this.searchTerm ||
