@@ -28,6 +28,15 @@
       </div>
     </div>
     <div class="stat-card">
+      <div class="stat-icon icon-blue">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Future Scheduled</span>
+        <span class="stat-value">{{ stats.future }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
       <div class="stat-icon icon-purple">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9333ea" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       </div>
@@ -41,8 +50,8 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
       </div>
       <div class="stat-info">
-        <span class="stat-label">Draft / Closed</span>
-        <span class="stat-value">{{ stats.draft + stats.completed }}</span>
+        <span class="stat-label">Draft / Expired</span>
+        <span class="stat-value">{{ stats.draft + stats.expired }}</span>
       </div>
     </div>
   </div>
@@ -56,24 +65,32 @@
       <input 
         type="text" 
         [(ngModel)]="searchTerm" 
+        (input)="applyFilter()"
         (ngModelChange)="applyFilter()" 
         placeholder="Search campaigns by name or description..." 
       />
       <button 
-        *ngIf="searchTerm" 
+        *ngIf="searchTerm && searchTerm.length > 0" 
         type="button" 
         (click)="clearSearch()" 
         class="btn-clear-search" 
         title="Clear search"
-      >&times;</button>
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
 
     <div class="filter-actions">
       <select [(ngModel)]="selectedStatus" (ngModelChange)="applyFilter()" class="status-select">
         <option value="ALL">All Statuses</option>
         <option value="ACTIVE">Active</option>
+        <option value="FUTURE">Future Scheduled</option>
         <option value="DRAFT">Draft</option>
         <option value="PAUSED">Paused</option>
+        <option value="EXPIRED">Expired</option>
         <option value="COMPLETED">Completed</option>
         <option value="CLOSED">Closed</option>
       </select>
@@ -117,13 +134,13 @@
 
   <!-- 1. GRID VIEW (Cards) - Primary / Default -->
   <div *ngIf="!loading && filteredCampaigns.length > 0 && viewMode === 'cards'" class="campaign-grid">
-    <div *ngFor="let campaign of filteredCampaigns" class="campaign-card">
+    <div *ngFor="let campaign of paginatedCampaigns" class="campaign-card" [class.campaign-card-expired]="isExpired(campaign)">
       
       <!-- Card Header -->
       <div class="card-header">
         <div class="campaign-badge-wrap">
-          <span class="status-badge" [ngClass]="(campaign.status || 'draft').toLowerCase()">
-            {{ campaign.status || 'DRAFT' }}
+          <span class="status-badge" [ngClass]="getEffectiveStatus(campaign).toLowerCase()">
+            {{ getEffectiveStatus(campaign) }}
           </span>
           <span class="count-pill">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 3px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
@@ -146,14 +163,14 @@
           <div class="schedule-item">
             <span class="schedule-label">Start:</span>
             <span class="schedule-val" *ngIf="campaign.scheduleStartDate">
-              {{ campaign.scheduleStartDate | date:'MMM d, y, h:mm a' }}
+              {{ formatDate(campaign.scheduleStartDate) }}
             </span>
             <span class="schedule-val text-muted" *ngIf="!campaign.scheduleStartDate">—</span>
           </div>
           <div class="schedule-item">
             <span class="schedule-label">End:</span>
-            <span class="schedule-val" *ngIf="campaign.scheduleEndDate">
-              {{ campaign.scheduleEndDate | date:'MMM d, y, h:mm a' }}
+            <span class="schedule-val" [class.text-danger]="isExpired(campaign)" *ngIf="campaign.scheduleEndDate">
+              {{ formatDate(campaign.scheduleEndDate) }}
             </span>
             <span class="schedule-val text-muted" *ngIf="!campaign.scheduleEndDate">—</span>
           </div>
@@ -167,7 +184,7 @@
             Edit
           </a>
           <button 
-            *ngIf="campaign.status === 'ACTIVE'" 
+            *ngIf="getEffectiveStatus(campaign) === 'ACTIVE'" 
             (click)="pauseCampaign(campaign.campaignId)" 
             class="btn-action pause" 
             title="Pause Sequence"
@@ -175,7 +192,7 @@
             Pause
           </button>
           <button 
-            *ngIf="campaign.status === 'PAUSED'" 
+            *ngIf="getEffectiveStatus(campaign) === 'PAUSED'" 
             (click)="resumeCampaign(campaign.campaignId)" 
             class="btn-action resume" 
             title="Resume Sequence"
@@ -183,7 +200,7 @@
             Resume
           </button>
           <button 
-            *ngIf="campaign.status !== 'COMPLETED' && campaign.status !== 'CLOSED'" 
+            *ngIf="getEffectiveStatus(campaign) !== 'COMPLETED' && getEffectiveStatus(campaign) !== 'CLOSED' && !isExpired(campaign)" 
             (click)="closeCampaign(campaign.campaignId)" 
             class="btn-action close" 
             title="Close Campaign"
@@ -203,7 +220,7 @@
     </div>
   </div>
 
-  <!-- 2. TABLE VIEW (With Synchronized Dual Sliders: Top & Bottom + Pagination) -->
+  <!-- 2. TABLE VIEW (With Synchronized Dual Sliders: Top & Bottom) -->
   <div *ngIf="!loading && filteredCampaigns.length > 0 && viewMode === 'table'" class="card table-card">
     <!-- Top Horizontal Slider Bar -->
     <div class="table-top-slider-wrapper" #topScroll>
@@ -259,7 +276,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let campaign of paginatedCampaigns">
+          <tr *ngFor="let campaign of paginatedCampaigns" [class.table-row-expired]="isExpired(campaign)">
             <td>
               <div class="campaign-name-cell">
                 <span class="campaign-name">{{ campaign.name }}</span>
@@ -267,8 +284,8 @@
               </div>
             </td>
             <td>
-              <span class="status-badge" [ngClass]="(campaign.status || 'draft').toLowerCase()">
-                {{ campaign.status || 'DRAFT' }}
+              <span class="status-badge" [ngClass]="getEffectiveStatus(campaign).toLowerCase()">
+                {{ getEffectiveStatus(campaign) }}
               </span>
             </td>
             <td>
@@ -278,19 +295,19 @@
               </span>
             </td>
             <td class="date-cell">
-              <span *ngIf="campaign.scheduleStartDate">{{ campaign.scheduleStartDate | date:'MMM d, y, h:mm a' }}</span>
+              <span *ngIf="campaign.scheduleStartDate">{{ formatDate(campaign.scheduleStartDate) }}</span>
               <span *ngIf="!campaign.scheduleStartDate" class="text-muted">—</span>
             </td>
             <td class="date-cell">
-              <span *ngIf="campaign.scheduleEndDate">{{ campaign.scheduleEndDate | date:'MMM d, y, h:mm a' }}</span>
+              <span [class.text-danger]="isExpired(campaign)" *ngIf="campaign.scheduleEndDate">{{ formatDate(campaign.scheduleEndDate) }}</span>
               <span *ngIf="!campaign.scheduleEndDate" class="text-muted">—</span>
             </td>
             <td style="text-align: right;">
               <div class="action-btn-group">
                 <a [routerLink]="['/admin/campaigns', campaign.campaignId]" class="btn-action edit">Edit</a>
-                <button *ngIf="campaign.status === 'ACTIVE'" (click)="pauseCampaign(campaign.campaignId)" class="btn-action pause">Pause</button>
-                <button *ngIf="campaign.status === 'PAUSED'" (click)="resumeCampaign(campaign.campaignId)" class="btn-action resume">Resume</button>
-                <button *ngIf="campaign.status !== 'COMPLETED' && campaign.status !== 'CLOSED'" (click)="closeCampaign(campaign.campaignId)" class="btn-action close">Close</button>
+                <button *ngIf="getEffectiveStatus(campaign) === 'ACTIVE'" (click)="pauseCampaign(campaign.campaignId)" class="btn-action pause">Pause</button>
+                <button *ngIf="getEffectiveStatus(campaign) === 'PAUSED'" (click)="resumeCampaign(campaign.campaignId)" class="btn-action resume">Resume</button>
+                <button *ngIf="getEffectiveStatus(campaign) !== 'COMPLETED' && getEffectiveStatus(campaign) !== 'CLOSED' && !isExpired(campaign)" (click)="closeCampaign(campaign.campaignId)" class="btn-action close">Close</button>
                 <button (click)="deleteCampaign(campaign.campaignId)" class="btn-action delete">Delete</button>
               </div>
             </td>
@@ -298,8 +315,10 @@
         </tbody>
       </table>
     </div>
+  </div>
 
-    <!-- Table Pagination -->
+  <!-- Shared Pagination for both Grid and Table Views -->
+  <div *ngIf="!loading && filteredCampaigns.length > 0" class="pagination-wrapper">
     <app-pagination
       [totalItems]="filteredCampaigns.length"
       [pageSize]="pageSize"
