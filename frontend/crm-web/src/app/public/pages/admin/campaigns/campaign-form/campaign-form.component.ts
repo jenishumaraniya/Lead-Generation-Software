@@ -25,10 +25,12 @@ export class CampaignFormComponent implements OnInit {
   allProspects: any[] = [];
   filteredProspects: any[] = [];
   selectedProspectIds: Set<number> = new Set<number>();
+  originalProspectIds: Set<number> = new Set<number>();
   prospectSearchTerm = '';
   csvUploadMessage = '';
   isUploadingCsv = false;
   saving = false;
+  campaignStatus: string = 'DRAFT';
 
   constructor(
     private fb: FormBuilder,
@@ -39,8 +41,8 @@ export class CampaignFormComponent implements OnInit {
     this.form = this.fb.group({
       name: ['', Validators.required],
       description: [''],
-      scheduleStartDate: [''],
-      scheduleEndDate: [''],
+      scheduleStartDate: ['', Validators.required],
+      scheduleEndDate: ['', Validators.required],
       status: ['ACTIVE'],
       subject: [
         'Exploring opportunities with {{Company}}',
@@ -50,8 +52,19 @@ export class CampaignFormComponent implements OnInit {
         '<p>Hello {{Name}},</p><p>I noticed your work as {{JobTitle}} at {{Company}}. We provide enterprise solutions tailored for your industry.</p><p>Would you be open to a brief introductory conversation this week?</p><p>Best regards,<br/>Sales & Partnerships Team</p>',
         Validators.required,
       ],
-      sendImmediately: [true],
     });
+  }
+
+  get isPaused(): boolean {
+    return this.isEdit && this.campaignStatus === 'PAUSED';
+  }
+
+  get isRunning(): boolean {
+    return this.isEdit && this.campaignStatus === 'ACTIVE';
+  }
+
+  get isClosedOrCompleted(): boolean {
+    return this.isEdit && (this.campaignStatus === 'COMPLETED' || this.campaignStatus === 'CLOSED' || this.campaignStatus === 'EXPIRED');
   }
 
   ngOnInit(): void {
@@ -61,6 +74,7 @@ export class CampaignFormComponent implements OnInit {
       this.campaignId = +id;
       this.campaignService.getCampaign(this.campaignId).subscribe({
         next: (data) => {
+          this.campaignStatus = data.status || 'ACTIVE';
           const step1 = data.steps?.length ? data.steps[0] : null;
           this.form.patchValue({
             name: data.name || '',
@@ -73,36 +87,45 @@ export class CampaignFormComponent implements OnInit {
             body:
               step1?.body ||
               '<p>Hello {{Name}},</p><p>I noticed your work as {{JobTitle}} at {{Company}}. We provide enterprise solutions tailored for your industry.</p><p>Would you be open to a brief introductory conversation this week?</p><p>Best regards,<br/>Sales & Partnerships Team</p>',
-            sendImmediately: false,
           });
           if (data.recipients?.length) {
-            data.recipients.forEach((r: any) =>
-              this.selectedProspectIds.add(r.prospectId),
-            );
+            data.recipients.forEach((r: any) => {
+              this.selectedProspectIds.add(r.prospectId);
+              this.originalProspectIds.add(r.prospectId);
+            });
           }
         },
         error: () => this.router.navigate(['/admin/campaigns']),
+      });
+    } else {
+      // Auto-populate Start Date with current local time and End Date with +7 days
+      const now = new Date();
+      const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      this.form.patchValue({
+        scheduleStartDate: this.toInputDateTime(now),
+        scheduleEndDate: this.toInputDateTime(nextWeek),
       });
     }
     this.loadProspects();
   }
 
+  get minDateTime(): string {
+    const now = new Date();
+    const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  }
+
   private toInputDateTime(dateVal: any): string {
     if (!dateVal) return '';
-    const d = new Date(dateVal);
+    let d: Date;
+    if (typeof dateVal === 'string' && !dateVal.endsWith('Z') && !dateVal.includes('+')) {
+      d = new Date(dateVal + 'Z');
+    } else {
+      d = new Date(dateVal);
+    }
     if (isNaN(d.getTime())) return '';
     const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }
-
-  get minDateTime(): string {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
   loadProspects(): void {
@@ -116,11 +139,6 @@ export class CampaignFormComponent implements OnInit {
         this.filteredProspects = [];
       },
     });
-  }
-
-  clearProspectSearch(): void {
-    this.prospectSearchTerm = '';
-    this.applyProspectFilter();
   }
 
   applyProspectFilter(): void {
@@ -208,21 +226,30 @@ export class CampaignFormComponent implements OnInit {
     const formVal = this.form.value;
     const now = new Date();
 
-    if (formVal.scheduleStartDate) {
-      const startDate = new Date(formVal.scheduleStartDate);
-      // Allow up to 2 minutes grace period for current time selection
-      if (startDate.getTime() < now.getTime() - 120000 && !this.isEdit) {
-        alert('Scheduled Start Date cannot be in the past. Please select a valid future date and time.');
-        return;
-      }
+    if (!formVal.scheduleStartDate || !formVal.scheduleEndDate) {
+      alert('Both Scheduled Start Date and Scheduled End Date are required.');
+      return;
     }
 
-    if (formVal.scheduleStartDate && formVal.scheduleEndDate) {
-      const startDate = new Date(formVal.scheduleStartDate);
-      const endDate = new Date(formVal.scheduleEndDate);
-      if (endDate <= startDate) {
-        alert('Scheduled End Date must be strictly after the Scheduled Start Date.');
-        return;
+    const startDate = new Date(formVal.scheduleStartDate);
+    const endDate = new Date(formVal.scheduleEndDate);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      alert('Please provide valid date and time values.');
+      return;
+    }
+
+    if (startDate.getTime() >= endDate.getTime()) {
+      alert('Scheduled Start Date and Time cannot be greater than or equal to Scheduled End Date and Time. The Start Date must be strictly before the End Date.');
+      return;
+    }
+
+    let campaignStatus = formVal.status || 'ACTIVE';
+    if (campaignStatus !== 'DRAFT' && campaignStatus !== 'PAUSED') {
+      if (startDate.getTime() > now.getTime()) {
+        campaignStatus = 'FUTURE';
+      } else {
+        campaignStatus = 'ACTIVE';
       }
     }
 
@@ -231,13 +258,14 @@ export class CampaignFormComponent implements OnInit {
     const payload = {
       name: formVal.name?.trim(),
       description: formVal.description?.trim() || null,
-      status: formVal.status || 'ACTIVE',
+      status: campaignStatus,
       scheduleStartDate: formVal.scheduleStartDate
-        ? formVal.scheduleStartDate
+        ? new Date(formVal.scheduleStartDate).toISOString()
         : null,
       scheduleEndDate: formVal.scheduleEndDate
-        ? formVal.scheduleEndDate
+        ? new Date(formVal.scheduleEndDate).toISOString()
         : null,
+      sendImmediately: false,
       steps: [
         {
           stepNumber: 1,
@@ -264,47 +292,16 @@ export class CampaignFormComponent implements OnInit {
     obs.subscribe({
       next: (campaign) => {
         console.log('✅ Campaign saved:', campaign);
-        const id = this.isEdit ? this.campaignId! : campaign.campaignId;
-
-        // Backend now handles recipient sync based on prospectIds – no manual enrollment needed.
-        // Just proceed to launch if required.
-        this.handlePostEnrollment(id, formVal);
+        this.saving = false;
+        this.router.navigate(['/admin/campaigns']);
       },
       error: (err) => {
         this.saving = false;
         console.error('❌ HTTP error:', err);
-        alert('Failed to save campaign: ' + (err.message || 'Unknown error'));
+        const errorMsg = err.error?.error || err.error?.message || err.message || 'Unknown error occurred.';
+        alert('Failed to save campaign: ' + errorMsg);
       },
     });
-  }
-
-  private handlePostEnrollment(campaignId: number, formVal: any): void {
-    console.log('🔁 handlePostEnrollment called');
-    const shouldLaunch = formVal.sendImmediately || formVal.status === 'ACTIVE';
-    console.log('🚀 Should launch?', shouldLaunch);
-
-    if (shouldLaunch) {
-      console.log('🚀 Launching campaign...');
-      this.campaignService.launchCampaign(campaignId).subscribe({
-        next: (res) => {
-          console.log('✅ Launch succeeded:', res);
-          this.saving = false;
-          this.router.navigate(['/admin/campaigns']);
-        },
-        error: (err) => {
-          console.error('❌ Launch failed:', err);
-          this.saving = false;
-          alert('Campaign saved but launch failed: ' + err.message);
-          this.router.navigate(['/admin/campaigns']);
-        },
-      });
-    } else {
-      console.log(
-        'ℹ️ Skipping launch (sendImmediately=false, status != ACTIVE).',
-      );
-      this.saving = false;
-      this.router.navigate(['/admin/campaigns']);
-    }
   }
 
   goBack(): void {

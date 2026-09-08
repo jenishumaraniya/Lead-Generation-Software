@@ -9,6 +9,7 @@ public class ProductDto
     public string? Features { get; set; }
     public string? Specifications { get; set; }
     public string Status { get; set; } = "ACTIVE";
+    public string? ImageUrl { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public int? CategoryId { get; set; }          // only ID, no Category object

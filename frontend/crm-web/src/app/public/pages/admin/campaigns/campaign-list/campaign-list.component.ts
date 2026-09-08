@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -13,7 +13,7 @@ import { PaginationComponent } from '../../../../../components/pagination/pagina
   templateUrl: './campaign-list.component.html',
   styleUrls: ['./campaign-list.component.css']
 })
-export class CampaignListComponent implements OnInit, AfterViewInit {
+export class CampaignListComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('topScroll') topScrollRef!: ElementRef<HTMLDivElement>;
   @ViewChild('tableScroll') tableScrollRef!: ElementRef<HTMLDivElement>;
 
@@ -30,7 +30,7 @@ export class CampaignListComponent implements OnInit, AfterViewInit {
   sortDirection: 'asc' | 'desc' = 'asc';
 
   currentPage = 1;
-  pageSize = 10;
+  pageSize = 6;
 
   get paginatedCampaigns(): any[] {
     const start = (this.currentPage - 1) * this.pageSize;
@@ -40,8 +40,10 @@ export class CampaignListComponent implements OnInit, AfterViewInit {
   stats = {
     total: 0,
     active: 0,
+    future: 0,
     draft: 0,
     completed: 0,
+    expired: 0,
     totalProspects: 0
   };
 
@@ -50,39 +52,109 @@ export class CampaignListComponent implements OnInit, AfterViewInit {
   constructor(
     private campaignService: CampaignService,
     private sidebarService: SidebarService
-  ) {}
+  ) { }
+
+  private refreshInterval: any;
 
   ngOnInit() {
     this.loadCampaigns();
+    // Auto-refresh campaigns every 5 seconds so status changes dynamically in real time
+    this.refreshInterval = setInterval(() => {
+      this.loadCampaigns(true);
+    }, 5000);
+  }
+
+  ngOnDestroy() {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
+  }
+
+  private parseDate(d: any): Date {
+    if (!d) return new Date(0);
+    if (typeof d === 'string' && !d.endsWith('Z') && !d.includes('+')) {
+      return new Date(d + 'Z');
+    }
+    return new Date(d);
+  }
+
+  formatDate(dateVal: any): string {
+    if (!dateVal) return '—';
+    const d = this.parseDate(dateVal);
+    if (isNaN(d.getTime()) || d.getTime() === 0) return '—';
+    return d.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+
+  isExpired(campaign: any): boolean {
+    if ((campaign.status || '').toUpperCase() === 'EXPIRED') return true;
+    if (campaign.scheduleEndDate) {
+      return this.parseDate(campaign.scheduleEndDate).getTime() < new Date().getTime();
+    }
+    return false;
+  }
+
+  isFuture(campaign: any): boolean {
+    if (this.isExpired(campaign)) return false;
+    const status = (campaign.status || '').toUpperCase();
+    if (campaign.scheduleStartDate) {
+      const isStartInFuture = this.parseDate(campaign.scheduleStartDate).getTime() > new Date().getTime();
+      if (status === 'FUTURE') return isStartInFuture;
+      if (status === 'ACTIVE') return isStartInFuture;
+    }
+    return status === 'FUTURE';
+  }
+
+  getEffectiveStatus(campaign: any): string {
+    if (this.isExpired(campaign)) return 'EXPIRED';
+    if (this.isFuture(campaign)) return 'FUTURE';
+    const status = (campaign.status || 'DRAFT').toUpperCase();
+    // If it was marked FUTURE in DB but start date has arrived and not expired, it is dynamically ACTIVE
+    if (status === 'FUTURE' && campaign.scheduleStartDate) {
+      if (this.parseDate(campaign.scheduleStartDate).getTime() <= new Date().getTime()) {
+        return 'ACTIVE';
+      }
+    }
+    return status;
   }
 
   ngAfterViewInit() {
     this.setupScrollSync();
   }
 
-  loadCampaigns() {
-    this.loading = true;
+  loadCampaigns(silent: boolean = false) {
+    if (!silent) this.loading = true;
     this.campaignService.getCampaigns().subscribe({
       next: (data) => {
         this.campaigns = data || [];
         this.calculateStats();
         this.applyFilter();
-        this.loading = false;
+        if (!silent) this.loading = false;
         setTimeout(() => this.setupScrollSync(), 100);
       },
       error: () => {
-        this.campaigns = [];
-        this.filteredCampaigns = [];
-        this.calculateStats();
-        this.loading = false;
+        if (!silent) {
+          this.campaigns = [];
+          this.filteredCampaigns = [];
+          this.calculateStats();
+          this.loading = false;
+        }
       }
     });
   }
 
   calculateStats() {
     this.stats.total = this.campaigns.length;
-    this.stats.active = this.campaigns.filter(c => (c.status || '').toUpperCase() === 'ACTIVE').length;
+    this.stats.active = this.campaigns.filter(c => this.getEffectiveStatus(c) === 'ACTIVE').length;
+    this.stats.future = this.campaigns.filter(c => this.getEffectiveStatus(c) === 'FUTURE').length;
     this.stats.draft = this.campaigns.filter(c => (c.status || '').toUpperCase() === 'DRAFT').length;
+    this.stats.expired = this.campaigns.filter(c => this.isExpired(c)).length;
     this.stats.completed = this.campaigns.filter(c => ['COMPLETED', 'CLOSED'].includes((c.status || '').toUpperCase())).length;
     this.stats.totalProspects = this.campaigns.reduce((acc, c) => acc + (c.recipientsCount || 0), 0);
   }
@@ -105,8 +177,12 @@ export class CampaignListComponent implements OnInit, AfterViewInit {
     let list = this.campaigns.filter(c => {
       // Status filter
       if (this.selectedStatus !== 'ALL') {
-        const cStatus = (c.status || '').toUpperCase();
-        if (cStatus !== this.selectedStatus) return false;
+        const cStatus = this.getEffectiveStatus(c);
+        if (this.selectedStatus === 'EXPIRED') {
+          if (cStatus !== 'EXPIRED') return false;
+        } else if (cStatus !== this.selectedStatus) {
+          return false;
+        }
       }
 
       // Search term

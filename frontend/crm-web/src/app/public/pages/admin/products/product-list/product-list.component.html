@@ -59,16 +59,22 @@
       <input 
         type="text" 
         [(ngModel)]="searchTerm" 
+        (input)="applyFilter()"
         (ngModelChange)="applyFilter()" 
         placeholder="Search products by name, description, or category..." 
       />
       <button 
-        *ngIf="searchTerm" 
+        *ngIf="searchTerm && searchTerm.length > 0" 
         type="button" 
         (click)="clearSearch()" 
         class="btn-clear-search" 
         title="Clear search"
-      >&times;</button>
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
 
     <div class="filter-actions">
@@ -131,12 +137,10 @@
   <div *ngIf="!loading && filteredProducts.length > 0 && viewMode === 'cards'" class="product-grid">
     <div *ngFor="let p of paginatedProducts" class="product-card">
       
-      <!-- Card Header -->
+      <!-- Card Image / Header -->
       <div class="product-card-top">
-        <div class="product-icon-wrap">
-          <span class="product-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
-          </span>
+        <div class="product-img-wrap">
+          <img [src]="getProductImage(p)" [alt]="p.name" class="product-cover-img" />
         </div>
         <span class="status-badge" 
               [class.active]="(p.status || 'ACTIVE').toUpperCase() === 'ACTIVE'"
@@ -178,7 +182,7 @@
       <thead>
         <tr>
           <th class="sortable" [class.sort-active]="sortColumn === 'name'" (click)="toggleSort('name')">
-            Product Name
+            Product
             <span class="sort-icon">
               <span *ngIf="sortColumn === 'name' && sortDirection === 'asc'">▲</span>
               <span *ngIf="sortColumn === 'name' && sortDirection === 'desc'">▼</span>
@@ -215,8 +219,13 @@
       <tbody>
         <tr *ngFor="let p of paginatedProducts">
           <td>
-            <div class="prod-name">{{ p.name }}</div>
-            <div class="prod-desc" *ngIf="p.description">{{ p.description }}</div>
+            <div class="prod-identity">
+              <img [src]="getProductImage(p)" [alt]="p.name" class="prod-thumb" />
+              <div>
+                <div class="prod-name">{{ p.name }}</div>
+                <div class="prod-desc" *ngIf="p.description">{{ p.description }}</div>
+              </div>
+            </div>
           </td>
           <td>
             <span class="category-pill">{{ getCategoryName(p.categoryId) }}</span>
@@ -242,7 +251,7 @@
   </div>
 
   <!-- Shared Pagination for both Grid and Table Views -->
-  <div *ngIf="!loading && filteredProducts.length > pageSize" class="pagination-wrapper">
+  <div *ngIf="!loading && filteredProducts.length > 0" class="pagination-wrapper">
     <app-pagination
       [totalItems]="filteredProducts.length"
       [pageSize]="pageSize"
@@ -277,7 +286,54 @@
 
         <div class="form-field">
           <label>Starting Price (INR ₹) *</label>
-          <input type="number" [(ngModel)]="formData.pricing" placeholder="e.g. 49999" />
+          <input type="number" [(ngModel)]="formData.pricing" min="0.01" step="0.01" placeholder="e.g. 49999" />
+          <span class="field-error-text" *ngIf="formData.pricing !== null && formData.pricing !== undefined && formData.pricing !== '' && formData.pricing <= 0" style="color: #ef4444; font-size: 11px; margin-top: 4px; display: block; font-weight: 500;">
+            ⚠️ Product price must be greater than zero (cannot be 0 or negative).
+          </span>
+        </div>
+
+        <!-- Custom Product Image Field (Upload or Paste URL) -->
+        <div class="form-field full-width">
+          <label>Product Image (Optional)</label>
+          <div class="image-uploader-box">
+            <!-- Image Preview Box if image exists -->
+            <div class="preview-area" *ngIf="formData.imageUrl">
+              <div class="preview-thumb-wrap">
+                <img [src]="getImagePreviewUrl(formData.imageUrl)" alt="Image Preview" class="preview-thumb" />
+                <button type="button" (click)="clearImage()" class="btn-clear-image" title="Remove custom image">
+                  &times;
+                </button>
+              </div>
+              <span class="preview-status-text">Custom image configured</span>
+            </div>
+
+            <!-- Upload / URL Input Controls -->
+            <div class="upload-controls">
+              <div class="file-upload-row">
+                <input type="file" id="prodImgUploadInput" (change)="onImageFileSelected($event)" accept="image/*" class="hidden-file-input" />
+                <label for="prodImgUploadInput" class="btn-file-select" [class.loading]="isUploadingImage">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  {{ isUploadingImage ? 'Uploading Image...' : 'Upload Image File' }}
+                </label>
+                <span class="file-spec-hint">PNG, JPG, WEBP, SVG (Max 10MB)</span>
+              </div>
+
+              <div class="url-divider">
+                <span>OR PASTE IMAGE URL</span>
+              </div>
+
+              <input 
+                type="text" 
+                [(ngModel)]="formData.imageUrl" 
+                placeholder="https://example.com/product-image.jpg" 
+                class="img-url-input" 
+              />
+            </div>
+
+            <div *ngIf="imageUploadError" class="upload-error-msg">
+              {{ imageUploadError }}
+            </div>
+          </div>
         </div>
 
         <div class="form-field">
@@ -297,7 +353,7 @@
 
       <div class="modal-footer">
         <button (click)="closeModal()" class="btn-secondary">Cancel</button>
-        <button (click)="saveProduct()" [disabled]="!formData.name.trim()" class="btn-primary">
+        <button (click)="saveProduct()" [disabled]="!formData.name?.trim() || !formData.pricing || formData.pricing <= 0 || isUploadingImage" class="btn-primary">
           {{ isEdit ? 'Save Changes' : 'Create Product' }}
         </button>
       </div>
