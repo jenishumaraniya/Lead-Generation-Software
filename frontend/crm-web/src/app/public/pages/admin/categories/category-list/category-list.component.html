@@ -71,22 +71,9 @@
       <input 
         type="text" 
         [(ngModel)]="searchTerm" 
-        (input)="applyFilter()"
         (ngModelChange)="applyFilter()" 
         placeholder="Search categories by name or assigned sales rep..." 
       />
-      <button 
-        *ngIf="searchTerm && searchTerm.length > 0" 
-        type="button" 
-        (click)="clearSearch()" 
-        class="btn-clear-search" 
-        title="Clear search"
-      >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
     </div>
 
     <div class="filter-actions">
@@ -136,7 +123,7 @@
 
   <!-- 1. GRID VIEW (Cards) - Primary / Default -->
   <div *ngIf="!loading && filteredCategories.length > 0 && viewMode === 'cards'" class="category-grid">
-    <div *ngFor="let cat of paginatedCategories" class="category-card">
+    <div *ngFor="let cat of filteredCategories" class="category-card">
       
       <!-- Card Header -->
       <div class="cat-card-top">
@@ -243,10 +230,7 @@
         </tr>
       </tbody>
     </table>
-  </div>
 
-  <!-- Shared Pagination for both Grid and Table Views -->
-  <div *ngIf="!loading && filteredCategories.length > 0" class="pagination-wrapper">
     <app-pagination
       [totalItems]="filteredCategories.length"
       [pageSize]="pageSize"

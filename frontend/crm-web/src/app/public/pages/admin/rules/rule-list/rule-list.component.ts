@@ -151,11 +151,6 @@ export class RuleListComponent implements OnInit {
     this.filteredRules = list;
   }
 
-  clearSearch(): void {
-    this.searchQuery = '';
-    this.applyFilter();
-  }
-
   toggleSort(column: string): void {
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';

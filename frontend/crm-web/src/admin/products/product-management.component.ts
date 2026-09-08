@@ -76,11 +76,6 @@ export class ProductManagementComponent implements OnInit {
     });
   }
 
-  clearSearch(): void {
-    this.searchTerm = '';
-    this.applyFilter();
-  }
-
   openCreateModal(): void {
     if (!this.authService.isAdmin()) return;
     this.isEditing = false;
@@ -120,14 +115,8 @@ export class ProductManagementComponent implements OnInit {
   saveProduct(): void {
     if (!this.authService.isAdmin()) return;
 
-    if (!this.productForm.name || !this.productForm.name.trim()) {
+    if (!this.productForm.name) {
       alert('Product name is required.');
-      return;
-    }
-
-    const price = Number(this.productForm.pricing);
-    if (this.productForm.pricing === null || this.productForm.pricing === undefined || isNaN(price) || price <= 0) {
-      alert('Product price must be greater than zero (cannot be 0 or negative).');
       return;
     }
 

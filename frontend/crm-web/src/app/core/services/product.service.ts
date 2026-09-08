@@ -14,9 +14,4 @@ export class ProductService {
   createProduct(data: any): Observable<any> { return this.http.post(this.base, data); }
   updateProduct(id: number, data: any): Observable<any> { return this.http.put(`${this.base}/${id}`, data); }
   deleteProduct(id: number): Observable<any> { return this.http.delete(`${this.base}/${id}`); }
-  uploadProductImage(file: File): Observable<{ imageUrl: string; message?: string }> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<{ imageUrl: string; message?: string }>(`${this.base}/upload-image`, formData);
-  }
 }

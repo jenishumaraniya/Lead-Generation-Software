@@ -215,6 +215,10 @@ public class LinkedInEnrichmentService
             .Include(l => l.Prospect)
             .FirstOrDefaultAsync(l => l.ProspectId == prospect.ProspectId);
 
+        var activeUser = await _context.Users
+            .FirstOrDefaultAsync(u => u.IsActive && (u.Role == "SALES_REP" || u.Role == "SALES"))
+            ?? await _context.Users.FirstOrDefaultAsync(u => u.IsActive);
+
         if (lead == null && dto.AutoCreateLead)
         {
             lead = new Lead
@@ -233,33 +237,23 @@ public class LinkedInEnrichmentService
                 Score = 30,
                 Qualification = "WARM",
                 PriorityLevel = "HIGH",
-                AssignedTo = null, // Unassigned: Admin manually assigns lead to chosen sales rep
-                IsMultiCategory = true,
+                AssignedTo = activeUser?.UserId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
             _context.Leads.Add(lead);
             await _context.SaveChangesAsync();
-
-            _context.LeadActivities.Add(new LeadActivity
-            {
-                LeadId = lead.LeadId,
-                ActivityType = "INQUIRY_RECEIVED",
-                Description = $"Lead imported from LinkedIn profile by Admin. Awaiting Admin assignment.",
-                CreatedAt = DateTime.UtcNow,
-                CreatedBy = "LINKEDIN_EXTENSION"
-            });
-            await _context.SaveChangesAsync();
         }
         else if (lead != null)
         {
-            // Update existing Lead with latest verified information (do not overwrite existing assignment)
+            // Update existing Lead with latest verified information
             lead.FullName = prospect.Name;
             lead.Email = prospect.Email;
             lead.JobTitle = prospect.JobTitle;
             if (!string.IsNullOrEmpty(dto.CompanyName)) lead.CompanyName = dto.CompanyName;
             if (!string.IsNullOrEmpty(dto.Location)) lead.Country = dto.Location;
             if (!string.IsNullOrEmpty(dto.Summary)) lead.BusinessRequirement = dto.Summary;
+            if (!lead.AssignedTo.HasValue && activeUser != null) lead.AssignedTo = activeUser.UserId;
             lead.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
         }
@@ -383,6 +377,10 @@ public class LinkedInEnrichmentService
         Lead? lead = await _context.Leads
             .FirstOrDefaultAsync(l => l.CompanyName.ToLower() == compName.ToLower());
 
+        var activeUser = await _context.Users
+            .FirstOrDefaultAsync(u => u.IsActive && (u.Role == "SALES_REP" || u.Role == "SALES"))
+            ?? await _context.Users.FirstOrDefaultAsync(u => u.IsActive);
+
         if (lead == null && dto.AutoCreateLead)
         {
             lead = new Lead
@@ -400,22 +398,11 @@ public class LinkedInEnrichmentService
                 Score = 35,
                 Qualification = "WARM",
                 PriorityLevel = "HIGH",
-                AssignedTo = null, // Unassigned: Admin manually assigns lead to chosen sales rep
-                IsMultiCategory = true,
+                AssignedTo = activeUser?.UserId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
             _context.Leads.Add(lead);
-            await _context.SaveChangesAsync();
-
-            _context.LeadActivities.Add(new LeadActivity
-            {
-                LeadId = lead.LeadId,
-                ActivityType = "INQUIRY_RECEIVED",
-                Description = $"Corporate lead imported from LinkedIn Company page by Admin. Awaiting Admin assignment.",
-                CreatedAt = DateTime.UtcNow,
-                CreatedBy = "LINKEDIN_EXTENSION"
-            });
             await _context.SaveChangesAsync();
         }
         else if (lead != null)
@@ -424,6 +411,7 @@ public class LinkedInEnrichmentService
             if (!string.IsNullOrEmpty(company.Location)) lead.Country = company.Location;
             if (!string.IsNullOrEmpty(company.Industry)) lead.Industry = company.Industry;
             if (!string.IsNullOrEmpty(dto.Description)) lead.BusinessRequirement = dto.Description;
+            if (!lead.AssignedTo.HasValue && activeUser != null) lead.AssignedTo = activeUser.UserId;
             lead.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
         }
