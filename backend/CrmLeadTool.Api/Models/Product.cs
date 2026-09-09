@@ -15,7 +15,7 @@ public class Product
     public decimal Pricing { get; set; }          // Must be > 0
     public string? Features { get; set; }
     public string? Specifications { get; set; }
-    public string Status { get; set; } = "ACTIVE";
+    public string Status { get; set; } = "DRAFT";
     public string? ImageUrl { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

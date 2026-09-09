@@ -107,7 +107,7 @@ public class ProductController : ControllerBase
             Pricing = dto.Pricing,
             Features = dto.Features,
             Specifications = dto.Specifications,
-            Status = "ACTIVE",
+            Status = string.IsNullOrWhiteSpace(dto.Status) ? "DRAFT" : dto.Status.Trim().ToUpper(),
             ImageUrl = string.IsNullOrWhiteSpace(dto.ImageUrl) ? null : dto.ImageUrl.Trim(),
             CategoryId = dto.CategoryId,
             CreatedAt = DateTime.UtcNow,
@@ -144,7 +144,7 @@ public class ProductController : ControllerBase
         product.Pricing = dto.Pricing;
         product.Features = dto.Features;
         product.Specifications = dto.Specifications;
-        product.Status = dto.Status ?? "ACTIVE";
+        product.Status = string.IsNullOrWhiteSpace(dto.Status) ? product.Status : dto.Status.Trim().ToUpper();
         product.ImageUrl = string.IsNullOrWhiteSpace(dto.ImageUrl) ? null : dto.ImageUrl.Trim();
         product.CategoryId = dto.CategoryId;
         product.UpdatedAt = DateTime.UtcNow;
@@ -245,4 +245,27 @@ public class ProductController : ControllerBase
 
         return Ok(new { message = "Product deleted successfully." });
     }
+
+    [HttpPost("{id}/status")]
+    [HttpPut("{id}/status")]
+    public async Task<IActionResult> UpdateProductStatus(int id, [FromBody] ChangeProductStatusRequestDto dto)
+    {
+        var product = await _context.Products.FindAsync(id);
+        if (product == null) return NotFound(new { error = "Product not found." });
+
+        product.Status = string.IsNullOrWhiteSpace(dto?.Status) ? "ACTIVE" : dto.Status.Trim().ToUpper();
+        product.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        var userEmail = User.FindFirstValue(ClaimTypes.Email) ?? "ADMIN";
+        await _auditLog.LogAsync(null, userEmail, "UPDATE_PRODUCT_STATUS", "Product", product.ProductId.ToString(), $"Changed product '{product.Name}' status to {product.Status}");
+
+        return Ok(product);
+    }
+}
+
+public class ChangeProductStatusRequestDto
+{
+    public string Status { get; set; } = "ACTIVE";
 }

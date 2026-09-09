@@ -44,12 +44,12 @@ public class ScoringController : ControllerBase
             return BadRequest(new { error = "Rule Name and Event Type are required." });
         }
 
-        var normalizedEventType = dto.EventType.Trim().ToUpper();
+        var normalizedEventType = dto.EventType.Trim().ToUpper().Replace(" ", "_");
 
-        // Only allow predefined event types — admins cannot inject arbitrary codes
-        if (!ScoringService.PredefinedEventTypes.Contains(normalizedEventType, StringComparer.OrdinalIgnoreCase))
+        // Validate event type format (letters, numbers, underscores, 3-50 chars)
+        if (!System.Text.RegularExpressions.Regex.IsMatch(normalizedEventType, @"^[A-Z0-9_]{3,50}$"))
         {
-            return BadRequest(new { error = $"'{normalizedEventType}' is not a recognized system event type. Allowed values: {string.Join(", ", ScoringService.PredefinedEventTypes)}" });
+            return BadRequest(new { error = "Event Type must contain only uppercase letters, numbers, and underscores (3-50 characters)." });
         }
 
         // Prevent duplicate event types

@@ -60,17 +60,22 @@ export function getProductImageUrl(product?: { name?: string; categoryName?: str
     if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
       return trimmed;
     }
+
+    const backendBase = (typeof window !== 'undefined' && window.location.port === '4200')
+      ? 'http://localhost:5234'
+      : '';
+
     if (trimmed.startsWith('/uploads/products/')) {
       const fileName = trimmed.replace('/uploads/products/', '');
-      return `http://localhost:5234/api/product/image/${fileName}`;
+      return `${backendBase}/api/product/image/${fileName}`;
     }
     if (trimmed.startsWith('/api/product/image/')) {
-      return `http://localhost:5234${trimmed}`;
+      return `${backendBase}${trimmed}`;
     }
     if (trimmed.startsWith('/')) {
-      return `http://localhost:5234${trimmed}`;
+      return `${backendBase}${trimmed}`;
     }
-    return `http://localhost:5234/api/product/image/${trimmed}`;
+    return `${backendBase}/api/product/image/${trimmed}`;
   }
 
   const name = (product.name || '').toLowerCase();

@@ -13,21 +13,31 @@ public static class PasswordHasher
         byte[] saltBytes = RandomNumberGenerator.GetBytes(SaltSize);
         string salt = Convert.ToBase64String(saltBytes);
 
-        using var algorithm = new Rfc2898DeriveBytes(password, saltBytes, Iterations, HashAlgorithmName.SHA256);
-        string hash = Convert.ToBase64String(algorithm.GetBytes(KeySize));
+        byte[] hashBytes = Rfc2898DeriveBytes.Pbkdf2(
+            password,
+            saltBytes,
+            Iterations,
+            HashAlgorithmName.SHA256,
+            KeySize
+        );
 
+        string hash = Convert.ToBase64String(hashBytes);
         return (hash, salt);
     }
 
     public static bool VerifyPassword(string password, string hash, string salt)
     {
         byte[] saltBytes = Convert.FromBase64String(salt);
-        using var algorithm = new Rfc2898DeriveBytes(password, saltBytes, Iterations, HashAlgorithmName.SHA256);
-        string newHash = Convert.ToBase64String(algorithm.GetBytes(KeySize));
+        byte[] actualHashBytes = Convert.FromBase64String(hash);
 
-        return CryptographicOperations.FixedTimeEquals(
-            Convert.FromBase64String(hash),
-            Convert.FromBase64String(newHash)
+        byte[] expectedHashBytes = Rfc2898DeriveBytes.Pbkdf2(
+            password,
+            saltBytes,
+            Iterations,
+            HashAlgorithmName.SHA256,
+            KeySize
         );
+
+        return CryptographicOperations.FixedTimeEquals(actualHashBytes, expectedHashBytes);
     }
 }

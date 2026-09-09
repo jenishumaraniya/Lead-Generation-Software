@@ -36,6 +36,7 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -84,6 +85,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<AIAnalysis>().ToTable("AIAnalysis_CRM");
         modelBuilder.Entity<AIInsight>().ToTable("AIInsight_CRM");
         modelBuilder.Entity<AIAnalysisHistory>().ToTable("AIAnalysisHistory_CRM");
+        modelBuilder.Entity<Notification>().ToTable("Notification_CRM");
 
 
         modelBuilder.Entity<Product>()

@@ -169,6 +169,7 @@
 
       <!-- Card Footer Actions -->
       <div class="product-card-footer">
+        <button *ngIf="(p.status || '').toUpperCase() === 'DRAFT'" (click)="activateProduct(p)" class="btn-action activate" title="Publish product to Active">Publish</button>
         <button (click)="editProduct(p)" class="btn-action edit">Edit</button>
         <button (click)="deleteProduct(p.productId)" class="btn-action delete">Delete</button>
       </div>
@@ -242,6 +243,7 @@
             </span>
           </td>
           <td class="text-right actions-cell">
+            <button *ngIf="(p.status || '').toUpperCase() === 'DRAFT'" (click)="activateProduct(p)" class="btn-action activate" title="Publish product to Active">Publish</button>
             <button (click)="editProduct(p)" class="btn-action edit">Edit</button>
             <button (click)="deleteProduct(p.productId)" class="btn-action delete">Delete</button>
           </td>
@@ -344,10 +346,13 @@
         <div class="form-field">
           <label>Status</label>
           <select [(ngModel)]="formData.status">
-            <option value="ACTIVE">Active</option>
+            <option value="DRAFT">Draft (Unpublished - Hidden from public)</option>
+            <option value="ACTIVE">Active (Published on live catalog)</option>
             <option value="INACTIVE">Inactive</option>
-            <option value="DRAFT">Draft</option>
           </select>
+          <small class="field-hint" style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+            New products start as Draft by default. You can publish them to Active whenever you are ready.
+          </small>
         </div>
       </div>
 

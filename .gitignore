@@ -16,3 +16,6 @@
 **/bin/
 **/obj/
 appsettings.Development.json
+*.zip
+backend/CrmLeadTool.Api/wwwroot/
+backend/CrmLeadTool.Api/publish/

@@ -57,7 +57,7 @@
 
 .logo {
   font-size: 23px;
-  font-weight: 800;
+  font-weight: 400;
 
   color: #172033;
 
@@ -935,4 +935,49 @@
   background: #059669;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.loading-state-box {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.spinner-circle {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(74, 108, 247, 0.15);
+  border-top-color: #4a6cf7;
+  border-radius: 50%;
+  animation: spinProduct 0.8s linear infinite;
+  margin-bottom: 18px;
+}
+
+.loading-text {
+  font-size: 1.1rem;
+  color: #64748b;
+  font-weight: 600;
+  margin: 0;
+}
+
+@keyframes spinProduct {
+  to { transform: rotate(360deg); }
+}
+
+.no-products {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  color: #64748b;
+}
+
+.no-products h2 {
+  font-size: 1.6rem;
+  color: #1e293b;
+  margin-bottom: 8px;
 }

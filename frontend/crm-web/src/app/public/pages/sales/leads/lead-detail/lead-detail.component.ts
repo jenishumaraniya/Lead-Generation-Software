@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Lead, LeadService } from '../../../../../core/services/lead.service';
 import { AIService } from '../../../../../core/services/ai.service';
+import { ApiService } from '../../../../../core/services/api.service';
+import { Product } from '../../../../../core/models/product.model';
 
 @Component({
   selector: 'app-sales-lead-detail',
@@ -17,8 +19,9 @@ export class LeadDetailComponent implements OnInit {
   activities: any[] = [];
   statusHistories: any[] = [];
   scoreHistories: any[] = [];
+  leadProducts: Product[] = [];
   newActivity = { activityType: 'CALL', description: '' };
-  loading = false;
+  loading = true;
   saveMessage = '';
   followUpDateString = '';
 
@@ -32,7 +35,8 @@ export class LeadDetailComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private leadService: LeadService,
-    private aiService: AIService
+    private aiService: AIService,
+    private apiService: ApiService
   ) {}
 
   ngOnInit(): void {
@@ -50,9 +54,22 @@ export class LeadDetailComponent implements OnInit {
     this.leadService.getLead(id).subscribe({
       next: (data) => {
         this.lead = data;
+        this.salesNote = '';
+        if (this.lead) this.lead.notes = '';
         this.activities = data.activities || [];
         this.statusHistories = data.statusHistories || [];
         this.scoreHistories = data.scoreHistories || [];
+
+        const pids = data.productIds || [];
+        if (pids.length > 0) {
+          this.apiService.getProducts().subscribe({
+            next: (prods) => {
+              this.leadProducts = (prods || []).filter(p => pids.includes(p.productId));
+            }
+          });
+        } else {
+          this.leadProducts = [];
+        }
 
         if (data.nextFollowUpDate) {
           const d = new Date(data.nextFollowUpDate);
@@ -62,11 +79,17 @@ export class LeadDetailComponent implements OnInit {
         }
         this.loading = false;
       },
-      error: (err) => {
-        console.error('Failed to load lead', err);
+      error: () => {
+        this.loading = false;
         this.router.navigate(['/sales/leads']);
       }
     });
+  }
+
+  getProductQty(productId: number): number {
+    if (!this.lead?.productQuantities) return 1;
+    const val = this.lead.productQuantities[productId.toString()] || this.lead.productQuantities[productId as any];
+    return val ? Number(val) : 1;
   }
 
   loadExistingAnalysis(leadId: number): void {
@@ -83,7 +106,7 @@ export class LeadDetailComponent implements OnInit {
   }
 
   triggerAnalysis(): void {
-    if (!this.lead) return;
+    if (!this.lead || this.aiLoading) return;
     this.aiLoading = true;
     this.aiError = '';
     this.aiService.analyzeLead(this.lead.leadId).subscribe({
@@ -107,17 +130,22 @@ export class LeadDetailComponent implements OnInit {
     }
   }
 
+  salesNote: string = '';
+
   updateLead(): void {
     if (!this.lead) return;
+    const noteText = this.salesNote.trim() || (this.lead.notes?.trim() || '');
     this.leadService.updateLead(this.lead.leadId, {
       status: this.lead.status,
       qualification: this.lead.qualification,
       nextFollowUpDate: this.followUpDateString ? new Date(this.followUpDateString).toISOString() : null,
-      notes: this.lead.notes
+      notes: noteText || undefined
     }).subscribe({
       next: () => {
         this.saveMessage = 'Lead updated successfully';
         setTimeout(() => this.saveMessage = '', 3000);
+        this.salesNote = '';
+        if (this.lead) this.lead.notes = '';
         this.loadLead(this.lead.leadId);
       },
       error: () => alert('Failed to update lead')

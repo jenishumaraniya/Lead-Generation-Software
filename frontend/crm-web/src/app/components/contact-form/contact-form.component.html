@@ -257,23 +257,83 @@
           <small class="hint">Click to select one or multiple products</small>
         </div>
 
-        <!-- Required Quantity -->
+        <!-- Product-Wise Required Quantities -->
         <div class="form-group">
-          <label for="quantity">Required Quantity <span class="required">*</span></label>
-          <input 
-            type="number" 
-            id="quantity"
-            name="quantity"
-            [(ngModel)]="formData.quantity" 
-            required
-            min="1"
-            (blur)="validateField('quantity')"
-            (input)="validateField('quantity')"
-            placeholder="Enter quantity of licenses or devices needed"
-            class="form-control"
-            [class.invalid]="formErrors.quantity && (contactForm.controls['quantity'].touched || contactForm.submitted)"
-          >
-          <div class="error-message" *ngIf="formErrors.quantity && (contactForm.controls['quantity'].touched || contactForm.submitted)">
+          <label>Required Quantity (Product-Wise) <span class="required">*</span></label>
+          
+          <!-- When products are selected -->
+          <div *ngIf="formData.products.length > 0" class="product-quantities-section">
+            <div class="pq-header">
+              <span class="pq-title">Specify quantity for each selected product:</span>
+              <span class="pq-badge">{{ formData.products.length }} {{ formData.products.length === 1 ? 'Product' : 'Products' }}</span>
+            </div>
+
+            <div class="pq-list">
+              <div *ngFor="let pid of formData.products" class="pq-item">
+                <div class="pq-info">
+                  <div class="pq-name">{{ getProductName(pid) }}</div>
+                  <div class="pq-unit-price" *ngIf="getProductById(pid)?.pricing">
+                    ₹{{ getProductById(pid)?.pricing | number }} / unit
+                  </div>
+                </div>
+
+                <div class="pq-controls">
+                  <div class="pq-stepper">
+                    <button 
+                      type="button" 
+                      class="pq-step-btn" 
+                      (click)="decrementQuantity(pid, $event)"
+                      [disabled]="getProductQuantity(pid) <= 1"
+                      title="Decrease quantity"
+                    >−</button>
+                    <input 
+                      type="number" 
+                      class="pq-input"
+                      [value]="getProductQuantity(pid)"
+                      (input)="setProductQuantity(pid, $any($event.target).value)"
+                      min="1" 
+                      max="99999"
+                      title="Quantity for {{ getProductName(pid) }}"
+                    >
+                    <button 
+                      type="button" 
+                      class="pq-step-btn" 
+                      (click)="incrementQuantity(pid, $event)"
+                      title="Increase quantity"
+                    >+</button>
+                  </div>
+
+                  <div class="pq-subtotal" *ngIf="getProductById(pid)?.pricing">
+                    ₹{{ getProductSubtotal(pid) | number }}
+                  </div>
+
+                  <button 
+                    type="button" 
+                    class="pq-remove" 
+                    (click)="removeProduct(pid, $event)"
+                    title="Remove this product"
+                  >×</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Total Quantities Summary -->
+            <div class="pq-summary">
+              <div class="pq-total-units">
+                Total Units: <strong>{{ formData.quantity || 0 }}</strong>
+              </div>
+              <div class="pq-total-amount" *ngIf="getEstimatedTotal() > 0">
+                Est. Total: <strong>₹{{ getEstimatedTotal() | number }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- When no products are selected yet -->
+          <div *ngIf="formData.products.length === 0" class="no-products-hint">
+            <span class="hint-icon">ℹ</span> Select one or more products above to configure individual quantities.
+          </div>
+
+          <div class="error-message" *ngIf="formErrors.quantity && (contactForm.submitted)">
             {{ formErrors.quantity }}
           </div>
         </div>

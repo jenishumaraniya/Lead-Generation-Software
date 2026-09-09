@@ -109,12 +109,6 @@ export class CampaignFormComponent implements OnInit {
     this.loadProspects();
   }
 
-  get minDateTime(): string {
-    const now = new Date();
-    const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
-    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  }
-
   private toInputDateTime(dateVal: any): string {
     if (!dateVal) return '';
     let d: Date;
@@ -244,21 +238,12 @@ export class CampaignFormComponent implements OnInit {
       return;
     }
 
-    let campaignStatus = formVal.status || 'ACTIVE';
-    if (campaignStatus !== 'DRAFT' && campaignStatus !== 'PAUSED') {
-      if (startDate.getTime() > now.getTime()) {
-        campaignStatus = 'FUTURE';
-      } else {
-        campaignStatus = 'ACTIVE';
-      }
-    }
-
     this.saving = true;
 
     const payload = {
       name: formVal.name?.trim(),
       description: formVal.description?.trim() || null,
-      status: campaignStatus,
+      status: formVal.status || 'ACTIVE',
       scheduleStartDate: formVal.scheduleStartDate
         ? new Date(formVal.scheduleStartDate).toISOString()
         : null,

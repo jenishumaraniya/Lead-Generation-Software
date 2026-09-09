@@ -2,13 +2,14 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { catchError, switchMap, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const token = authService.getAccessToken();
 
   let authReq = req;
-  const isApiUrl = req.url.includes('/api') || req.url.includes('localhost:5234');
+  const isApiUrl = req.url.startsWith(environment.apiUrl) || req.url.includes('/api');
 
   if (token && isApiUrl) {
     authReq = req.clone({

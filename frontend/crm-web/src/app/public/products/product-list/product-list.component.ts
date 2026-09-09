@@ -17,6 +17,7 @@ import { getProductImageUrl } from '../../../core/utils/product-image.util';
 export class ProductListComponent implements OnInit {
 
   products: Product[] = [];
+  loading = true;
   categories: any[] = [];
   selectedCategoryId: number | null = null;
   selectedCategoryName = 'All Products';
@@ -61,6 +62,7 @@ export class ProductListComponent implements OnInit {
   }
 
   private loadProducts(): void {
+    this.loading = true;
     this.apiService.getProducts(this.selectedCategoryId ?? undefined).subscribe({
       next: (products: Product[]) => {
         this.products = products.map(product => ({
@@ -68,10 +70,12 @@ export class ProductListComponent implements OnInit {
           features: this.parseStringArray(product.features),
           specifications: this.parseStringArray(product.specifications)
         }));
+        this.loading = false;
       },
       error: (error) => {
         console.error('Failed to load products:', error);
         this.products = [];
+        this.loading = false;
       }
     });
   }

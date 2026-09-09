@@ -50,7 +50,13 @@
 
   <section class="products">
 
-    @if (products.length > 0) {
+    @if (loading) {
+      <div class="loading-state-box">
+        <div class="spinner-circle"></div>
+        <p class="loading-text">Loading solutions catalog...</p>
+      </div>
+    }
+    @else if (products.length > 0) {
 
       @for (product of products; track product.productId) {
 

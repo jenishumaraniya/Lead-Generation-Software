@@ -80,13 +80,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';  // <-- add HttpP
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Product } from '../models/product.model';
+import { environment } from '../../../environments/environment';
  
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
 
-  private baseUrl = 'http://localhost:5234/api';
+  private baseUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
  
@@ -177,19 +178,19 @@ export class ApiService {
   }
  
   private normalizeProduct(product: any): Product {
-
-  return {
-    productId: product.productId ?? product.id,
-    name: product.name ?? 'Product',
-    description: product.description ?? '',
-    pricing: Number(product.pricing ?? 0),
-    features: this.parseList(product.features),
-    specifications: this.parseList(product.specifications),
-    status: product.status ?? 'Available',
-    categoryId: product.categoryId ?? null,
-    categoryName: product.categoryName ?? null
-  };
-}
+    return {
+      productId: product.productId ?? product.id,
+      name: product.name ?? 'Product',
+      description: product.description ?? '',
+      pricing: Number(product.pricing ?? 0),
+      features: this.parseList(product.features),
+      specifications: this.parseList(product.specifications),
+      status: product.status ?? 'Available',
+      categoryId: product.categoryId ?? null,
+      categoryName: product.categoryName ?? null,
+      imageUrl: product.imageUrl ?? product.ImageUrl ?? null
+    };
+  }
 
  
   private parseList(value: string | string[] | null | undefined): string[] {

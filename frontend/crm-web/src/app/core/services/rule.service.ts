@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface ScoreRule {
   scoreRuleId: number;
@@ -25,7 +26,7 @@ export interface ScoreRule {
   providedIn: 'root',
 })
 export class RuleService {
-  private apiUrl = 'http://localhost:5234/api/scoring/rules';
+  private apiUrl = `${environment.apiUrl}/scoring/rules`;
 
   constructor(private http: HttpClient) {}
 
@@ -35,7 +36,7 @@ export class RuleService {
 
   getEventTypes(): Observable<string[]> {
     return this.http.get<string[]>(
-      'http://localhost:5234/api/scoring/event-types',
+      `${environment.apiUrl}/scoring/event-types`,
     );
   }
 
@@ -45,7 +46,7 @@ export class RuleService {
    */
   getUndefinedEventTypes(): Observable<string[]> {
     return this.http.get<string[]>(
-      'http://localhost:5234/api/scoring/undefined-event-types',
+      `${environment.apiUrl}/scoring/undefined-event-types`,
     );
   }
 

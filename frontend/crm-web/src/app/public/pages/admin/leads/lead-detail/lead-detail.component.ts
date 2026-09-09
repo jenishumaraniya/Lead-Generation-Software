@@ -7,7 +7,9 @@ import {
   EmployeeService,
   Salesperson,
 } from '../../../../../core/services/employee.service';
-import { AIService } from '../../../../../core/services/ai.service'; 
+import { AIService } from '../../../../../core/services/ai.service';
+import { ApiService } from '../../../../../core/services/api.service';
+import { Product } from '../../../../../core/models/product.model';
 
 @Component({
   selector: 'app-lead-detail',
@@ -18,10 +20,12 @@ import { AIService } from '../../../../../core/services/ai.service';
 })
 export class LeadDetailComponent implements OnInit {
   lead: Lead | null = null;
+  loading = true;
   activities: any[] = [];
   statusHistories: any[] = [];
   scoreHistories: any[] = [];
   employees: Salesperson[] = [];
+  leadProducts: Product[] = [];
   newActivity = { activityType: 'CALL', description: '' };
   isAdmin = false;
   saveToast = '';
@@ -38,7 +42,8 @@ export class LeadDetailComponent implements OnInit {
     private router: Router,
     private leadService: LeadService,
     private employeeService: EmployeeService,
-    private aiService: AIService, // 👈 NEW
+    private aiService: AIService,
+    private apiService: ApiService
   ) {}
 
   ngOnInit(): void {
@@ -52,16 +57,31 @@ export class LeadDetailComponent implements OnInit {
 
     this.loadLead(id);
     this.loadEmployees();
-    this.loadExistingAnalysis(id); // 👈 NEW
+    this.loadExistingAnalysis(id);
   }
 
   loadLead(id: number): void {
+    this.loading = true;
     this.leadService.getLead(id).subscribe({
       next: (data) => {
         this.lead = data;
+        this.adminNote = '';
+        if (this.lead) this.lead.notes = '';
+        this.loading = false;
         this.activities = data.activities || [];
         this.statusHistories = data.statusHistories || [];
         this.scoreHistories = data.scoreHistories || [];
+
+        const pids = data.productIds || [];
+        if (pids.length > 0) {
+          this.apiService.getProducts().subscribe({
+            next: (prods) => {
+              this.leadProducts = (prods || []).filter(p => pids.includes(p.productId));
+            }
+          });
+        } else {
+          this.leadProducts = [];
+        }
 
         if (data.nextFollowUpDate) {
           const d = new Date(data.nextFollowUpDate);
@@ -70,8 +90,17 @@ export class LeadDetailComponent implements OnInit {
           this.followUpDateString = '';
         }
       },
-      error: () => this.router.navigate(['/admin/leads']),
+      error: () => {
+        this.loading = false;
+        this.router.navigate(['/admin/leads']);
+      },
     });
+  }
+
+  getProductQty(productId: number): number {
+    if (!this.lead?.productQuantities) return 1;
+    const val = this.lead.productQuantities[productId.toString()] || this.lead.productQuantities[productId as any];
+    return val ? Number(val) : 1;
   }
 
   loadEmployees(): void {
@@ -98,7 +127,7 @@ export class LeadDetailComponent implements OnInit {
 
   // 👇 Trigger new AI analysis
   triggerAnalysis(): void {
-    if (!this.lead) return;
+    if (!this.lead || this.aiLoading) return;
     this.aiLoading = true;
     this.aiError = '';
     this.aiService.analyzeLead(this.lead.leadId).subscribe({
@@ -124,8 +153,12 @@ export class LeadDetailComponent implements OnInit {
     }
   }
 
+  adminNote: string = '';
+
   saveLead(): void {
     if (!this.lead) return;
+
+    const noteText = this.adminNote.trim() || (this.lead.notes?.trim() || '');
 
     this.leadService
       .updateLead(this.lead.leadId, {
@@ -136,11 +169,13 @@ export class LeadDetailComponent implements OnInit {
         nextFollowUpDate: this.followUpDateString
           ? new Date(this.followUpDateString).toISOString()
           : null,
-        notes: this.lead.notes,
+        notes: noteText || undefined,
       })
       .subscribe({
         next: () => {
           this.showToast('Lead details and follow-up saved successfully.');
+          this.adminNote = '';
+          if (this.lead) this.lead.notes = '';
           this.loadLead(this.lead!.leadId);
         },
         error: (err) =>

@@ -490,6 +490,18 @@
   align-items: center;
 }
 
+.btn-action.activate {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #059669;
+  flex: 1;
+  justify-content: center;
+}
+
+.btn-action.activate:hover {
+  background: #d1fae5;
+}
+
 .btn-action.edit {
   background: #eff6ff;
   border-color: #bfdbfe;
@@ -512,6 +524,10 @@
 
 .btn-action.delete:hover {
   background: #fee2e2;
+}
+
+.actions-cell .btn-action {
+  margin-left: 6px;
 }
 
 .empty-state, .loading-state {
@@ -551,35 +567,48 @@
   to { transform: rotate(360deg); }
 }
 
-/* ======================================================== */
-/* MODALS                                                   */
-/* ======================================================== */
 .modal-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(15, 23, 42, 0.45);
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   padding: 24px 16px;
   box-sizing: border-box;
+  animation: modalFadeIn 0.22s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-card {
   background: #ffffff;
   width: 100%;
-  max-width: 520px;
+  max-width: 540px;
   max-height: calc(100vh - 48px);
   display: flex;
   flex-direction: column;
-  border-radius: 14px;
-  box-shadow: 0 20px 30px -10px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  border-radius: 18px;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.28), 0 0 0 1px rgba(15, 23, 42, 0.08);
   overflow: hidden;
+  animation: modalPopUp 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPopUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .modal-header {

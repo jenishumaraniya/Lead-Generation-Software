@@ -24,6 +24,8 @@ export class VisitorTrackingService {
 
   private storageKey = 'anonymousVisitorId';
   private consentKey = 'crm_cookie_consent';
+  private lastInterestClickByProduct = new Map<number, number>();
+  private readonly INTEREST_COOLDOWN_MS = 2 * 60 * 1000; // 2-minute cooldown per product
 
   constructor(private api: ApiService) {}
 
@@ -134,6 +136,17 @@ export class VisitorTrackingService {
       );
 
       return;
+    }
+
+    // Consecutive interest clicks on the same product within 2 minutes do not add score
+    if (activityType === 'INTEREST_CLICK' && productId) {
+      const now = Date.now();
+      const lastClick = this.lastInterestClickByProduct.get(productId);
+      if (lastClick && (now - lastClick) < this.INTEREST_COOLDOWN_MS) {
+        console.info(`[Tracking] Consecutive interest click for product #${productId} throttled (2-minute cooldown).`);
+        return;
+      }
+      this.lastInterestClickByProduct.set(productId, now);
     }
 
     const activity = {

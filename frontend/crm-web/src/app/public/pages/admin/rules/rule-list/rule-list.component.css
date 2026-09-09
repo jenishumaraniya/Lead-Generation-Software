@@ -125,47 +125,65 @@
 
 .search-box {
   position: relative;
-  display: inline-flex;
+  display: flex;
   align-items: center;
 }
 
+.search-box .search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
 .search-input {
-  padding: 9px 36px 9px 14px;
+  padding: 9px 36px 9px 36px;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 13px;
   width: 320px;
   background: #ffffff;
-  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.search-input:focus {
+  border-color: #2563eb;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .btn-clear-search {
   position: absolute;
-  right: 8px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  background: transparent;
-  border: none;
-  color: #64748b;
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 2px 6px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 5;
+  cursor: pointer;
+  padding: 0;
   transition: all 0.15s ease;
+  z-index: 10;
 }
 
 .btn-clear-search:hover {
   background: #e2e8f0;
   color: #0f172a;
+  border-color: #94a3b8;
 }
 
-.search-input:focus, .filter-select:focus {
-  border-color: #0f172a;
+.filter-select:focus {
+  border-color: #2563eb;
   outline: none;
 }
 
@@ -413,21 +431,41 @@ input:checked + .slider:before {
 /* Modal */
 .modal-backdrop {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(15, 23, 42, 0.6);
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: modalFadeIn 0.22s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-content {
   background: #ffffff;
-  border-radius: 12px;
+  border-radius: 18px;
   width: 100%;
   max-width: 520px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.28), 0 0 0 1px rgba(15, 23, 42, 0.08);
   overflow: hidden;
+  animation: modalPopUp 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPopUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .modal-header {

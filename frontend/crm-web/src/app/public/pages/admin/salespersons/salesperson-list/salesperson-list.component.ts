@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { EmployeeService, Salesperson } from '../../../../../core/services/employee.service';
 import { CategoryService, Category } from '../../../../../core/services/category.service';
 import { PaginationComponent } from '../../../../../components/pagination/pagination.component';
+import { ConfirmDialogService } from '../../../../../core/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-salesperson-list',
@@ -29,7 +30,7 @@ export class SalespersonListComponent implements OnInit {
   sortDirection: 'asc' | 'desc' = 'asc';
 
   currentPage = 1;
-  pageSize = 10;
+  pageSize = 6;
 
   get paginatedSalespersons(): Salesperson[] {
     const start = (this.currentPage - 1) * this.pageSize;
@@ -62,7 +63,8 @@ export class SalespersonListComponent implements OnInit {
 
   constructor(
     private employeeService: EmployeeService,
-    private categoryService: CategoryService
+    private categoryService: CategoryService,
+    private confirmService: ConfirmDialogService
   ) {}
 
   ngOnInit(): void {
@@ -275,8 +277,18 @@ export class SalespersonListComponent implements OnInit {
     });
   }
 
-  deleteSalesperson(rep: any): void {
-    if (!confirm(`Are you sure you want to remove ${rep.fullName}? This will unassign all their leads.`)) {
+  async deleteSalesperson(rep: any): Promise<void> {
+    const confirmed = await this.confirmService.confirm({
+      title: 'Remove Sales Representative',
+      message: `Are you sure you want to remove ${rep.fullName}? All leads currently assigned to them will be unassigned for reassignment.`,
+      detailNote: `Assigned category: ${rep.categoryName || 'None'}`,
+      confirmText: 'Remove Representative',
+      cancelText: 'Cancel',
+      type: 'danger',
+      iconType: 'trash'
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -286,7 +298,7 @@ export class SalespersonListComponent implements OnInit {
         this.loadData();
       },
       error: (err) => {
-        alert(err.error?.error || 'Failed to delete sales representative.');
+        this.errorMessage = err.error?.error || 'Failed to delete sales representative.';
       }
     });
   }

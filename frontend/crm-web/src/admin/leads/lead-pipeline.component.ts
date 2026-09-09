@@ -72,6 +72,11 @@ export class LeadPipelineComponent implements OnInit {
     });
   }
 
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.applyFilter();
+  }
+
   openLeadDetails(lead: any): void {
     this.showLeadDrawer = true;
     this.selectedLead = null;

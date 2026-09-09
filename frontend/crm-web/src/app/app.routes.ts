@@ -133,6 +133,12 @@ export const routes: Routes = [
           import('./public/pages/admin/rules/rule-list/rule-list.component')
             .then(m => m.RuleListComponent)
       },
+      {
+        path: 'visitors',
+        loadComponent: () =>
+          import('./public/pages/admin/visitors/visitor-list/visitor-list.component')
+            .then(m => m.VisitorListComponent)
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },

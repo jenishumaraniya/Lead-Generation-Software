@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AIService {
-  private baseUrl = 'http://localhost:5234/api/ai'; // adjust to your backend URL
+  private baseUrl = `${environment.apiUrl}/ai`;
 
   constructor(private http: HttpClient) {}
 

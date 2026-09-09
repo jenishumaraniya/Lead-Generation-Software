@@ -54,21 +54,19 @@
         </div>
 
         <div class="form-group">
-          <label>Scheduled Start Date &amp; Time *</label>
+          <label>Scheduled Start Date *</label>
           <input
             type="datetime-local"
             formControlName="scheduleStartDate"
-            [min]="minDateTime"
             required
           />
         </div>
 
         <div class="form-group">
-          <label>Scheduled End Date &amp; Time * (Extendable)</label>
+          <label>Scheduled End Date * (Extendable)</label>
           <input
             type="datetime-local"
             formControlName="scheduleEndDate"
-            [min]="form.get('scheduleStartDate')?.value || minDateTime"
             required
           />
         </div>

@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { CampaignService } from '../../../../../core/services/campaign.service';
 import { SidebarService } from '../../../../../core/services/sidebar.service';
 import { PaginationComponent } from '../../../../../components/pagination/pagination.component';
+import { ConfirmDialogService } from '../../../../../core/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-campaign-list',
@@ -51,7 +52,8 @@ export class CampaignListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private campaignService: CampaignService,
-    private sidebarService: SidebarService
+    private sidebarService: SidebarService,
+    private confirmService: ConfirmDialogService
   ) { }
 
   private refreshInterval: any;
@@ -267,20 +269,40 @@ export class CampaignListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  closeCampaign(id: number) {
-    if (confirm('Close this campaign?')) {
+  async closeCampaign(id: number) {
+    const c = this.campaigns.find(item => item.campaignId === id);
+    const confirmed = await this.confirmService.confirm({
+      title: 'Close Campaign',
+      message: `Are you sure you want to close "${c?.name || 'this campaign'}"? No further sequence emails will be dispatched.`,
+      confirmText: 'Close Campaign',
+      cancelText: 'Keep Running',
+      type: 'warning',
+      iconType: 'alert'
+    });
+
+    if (confirmed) {
       this.campaignService.closeCampaign(id).subscribe({
         next: () => this.loadCampaigns(),
-        error: () => alert('Failed to close campaign')
+        error: () => {}
       });
     }
   }
 
-  deleteCampaign(id: number) {
-    if (confirm('Are you sure you want to delete this campaign?')) {
+  async deleteCampaign(id: number) {
+    const c = this.campaigns.find(item => item.campaignId === id);
+    const confirmed = await this.confirmService.confirm({
+      title: 'Delete Campaign',
+      message: `Are you sure you want to permanently delete "${c?.name || 'this campaign'}"? This action cannot be undone.`,
+      confirmText: 'Delete Campaign',
+      cancelText: 'Cancel',
+      type: 'danger',
+      iconType: 'trash'
+    });
+
+    if (confirmed) {
       this.campaignService.deleteCampaign(id).subscribe({
         next: () => this.loadCampaigns(),
-        error: () => alert('Failed to delete campaign')
+        error: () => {}
       });
     }
   }

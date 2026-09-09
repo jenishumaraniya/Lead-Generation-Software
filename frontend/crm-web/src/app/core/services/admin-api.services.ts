@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AdminApiService {
-  private baseUrl = 'http://localhost:5234/api';
+  private baseUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 
@@ -17,6 +18,10 @@ export class AdminApiService {
 
   getVisitorDetails(anonymousId: string): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/admin/visitors/${anonymousId}`);
+  }
+
+  getVisitorStats(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/admin/visitors/stats`);
   }
 
   // --- Prospects & Discovery ---

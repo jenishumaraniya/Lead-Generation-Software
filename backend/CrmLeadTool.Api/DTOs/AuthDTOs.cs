@@ -102,6 +102,7 @@ public class CreateProductRequestDto
     public decimal Pricing { get; set; }
     public string? Features { get; set; }
     public string? Specifications { get; set; }
+    public string Status { get; set; } = "DRAFT";
     public string? ImageUrl { get; set; }
     public int? CategoryId { get; set; }
 }

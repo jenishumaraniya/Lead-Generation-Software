@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnInit, ElementRef, ViewChild, HostListener } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges, ElementRef, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -19,6 +19,7 @@ export interface ContactFormData {
   products: number[];
   productIds?: number[];
   quantity: number | null;
+  productQuantities?: { [productId: number]: number };
   timeline: string;
   businessRequirement: string;
 }
@@ -30,7 +31,7 @@ export interface ContactFormData {
   templateUrl: './contact-form.component.html',
   styleUrls: ['./contact-form.component.css']
 })
-export class ContactFormComponent implements OnInit {
+export class ContactFormComponent implements OnInit, OnChanges {
   @Input() isOpen = false;
   @Input() preselectedProductId?: number;
   @Output() close = new EventEmitter<void>();
@@ -44,6 +45,7 @@ export class ContactFormComponent implements OnInit {
   countries: CountryCodeItem[] = COUNTRY_DATA;
   selectedCountry: CountryCodeItem = COUNTRY_DATA[0]; // Default India (+91)
   phoneLocalNumber = '';
+  productQuantities: { [productId: number]: number } = {};
 
   isLoading = false;
   isDropdownOpen = false;
@@ -86,6 +88,17 @@ export class ContactFormComponent implements OnInit {
   ngOnInit(): void {
     this.loadProducts();
     this.detectUserCountry();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['preselectedProductId'] && this.preselectedProductId) {
+      if (!this.formData.products.includes(this.preselectedProductId)) {
+        this.formData.products.push(this.preselectedProductId);
+      }
+      this.productQuantities[this.preselectedProductId] = this.productQuantities[this.preselectedProductId] || 1;
+      this.recalculateTotalQuantity();
+      this.updateSelectedProductNames();
+    }
   }
 
   private detectUserCountry(): void {
@@ -236,7 +249,11 @@ export class ContactFormComponent implements OnInit {
       next: (products) => {
         this.availableProducts = products || [];
         if (this.preselectedProductId) {
-          this.formData.products = [this.preselectedProductId];
+          if (!this.formData.products.includes(this.preselectedProductId)) {
+            this.formData.products = [this.preselectedProductId];
+          }
+          this.productQuantities[this.preselectedProductId] = this.productQuantities[this.preselectedProductId] || 1;
+          this.recalculateTotalQuantity();
           this.updateSelectedProductNames();
         }
       },
@@ -275,11 +292,15 @@ export class ContactFormComponent implements OnInit {
     const index = this.formData.products.indexOf(productId);
     if (index > -1) {
       this.formData.products.splice(index, 1);
+      delete this.productQuantities[productId];
     } else {
       this.formData.products.push(productId);
+      this.productQuantities[productId] = this.productQuantities[productId] || 1;
     }
+    this.recalculateTotalQuantity();
     this.updateSelectedProductNames();
     this.validateField('products');
+    this.validateField('quantity');
   }
 
   isProductSelected(productId: number): boolean {
@@ -302,21 +323,83 @@ export class ContactFormComponent implements OnInit {
     }
   }
 
-  removeProduct(productId: number, event: Event): void {
-    event.stopPropagation();
+  removeProduct(productId: number, event?: Event): void {
+    if (event) event.stopPropagation();
     const index = this.formData.products.indexOf(productId);
     if (index > -1) {
       this.formData.products.splice(index, 1);
     }
+    delete this.productQuantities[productId];
+    this.recalculateTotalQuantity();
     this.updateSelectedProductNames();
     this.validateField('products');
+    this.validateField('quantity');
   }
 
-  clearAllProducts(event: Event): void {
-    event.stopPropagation();
+  clearAllProducts(event?: Event): void {
+    if (event) event.stopPropagation();
     this.formData.products = [];
+    this.productQuantities = {};
+    this.formData.quantity = null;
     this.updateSelectedProductNames();
     this.validateField('products');
+    this.validateField('quantity');
+  }
+
+  getProductQuantity(productId: number): number {
+    return this.productQuantities[productId] || 1;
+  }
+
+  setProductQuantity(productId: number, qty: any): void {
+    const parsed = parseInt(String(qty), 10);
+    const validQty = isNaN(parsed) || parsed < 1 ? 1 : Math.min(parsed, 99999);
+    this.productQuantities[productId] = validQty;
+    this.recalculateTotalQuantity();
+    this.validateField('quantity');
+  }
+
+  incrementQuantity(productId: number, event?: Event): void {
+    if (event) event.stopPropagation();
+    const current = this.getProductQuantity(productId);
+    this.setProductQuantity(productId, current + 1);
+  }
+
+  decrementQuantity(productId: number, event?: Event): void {
+    if (event) event.stopPropagation();
+    const current = this.getProductQuantity(productId);
+    if (current > 1) {
+      this.setProductQuantity(productId, current - 1);
+    }
+  }
+
+  recalculateTotalQuantity(): void {
+    if (this.formData.products.length === 0) {
+      this.formData.quantity = null;
+      return;
+    }
+    let total = 0;
+    for (const pid of this.formData.products) {
+      total += (this.productQuantities[pid] || 1);
+    }
+    this.formData.quantity = total;
+  }
+
+  getProductById(productId: number): Product | undefined {
+    return this.availableProducts.find(p => p.productId === productId);
+  }
+
+  getProductSubtotal(productId: number): number {
+    const prod = this.getProductById(productId);
+    const qty = this.getProductQuantity(productId);
+    return (prod?.pricing || 0) * qty;
+  }
+
+  getEstimatedTotal(): number {
+    let sum = 0;
+    for (const pid of this.formData.products) {
+      sum += this.getProductSubtotal(pid);
+    }
+    return sum;
   }
 
   validateField(fieldName: string): void {
@@ -419,12 +502,24 @@ export class ContactFormComponent implements OnInit {
         break;
 
       case 'quantity':
-        if (!value) {
-          this.formErrors.quantity = 'Quantity is required';
-        } else if (value < 1) {
-          this.formErrors.quantity = 'Quantity must be at least 1 unit';
+        if (this.formData.products.length === 0) {
+          this.formErrors.quantity = 'Please select at least one product first';
         } else {
-          this.formErrors.quantity = '';
+          let hasInvalid = false;
+          for (const pid of this.formData.products) {
+            const q = this.productQuantities[pid];
+            if (!q || q < 1) {
+              hasInvalid = true;
+              break;
+            }
+          }
+          if (hasInvalid) {
+            this.formErrors.quantity = 'Every selected product must have a quantity of at least 1 unit';
+          } else if (!this.formData.quantity || this.formData.quantity < 1) {
+            this.formErrors.quantity = 'Total quantity must be at least 1 unit';
+          } else {
+            this.formErrors.quantity = '';
+          }
         }
         break;
 
@@ -474,6 +569,9 @@ export class ContactFormComponent implements OnInit {
       }
     }
     const rawPhoneDigits = this.phoneLocalNumber.replace(/\D/g, '');
+    const hasValidQuantities = this.formData.products.length > 0 &&
+      this.formData.products.every(pid => (this.productQuantities[pid] || 0) >= 1);
+
     return !!(
       this.formData.companyName?.trim() &&
       this.formData.fullName?.trim() &&
@@ -485,6 +583,7 @@ export class ContactFormComponent implements OnInit {
       this.formData.country?.trim() &&
       rawPhoneDigits.length >= 7 &&
       this.formData.products.length > 0 &&
+      hasValidQuantities &&
       this.formData.quantity &&
       this.formData.quantity >= 1 &&
       this.formData.timeline &&
@@ -508,6 +607,7 @@ export class ContactFormComponent implements OnInit {
   onSubmit(form: any): void {
     this.submitError = '';
     this.updateFullPhoneNumber();
+    this.recalculateTotalQuantity();
     this.validateAllFields();
 
     if (this.isFormValid()) {
@@ -521,6 +621,7 @@ export class ContactFormComponent implements OnInit {
           { 
             source: 'contact_form_submission',
             products: this.formData.products,
+            productQuantities: this.productQuantities,
             timeline: this.formData.timeline
           }
         );
@@ -538,6 +639,7 @@ export class ContactFormComponent implements OnInit {
         products: this.formData.products,
         productIds: this.formData.products,
         quantity: this.formData.quantity,
+        productQuantities: this.productQuantities,
         timeline: this.formData.timeline,
         businessRequirement: this.formData.businessRequirement.trim(),
         source: 'WEBSITE_FORM',
@@ -587,6 +689,7 @@ export class ContactFormComponent implements OnInit {
       timeline: '',
       businessRequirement: ''
     };
+    this.productQuantities = {};
     this.phoneLocalNumber = '';
     this.selectedProductNames = 'Select products...';
     this.isDropdownOpen = false;

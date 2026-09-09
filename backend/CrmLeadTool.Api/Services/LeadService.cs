@@ -11,6 +11,7 @@ public class LeadService
     private readonly DuplicateService _duplicateService;
     private readonly ScoringService _scoringService;
     private readonly QualificationService _qualificationService;
+    private readonly NotificationService _notificationService;
     private readonly ILogger<LeadService> _logger;
 
     public LeadService(
@@ -18,12 +19,14 @@ public class LeadService
         DuplicateService duplicateService,
         ScoringService scoringService,
         QualificationService qualificationService,
+        NotificationService notificationService,
         ILogger<LeadService> logger)
     {
         _context = context;
         _duplicateService = duplicateService;
         _scoringService = scoringService;
         _qualificationService = qualificationService;
+        _notificationService = notificationService;
         _logger = logger;
     }
 
@@ -37,6 +40,12 @@ public class LeadService
             existing.BusinessRequirement = $"{existing.BusinessRequirement} | [Update {DateTime.UtcNow:g}]: {dto.BusinessRequirement}";
             if (!string.IsNullOrEmpty(dto.Timeline)) existing.Timeline = dto.Timeline;
             if (dto.Quantity.HasValue) existing.Quantity = dto.Quantity;
+            if (dto.ProductQuantities != null && dto.ProductQuantities.Count > 0)
+            {
+                existing.SetProductQuantities(dto.ProductQuantities);
+                var sum = dto.ProductQuantities.Values.Sum();
+                if (sum > 0) existing.Quantity = sum;
+            }
             
             var effectivePids = dto.GetEffectiveProductIds();
             if (effectivePids.Length > 0)
@@ -62,6 +71,13 @@ public class LeadService
                             .FirstOrDefaultAsync(u => u.CategoryId == existingCategories[0].CategoryId!.Value && u.Role == "SALES_REP" && u.IsActive);
                         if (rep != null) existing.AssignedTo = rep.UserId;
                     }
+                }
+
+                // Apply INTEREST_CLICK for each product (multiple products => multiple scores)
+                var prods = await _context.Products.Where(p => effectivePids.Contains(p.ProductId)).ToListAsync();
+                foreach (var p in prods)
+                {
+                    await _scoringService.ApplyScoreEventAsync(existing.LeadId, "INTEREST_CLICK", $"Interest expressed in: {p.Name}", allowDuplicates: true);
                 }
             }
 
@@ -137,6 +153,13 @@ public class LeadService
             }
         }
 
+        int? initialQuantity = dto.Quantity;
+        if (dto.ProductQuantities != null && dto.ProductQuantities.Count > 0)
+        {
+            var sum = dto.ProductQuantities.Values.Sum();
+            if (sum > 0) initialQuantity = sum;
+        }
+
         // 4. Create lead record
         var lead = new Lead
         {
@@ -152,7 +175,7 @@ public class LeadService
             Industry = dto.Industry ?? string.Empty,
             Country = dto.Country ?? string.Empty,
             Phone = dto.Phone ?? string.Empty,
-            Quantity = dto.Quantity,
+            Quantity = initialQuantity,
             Timeline = dto.Timeline ?? string.Empty,
             BusinessRequirement = dto.BusinessRequirement ?? string.Empty,
             Source = dto.Source ?? "WEBSITE_FORM",
@@ -162,6 +185,7 @@ public class LeadService
             UpdatedAt = DateTime.UtcNow
         };
         lead.SetProductIdList(productIds);
+        lead.SetProductQuantities(dto.ProductQuantities);
 
         _context.Leads.Add(lead);
         await _context.SaveChangesAsync();
@@ -192,15 +216,73 @@ public class LeadService
         await _context.SaveChangesAsync();
 
         // 6. Initial scoring & qualification evaluation
+        // A) Apply INTEREST_CLICK for each interested product (multiple interests => scored multiple times)
+        if (productIds.Length > 0)
+        {
+            var prods = await _context.Products.Where(p => productIds.Contains(p.ProductId)).ToListAsync();
+            foreach (var p in prods)
+            {
+                await _scoringService.ApplyScoreEventAsync(
+                    lead.LeadId, 
+                    "INTEREST_CLICK", 
+                    $"Interest expressed in product: {p.Name}", 
+                    allowDuplicates: true
+                );
+            }
+        }
+
+        // B) Apply FORM_SUBMIT rule (both interest click and form submission rules are applied)
         await _scoringService.ApplyScoreEventAsync(lead.LeadId, "FORM_SUBMIT", "Inbound form submitted with commercial requirement");
 
+        // C) Apply ROLE_MATCH if decision maker title
         var titleLower = (dto.JobTitle ?? "").ToLower();
         if (titleLower.Contains("vp") || titleLower.Contains("director") || titleLower.Contains("head") || titleLower.Contains("chief") || titleLower.Contains("manager"))
         {
             await _scoringService.ApplyScoreEventAsync(lead.LeadId, "ROLE_MATCH", $"Target decision maker role identified: {dto.JobTitle}");
         }
 
+        // D) Evaluate Negative Rules (INVALID_CONTACT, IRRELEVANT_REQ)
+        await _scoringService.EvaluateNegativeRulesAsync(lead.LeadId);
+
         await _qualificationService.EvaluateQualificationAsync(lead.LeadId);
+
+        // Notify assigned sales rep or admin
+        if (lead.AssignedTo.HasValue)
+        {
+            try
+            {
+                await _notificationService.CreateNotificationAsync(
+                    $"New Lead Assigned: {lead.FullName}",
+                    $"You have been assigned to new inbound lead '{lead.FullName}' ({lead.CompanyName}).",
+                    "LEAD_ASSIGNED",
+                    targetRole: "SALES_REP",
+                    userId: lead.AssignedTo.Value,
+                    leadId: lead.LeadId
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to dispatch lead assignment notification for lead {LeadId}", lead.LeadId);
+            }
+        }
+        else
+        {
+            try
+            {
+                await _notificationService.CreateNotificationAsync(
+                    $"New Inbound Lead: {lead.FullName}",
+                    $"Inbound inquiry received from '{lead.FullName}' ({lead.CompanyName}) awaiting manual assignment.",
+                    "NEW_LEAD",
+                    targetRole: "ADMIN",
+                    userId: null,
+                    leadId: lead.LeadId
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to dispatch new lead notification for lead {LeadId}", lead.LeadId);
+            }
+        }
 
         return lead;
     }
@@ -298,6 +380,7 @@ public class LeadService
             l.CreatedAt,
             l.UpdatedAt,
             ProductIds = l.GetProductIdList(),
+            ProductQuantities = l.GetProductQuantities(),
             Visitor = l.Visitor != null ? new
             {
                 l.Visitor.AnonymousId,
@@ -363,6 +446,7 @@ public class LeadService
             lead.CreatedAt,
             lead.UpdatedAt,
             ProductIds = lead.GetProductIdList(),
+            ProductQuantities = lead.GetProductQuantities(),
             Visitor = lead.Visitor != null ? new
             {
                 lead.Visitor.AnonymousId,
@@ -460,6 +544,10 @@ public class LeadService
         {
             var oldStatus = lead.Status;
             lead.Status = dto.Status;
+            if (dto.Status == "DISQUALIFIED")
+            {
+                lead.Qualification = "UNQUALIFIED";
+            }
 
             _context.LeadStatusHistories.Add(new LeadStatusHistory
             {
@@ -479,6 +567,22 @@ public class LeadService
                 CreatedBy = changedBy,
                 CreatedAt = DateTime.UtcNow
             });
+
+            try
+            {
+                await _notificationService.CreateNotificationAsync(
+                    $"Lead Status Updated: {lead.FullName}",
+                    $"Lead '{lead.FullName}' ({lead.CompanyName}) status was changed from '{oldStatus}' to '{dto.Status}' by {changedBy}.",
+                    "STATUS_UPDATE",
+                    targetRole: "ADMIN",
+                    userId: null,
+                    leadId: id
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to dispatch status update notification for lead {LeadId}", id);
+            }
         }
 
         if (!string.IsNullOrEmpty(dto.Qualification)) lead.Qualification = dto.Qualification;
@@ -535,6 +639,25 @@ public class LeadService
                 CreatedBy = changedBy,
                 CreatedAt = DateTime.UtcNow
             });
+
+            if (lead.AssignedTo.HasValue)
+            {
+                try
+                {
+                    await _notificationService.CreateNotificationAsync(
+                        $"Lead Assigned: {lead.FullName}",
+                        $"You have been assigned to lead '{lead.FullName}' ({lead.CompanyName}) by {changedBy}.",
+                        "LEAD_ASSIGNED",
+                        targetRole: "SALES_REP",
+                        userId: lead.AssignedTo.Value,
+                        leadId: id
+                    );
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to dispatch assignment notification for lead {LeadId}", id);
+                }
+            }
         }
 
         lead.UpdatedAt = DateTime.UtcNow;

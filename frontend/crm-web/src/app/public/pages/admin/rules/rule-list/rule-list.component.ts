@@ -5,6 +5,7 @@ import {
   RuleService,
   ScoreRule,
 } from '../../../../../core/services/rule.service';
+import { ConfirmDialogService } from '../../../../../core/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-rule-list',
@@ -52,17 +53,21 @@ export class RuleListComponent implements OnInit {
   /**
    * Predefined event types that do NOT yet have a score rule.
    * Loaded from GET /api/scoring/undefined-event-types.
-   * Empty when all 12 system events are already configured.
+   * Empty when all 14 system events are already configured.
    */
   undefinedEventTypes: string[] = [];
 
   /** True while loading the undefined event types list */
   loadingEventTypes = false;
 
-  constructor(private ruleService: RuleService) {}
+  constructor(
+    private ruleService: RuleService,
+    private confirmService: ConfirmDialogService
+  ) {}
 
   ngOnInit(): void {
     this.loadRules();
+    this.loadUndefinedEventTypes();
   }
 
   loadRules(): void {
@@ -156,6 +161,11 @@ export class RuleListComponent implements OnInit {
     this.filteredRules = list;
   }
 
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.applyFilter();
+  }
+
   toggleSort(column: string): void {
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
@@ -166,30 +176,33 @@ export class RuleListComponent implements OnInit {
     this.applyFilter();
   }
 
+  customEventTypeMode = false;
+
   openCreateModal(): void {
     this.isEditing = false;
     this.selectedRuleId = null;
     this.errorMessage = '';
+    this.showModal = true;
+    this.customEventTypeMode = this.undefinedEventTypes.length === 0;
     this.ruleForm = {
       name: '',
-      eventType: '',
+      eventType: this.undefinedEventTypes.length > 0 ? this.undefinedEventTypes[0] : '',
       category: 'INTENT',
       points: 15,
       isActive: true,
       description: '',
     };
 
-    // Fetch fresh list of still-unassigned event types before opening the modal
+    // Refresh undefined event types in the background without blocking modal
     this.loadUndefinedEventTypes(() => {
-      if (this.undefinedEventTypes.length === 0) {
-        this.errorMessage =
-          'All predefined event types already have a rule configured. ' +
-          'Edit an existing rule to adjust its score.';
-        return;
+      if (this.undefinedEventTypes.length > 0) {
+        if (!this.ruleForm.eventType) {
+          this.ruleForm.eventType = this.undefinedEventTypes[0];
+          this.customEventTypeMode = false;
+        }
+      } else {
+        this.customEventTypeMode = true;
       }
-      // Pre-select the first available event type for convenience
-      this.ruleForm.eventType = this.undefinedEventTypes[0];
-      this.showModal = true;
     });
   }
 
@@ -197,6 +210,7 @@ export class RuleListComponent implements OnInit {
     this.isEditing = true;
     this.selectedRuleId = rule.scoreRuleId;
     this.errorMessage = '';
+    this.customEventTypeMode = false;
     this.ruleForm = {
       name: rule.name,
       eventType: rule.eventType,   // locked; cannot be changed during edit
@@ -214,6 +228,7 @@ export class RuleListComponent implements OnInit {
     this.selectedRuleId = null;
     this.errorMessage = '';
     this.undefinedEventTypes = [];
+    this.customEventTypeMode = false;
   }
 
   saveRule(): void {
@@ -223,13 +238,15 @@ export class RuleListComponent implements OnInit {
     }
 
     if (!this.isEditing && !this.ruleForm.eventType?.trim()) {
-      this.errorMessage = 'Please select an Event Type.';
+      this.errorMessage = 'Please provide an Event Type.';
       return;
     }
 
+    const eventTypeCode = this.ruleForm.eventType!.trim().toUpperCase().replace(/\s+/g, '_');
+
     const payload = {
       name: this.ruleForm.name.trim(),
-      eventType: this.ruleForm.eventType!.trim().toUpperCase(),
+      eventType: eventTypeCode,
       category: this.ruleForm.category,
       points: Number(this.ruleForm.points ?? 0),
       isActive: !!this.ruleForm.isActive,
@@ -276,8 +293,17 @@ export class RuleListComponent implements OnInit {
     });
   }
 
-  deleteRule(rule: ScoreRule): void {
-    if (!confirm(`Are you sure you want to delete the rule "${rule.name}"?`)) {
+  async deleteRule(rule: ScoreRule): Promise<void> {
+    const confirmed = await this.confirmService.confirm({
+      title: 'Delete Scoring Rule',
+      message: `Are you sure you want to delete the rule "${rule.name}"? Leads will no longer be scored against this rule.`,
+      confirmText: 'Delete Rule',
+      cancelText: 'Cancel',
+      type: 'danger',
+      iconType: 'trash'
+    });
+
+    if (!confirmed) {
       return;
     }
 

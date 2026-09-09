@@ -49,13 +49,18 @@ public class QualificationService
 
         var hasEmail = !string.IsNullOrWhiteSpace(lead.Email) && lead.Email.Contains("@") && !lead.Email.EndsWith(".invalid");
 
+        var hasNegativeScoring = await _context.LeadScoreHistories
+            .AnyAsync(h => h.LeadId == leadId && (h.EventType == "INVALID_CONTACT" || h.EventType == "IRRELEVANT_REQ" || h.EventType == "AI_ANALYSIS_NEGATIVE"));
+
         string qualificationStage;
         string reason;
 
-        if (!hasEmail || lead.Status == "DISQUALIFIED")
+        if (!hasEmail || lead.Status == "DISQUALIFIED" || lead.Status == "UNQUALIFIED" || hasNegativeScoring || score <= 0)
         {
-            qualificationStage = "DISQUALIFIED";
-            reason = "Invalid contact credentials or explicitly disqualified";
+            qualificationStage = "UNQUALIFIED";
+            reason = hasNegativeScoring
+                ? "Disqualified due to negative scoring attribution (fake/invalid contact, irrelevant requirement, or poor AI fit)"
+                : "Invalid contact credentials or insufficient qualification score";
         }
         else if (score >= 60 && hasGenuineRequirement && isDecisionMaker)
         {

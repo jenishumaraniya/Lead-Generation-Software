@@ -5,6 +5,7 @@ import { ProductService } from '../../../../../core/services/product.service';
 import { CategoryService, Category } from '../../../../../core/services/category.service';
 import { PaginationComponent } from '../../../../../components/pagination/pagination.component';
 import { getProductImageUrl } from '../../../../../core/utils/product-image.util';
+import { ConfirmDialogService } from '../../../../../core/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-product-list',
@@ -19,7 +20,7 @@ export class ProductListComponent implements OnInit {
   categories: Category[] = [];
   showModal = false;
   isEdit = false;
-  formData: any = { name: '', pricing: 0, description: '', categoryId: null, status: 'ACTIVE', imageUrl: '' };
+  formData: any = { name: '', pricing: 0, description: '', categoryId: null, status: 'DRAFT', imageUrl: '' };
   editingId: number | null = null;
   loading = false;
   isUploadingImage = false;
@@ -51,7 +52,8 @@ export class ProductListComponent implements OnInit {
 
   constructor(
     private productService: ProductService,
-    private categoryService: CategoryService
+    private categoryService: CategoryService,
+    private confirmService: ConfirmDialogService
   ) {}
 
   ngOnInit(): void {
@@ -187,9 +189,48 @@ export class ProductListComponent implements OnInit {
       pricing: null, 
       description: '', 
       categoryId: this.categories.length > 0 ? this.categories[0].categoryId : null,
-      status: 'ACTIVE',
+      status: 'DRAFT',
       imageUrl: ''
     };
+  }
+
+  async activateProduct(p: any): Promise<void> {
+    const confirmed = await this.confirmService.confirm({
+      title: 'Publish Product',
+      message: `Are you sure you want to publish "${p.name}" to ACTIVE status? It will immediately become live in the public catalog.`,
+      confirmText: 'Publish Live',
+      cancelText: 'Keep Draft',
+      type: 'primary',
+      iconType: 'check'
+    });
+
+    if (!confirmed) {
+      return;
+    }
+    this.loading = true;
+    this.productService.updateProductStatus(p.productId, 'ACTIVE').subscribe({
+      next: () => {
+        this.loadData();
+      },
+      error: () => {
+        // Fallback for full update
+        const payload = {
+          name: p.name,
+          description: p.description,
+          pricing: p.pricing,
+          categoryId: p.categoryId,
+          status: 'ACTIVE',
+          imageUrl: p.imageUrl
+        };
+        this.productService.updateProduct(p.productId, payload).subscribe({
+          next: () => this.loadData(),
+          error: (err) => {
+            alert(err.error?.error || 'Failed to publish product.');
+            this.loading = false;
+          }
+        });
+      }
+    });
   }
 
   editProduct(p: any): void {
@@ -271,7 +312,7 @@ export class ProductListComponent implements OnInit {
       description: this.formData.description,
       pricing: price,
       categoryId: this.formData.categoryId ? Number(this.formData.categoryId) : null,
-      status: this.formData.status,
+      status: this.formData.status || (this.isEdit ? 'ACTIVE' : 'DRAFT'),
       imageUrl: this.formData.imageUrl ? this.formData.imageUrl.trim() : null
     };
 
@@ -292,13 +333,22 @@ export class ProductListComponent implements OnInit {
     });
   }
 
-  deleteProduct(id: number): void {
-    if (confirm('Are you sure you want to delete this product?')) {
+  async deleteProduct(id: number): Promise<void> {
+    const prod = this.products.find(p => p.productId === id);
+    const confirmed = await this.confirmService.confirm({
+      title: 'Delete Product',
+      message: `Are you sure you want to permanently delete "${prod?.name || 'this product'}"? This action cannot be undone.`,
+      confirmText: 'Delete Product',
+      cancelText: 'Cancel',
+      type: 'danger',
+      iconType: 'trash'
+    });
+
+    if (confirmed) {
       this.loading = true;
       this.productService.deleteProduct(id).subscribe({
         next: () => this.loadData(),
         error: () => {
-          alert('Delete failed');
           this.loading = false;
         }
       });

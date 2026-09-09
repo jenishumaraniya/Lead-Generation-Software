@@ -8,9 +8,8 @@
         thresholds
       </p>
     </div>
-    <button class="btn-create" (click)="openCreateModal()" [disabled]="loadingEventTypes">
-      <span *ngIf="!loadingEventTypes">+ Add Rule</span>
-      <span *ngIf="loadingEventTypes">Loading…</span>
+    <button class="btn-create" type="button" (click)="openCreateModal()">
+      + Add Rule
     </button>
   </div>
 
@@ -19,13 +18,16 @@
     {{ successMessage }}
   </div>
 
-  <!-- All-rules-configured info banner (shown when no undefined event types remain) -->
-  <div class="info-banner" *ngIf="!loading && rules.length >= 12 && !showModal">
+  <div class="error-banner" *ngIf="errorMessage && !showModal" style="margin-bottom: 16px;">
+    {{ errorMessage }}
+  </div>
+
+  <!-- All-predefined-configured info banner -->
+  <div class="info-banner" *ngIf="!loading && undefinedEventTypes.length === 0 && rules.length >= 14 && !showModal">
     <span class="info-icon">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
     </span>
-    All 12 predefined scoring events are configured. Edit an existing rule to
-    adjust its score or status.
+    All 14 predefined system scoring events are configured. You can edit existing rules or click "+ Add Rule" to define custom scoring triggers.
   </div>
 
   <!-- KPI Overview Cards -->
@@ -55,20 +57,29 @@
   <!-- Controls Bar -->
   <div class="filter-controls">
     <div class="search-box">
+      <span class="search-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
       <input
         type="text"
         class="search-input"
         placeholder="Search rules, event code, or description..."
         [(ngModel)]="searchQuery"
+        (input)="applyFilter()"
         (ngModelChange)="applyFilter()"
       />
       <button 
-        *ngIf="searchQuery" 
+        *ngIf="searchQuery && searchQuery.length > 0" 
         type="button" 
         (click)="clearSearch()" 
         class="btn-clear-search" 
         title="Clear search"
-      >&times;</button>
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
     <select
       class="filter-select"
@@ -210,18 +221,53 @@
         {{ errorMessage }}
       </div>
 
-      <!-- Event Type — dropdown (create) or read-only badge (edit) -->
+      <!-- Event Type — dropdown (create) or custom input (create) or read-only badge (edit) -->
       <div class="form-group" *ngIf="!isEditing">
-        <label>Event Type *</label>
-        <select class="form-select" [(ngModel)]="ruleForm.eventType">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <label style="margin-bottom:0;">Event Type *</label>
+          <div style="display:flex; gap:8px;">
+            <button 
+              type="button" 
+              *ngIf="undefinedEventTypes.length > 0"
+              (click)="customEventTypeMode = false" 
+              [style.font-weight]="!customEventTypeMode ? '600' : 'normal'"
+              [style.color]="!customEventTypeMode ? '#2563eb' : '#64748b'"
+              style="background:none; border:none; cursor:pointer; font-size:12px; padding:0;">
+              Predefined Events ({{ undefinedEventTypes.length }})
+            </button>
+            <span *ngIf="undefinedEventTypes.length > 0" style="color:#cbd5e1;">|</span>
+            <button 
+              type="button" 
+              (click)="customEventTypeMode = true" 
+              [style.font-weight]="customEventTypeMode ? '600' : 'normal'"
+              [style.color]="customEventTypeMode ? '#2563eb' : '#64748b'"
+              style="background:none; border:none; cursor:pointer; font-size:12px; padding:0;">
+              Custom Event Code
+            </button>
+          </div>
+        </div>
+
+        <select *ngIf="!customEventTypeMode" class="form-select" [(ngModel)]="ruleForm.eventType">
           <option value="" disabled>— Select predefined event —</option>
           <option *ngFor="let type of undefinedEventTypes" [value]="type">
             {{ type }}
           </option>
         </select>
-        <small class="field-hint">
-          Only system-defined events without a score rule are shown. Once all 12
-          are configured, no further rules can be added.
+
+        <input 
+          *ngIf="customEventTypeMode" 
+          type="text" 
+          class="form-input" 
+          [(ngModel)]="ruleForm.eventType" 
+          placeholder="e.g. WEBINAR_ATTEND, DEMO_CALL, CUSTOM_TRIGGER"
+          style="text-transform: uppercase;"
+        />
+
+        <small class="field-hint" *ngIf="!customEventTypeMode">
+          Predefined system events without an active rule are listed above.
+        </small>
+        <small class="field-hint" *ngIf="customEventTypeMode">
+          Enter an uppercase identifier (letters, numbers, underscores).
         </small>
       </div>
 
