@@ -10,10 +10,29 @@
     </div>
   </div>
 
+  <!-- Status Warning Banner for Paused / Completed Campaigns -->
+  <div *ngIf="isPaused" class="status-banner paused-banner">
+    <div class="banner-icon">⏸️</div>
+    <div class="banner-content">
+      <strong>Campaign is Paused</strong>
+      <p>Adding new prospects, CSV uploads, and email template edits are locked while the campaign is paused. You can edit the scheduled end date or change status to Active to resume adding new prospects.</p>
+    </div>
+  </div>
+
+  <div *ngIf="isClosedOrCompleted" class="status-banner closed-banner">
+    <div class="banner-icon">🔒</div>
+    <div class="banner-content">
+      <strong>Campaign is {{ campaignStatus }}</strong>
+      <p>Extend the Scheduled End Date and set status to Active to reactivate this campaign and continue outreach.</p>
+    </div>
+  </div>
+
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <!-- Campaign Details Card -->
+    <!-- 1. Campaign Details Card -->
     <div class="card section-card">
-      <h2 class="section-title">Campaign Details</h2>
+      <h2 class="section-title">1. Campaign Details</h2>
+      <p class="section-desc">Specify basic parameters, campaign schedule, and active status.</p>
+      
       <div class="grid-2">
         <div class="form-group full-width">
           <label>Campaign Name *</label>
@@ -21,6 +40,7 @@
             type="text"
             formControlName="name"
             placeholder="e.g. Q3 Enterprise Cloud Outreach"
+            required
           />
         </div>
 
@@ -34,27 +54,28 @@
         </div>
 
         <div class="form-group">
-          <label>Scheduled Start Date</label>
+          <label>Scheduled Start Date *</label>
           <input
             type="datetime-local"
             formControlName="scheduleStartDate"
-            [min]="minDateTime"
+            required
           />
         </div>
 
         <div class="form-group">
-          <label>Scheduled End Date</label>
+          <label>Scheduled End Date * (Extendable)</label>
           <input
             type="datetime-local"
             formControlName="scheduleEndDate"
-            [min]="form.get('scheduleStartDate')?.value || minDateTime"
+            required
           />
         </div>
 
-        <div class="form-group">
+        <div class="form-group full-width">
           <label>Campaign Status</label>
           <select formControlName="status">
-            <option value="ACTIVE">Active (Sending Enabled)</option>
+            <option value="ACTIVE">Active (Outreach Enabled)</option>
+            <option value="FUTURE">Future (Scheduled for Later)</option>
             <option value="DRAFT">Draft</option>
             <option value="PAUSED">Paused</option>
             <option value="COMPLETED">Completed</option>
@@ -63,17 +84,14 @@
       </div>
     </div>
 
-    <!-- Email Sequence & Content Section -->
+    <!-- 2. Email Message Template -->
     <div class="card section-card">
       <div class="section-header-flex">
         <div>
-          <h2 class="section-title">Email Sequence &amp; Message Content</h2>
+          <h2 class="section-title">2. Email Message Template</h2>
           <p class="section-desc" ngNonBindable>
             Customize the outbound email dispatched to enrolled prospects.
-            Supported template tags: <code>{{ Name }}</code
-            >, <code>{{ Company }}</code
-            >, <code>{{ JobTitle }}</code
-            >.
+            Supported template tags: <code>{{ Name }}</code>, <code>{{ Company }}</code>, <code>{{ JobTitle }}</code>.
           </p>
         </div>
       </div>
@@ -84,9 +102,8 @@
           <input
             type="text"
             formControlName="subject"
-            [placeholder]="
-              'e.g. Exploring Enterprise Solutions for {{Company}}'
-            "
+            [placeholder]="'e.g. Exploring Enterprise Solutions for {{Company}}'"
+            required
           />
         </div>
 
@@ -94,35 +111,27 @@
           <label>Email Body Content (HTML or Plain Text) *</label>
           <textarea
             formControlName="body"
-            rows="5"
-            [placeholder]="
-              '<p>Hello {{Name}},</p><p>We provide enterprise solutions for {{Company}}...</p>'
-            "
+            rows="6"
+            [placeholder]="'<p>Hello {{Name}},</p><p>We provide enterprise solutions for {{Company}}...</p>'"
+            required
           ></textarea>
-        </div>
-
-        <div class="form-group full-width">
-          <label class="checkbox-option">
-            <input type="checkbox" formControlName="sendImmediately" />
-            <span
-              ><strong>Send Step 1 Emails Immediately</strong> upon saving to
-              all selected prospects (dispatches live via Mailtrap)</span
-            >
-          </label>
         </div>
       </div>
     </div>
 
-    <!-- Prospects & CSV Import Section -->
-    <div class="card section-card">
+    <!-- 3. Audience & Prospect Selection -->
+    <div class="card section-card" [class.section-disabled]="isPaused">
       <div class="section-header-flex">
         <div>
-          <h2 class="section-title">Audience &amp; Prospect Selection</h2>
-          <p class="section-desc">
-            Upload a standard CSV sheet or select prospects from your database
+          <h2 class="section-title">3. Audience &amp; Prospect Selection</h2>
+          <p class="section-desc" *ngIf="!isPaused">
+            Upload a standard CSV sheet or select prospects from your database while the campaign is running.
+          </p>
+          <p class="section-desc text-danger-msg" *ngIf="isPaused">
+            ⚠️ Prospect addition and CSV upload are disabled because this campaign is <strong>PAUSED</strong>. Resume the campaign to enroll new prospects.
           </p>
         </div>
-        <div class="csv-actions">
+        <div class="csv-actions" *ngIf="!isPaused">
           <button
             type="button"
             (click)="downloadTemplate()"
@@ -179,6 +188,7 @@
                   type="checkbox"
                   [checked]="isAllSelected()"
                   (change)="toggleSelectAll($event)"
+                  [disabled]="isPaused"
                 />
               </th>
               <th>Prospect Name</th>
@@ -195,12 +205,14 @@
               [class.selected-row]="
                 selectedProspectIds.has(prospect.prospectId)
               "
+              [class.row-disabled]="isPaused && !originalProspectIds.has(prospect.prospectId)"
             >
               <td>
                 <input
                   type="checkbox"
                   [checked]="selectedProspectIds.has(prospect.prospectId)"
                   (change)="toggleProspectSelection(prospect.prospectId)"
+                  [disabled]="isPaused && !originalProspectIds.has(prospect.prospectId)"
                 />
               </td>
               <td>

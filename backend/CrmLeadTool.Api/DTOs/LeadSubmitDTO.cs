@@ -20,6 +20,7 @@ public class LeadSubmitDto
         return Array.Empty<int>();
     }
     public int? Quantity { get; set; }
+    public Dictionary<string, int>? ProductQuantities { get; set; }
     public string Timeline { get; set; } = string.Empty;
     public string BusinessRequirement { get; set; } = string.Empty;
     public string? Source { get; set; }

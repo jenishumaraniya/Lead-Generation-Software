@@ -36,6 +36,7 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -60,7 +61,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Category>().ToTable("Category_CRM");
         modelBuilder.Entity<Visitor>().ToTable("Visitor_CRM");
-        modelBuilder.Entity<Product>().ToTable("Product_CRM");
+        modelBuilder.Entity<Product>().ToTable("Product_CRM", t => t.HasCheckConstraint("CK_Product_Pricing_Positive", "[Pricing] > 0"));
         modelBuilder.Entity<VisitorActivity>().ToTable("VisitorActivity_CRM");
         modelBuilder.Entity<Company>().ToTable("Company_CRM");
         modelBuilder.Entity<Prospect>().ToTable("Prospect_CRM");
@@ -84,6 +85,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<AIAnalysis>().ToTable("AIAnalysis_CRM");
         modelBuilder.Entity<AIInsight>().ToTable("AIInsight_CRM");
         modelBuilder.Entity<AIAnalysisHistory>().ToTable("AIAnalysisHistory_CRM");
+        modelBuilder.Entity<Notification>().ToTable("Notification_CRM");
 
 
         modelBuilder.Entity<Product>()
@@ -256,5 +258,29 @@ modelBuilder.Entity<AIAnalysisHistory>()
     .WithMany()                    
     .HasForeignKey(h => h.LeadId)
     .OnDelete(DeleteBehavior.Restrict);  
+
+        // Global UTC DateTime ValueConverters
+        var utcConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>(
+            v => v.Kind == DateTimeKind.Utc ? v : v.ToUniversalTime(),
+            v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
+        var nullableUtcConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime?, DateTime?>(
+            v => !v.HasValue ? v : (v.Value.Kind == DateTimeKind.Utc ? v : v.Value.ToUniversalTime()),
+            v => !v.HasValue ? v : DateTime.SpecifyKind(v.Value, DateTimeKind.Utc));
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            foreach (var property in entityType.GetProperties())
+            {
+                if (property.ClrType == typeof(DateTime))
+                {
+                    property.SetValueConverter(utcConverter);
+                }
+                else if (property.ClrType == typeof(DateTime?))
+                {
+                    property.SetValueConverter(nullableUtcConverter);
+                }
+            }
+        }
     }
 }

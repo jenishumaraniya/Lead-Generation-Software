@@ -14,11 +14,11 @@
 }
 
 .page-title {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 26px;
+  font-weight: 800;
   color: #0f172a;
-  margin: 0 0 4px 0;
-  letter-spacing: -0.02em;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.03em;
 }
 
 .page-subtitle {
@@ -530,7 +530,7 @@
 .card-title {
   margin: 0 0 2px 0;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   color: #0f172a;
 }
 
@@ -624,6 +624,7 @@
 .status-badge.NEW { background: #eff6ff; color: #1d4ed8; }
 .status-badge.CONTACTED { background: #fffbeb; color: #b45309; }
 .status-badge.QUALIFIED { background: #f0fdf4; color: #15803d; }
+.status-badge.DISQUALIFIED { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
 .status-badge.WON { background: #ecfdf5; color: #047857; }
 .status-badge.LOST { background: #fef2f2; color: #b91c1c; }
 

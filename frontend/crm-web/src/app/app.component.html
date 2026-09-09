@@ -1,3 +1,8 @@
+<!-- Global Navigation Progress Bar -->
+<div class="global-route-loader" *ngIf="isLoading">
+  <div class="global-route-loader-bar"></div>
+</div>
+
 <ng-container *ngIf="isPublicRoute">
   <nav class="navbar">
     <div class="logo" routerLink="/">
@@ -13,6 +18,7 @@
 
 <router-outlet></router-outlet>
 <app-toast-container></app-toast-container>
+<app-confirm-dialog></app-confirm-dialog>
 
 <ng-container *ngIf="isPublicRoute">
   <!-- Floating Contact Button -->

@@ -43,12 +43,39 @@ function createSvgDataUri(bgGradient: [string, string], title: string, subtitle:
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
 }
 
-export function getProductImageUrl(product?: { name?: string; categoryName?: string; categoryId?: number; description?: string } | null): string {
+export function getProductImageUrl(product?: { name?: string; categoryName?: string; categoryId?: number; description?: string; imageUrl?: string | null } | null): string {
   if (!product) {
     return createSvgDataUri(['#1e293b', '#0f172a'], 'Enterprise Tech', 'Commercial Hardware', `
       <rect x="-60" y="-45" width="120" height="90" rx="10" fill="#3b82f6" />
       <circle cx="0" cy="0" r="24" fill="#ffffff" fill-opacity="0.8" />
     `);
+  }
+
+  // Priority 1: If custom image URL is provided by Admin, use it!
+  if (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.trim() !== '') {
+    const trimmed = product.imageUrl.trim();
+    if (trimmed.startsWith('data:image') || trimmed.startsWith('blob:')) {
+      return trimmed;
+    }
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+
+    const backendBase = (typeof window !== 'undefined' && window.location.port === '4200')
+      ? 'http://localhost:5234'
+      : '';
+
+    if (trimmed.startsWith('/uploads/products/')) {
+      const fileName = trimmed.replace('/uploads/products/', '');
+      return `${backendBase}/api/product/image/${fileName}`;
+    }
+    if (trimmed.startsWith('/api/product/image/')) {
+      return `${backendBase}${trimmed}`;
+    }
+    if (trimmed.startsWith('/')) {
+      return `${backendBase}${trimmed}`;
+    }
+    return `${backendBase}/api/product/image/${trimmed}`;
   }
 
   const name = (product.name || '').toLowerCase();

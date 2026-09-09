@@ -1,4 +1,9 @@
-<div class="lead-detail-wrapper" *ngIf="lead">
+<div class="loading-state-box" *ngIf="loading">
+  <div class="spinner-circle"></div>
+  <p class="loading-text">Loading lead dossier...</p>
+</div>
+
+<div class="lead-detail-wrapper" *ngIf="!loading && lead">
   <div class="top-nav">
     <button (click)="goBack()" class="back-button">&larr; Back to Leads</button>
     <div class="header-info">
@@ -60,16 +65,30 @@
         </div>
       </div>
 
-      <div class="card" *ngIf="lead.businessRequirement">
-        <h2 class="card-title">Stated Commercial Requirement</h2>
-        <p class="requirement-box">{{ lead.businessRequirement }}</p>
+      <div class="card" *ngIf="lead.businessRequirement || (leadProducts && leadProducts.length > 0)">
+        <h2 class="card-title">Stated Commercial Requirement & Products</h2>
+        <p class="requirement-box" *ngIf="lead.businessRequirement">{{ lead.businessRequirement }}</p>
         <div class="meta-row" *ngIf="lead.timeline || lead.quantity">
           <span *ngIf="lead.timeline"
             ><strong>Timeline:</strong> {{ lead.timeline }}</span
           >
           <span *ngIf="lead.quantity"
-            ><strong>Units Requested:</strong> {{ lead.quantity }}</span
+            ><strong>Total Units:</strong> {{ lead.quantity }}</span
           >
+        </div>
+
+        <!-- Product-Wise Quantities Breakdown -->
+        <div *ngIf="leadProducts && leadProducts.length > 0" class="lead-products-breakdown" style="margin-top: 14px; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+          <h3 style="font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 8px;">Requested Products & Quantities:</h3>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div *ngFor="let p of leadProducts" style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; font-size: 13px;">
+              <span style="font-weight: 600; color: #0f172a;">{{ p.name }}</span>
+              <div style="display: flex; gap: 14px; align-items: center;">
+                <span style="color: #475569;">Qty: <strong style="color: #0f172a;">{{ getProductQty(p.productId) }}</strong></span>
+                <span *ngIf="p.pricing" style="color: #0284c7; font-weight: 600;">₹{{ (p.pricing * getProductQty(p.productId)) | number }}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -156,6 +175,7 @@
             <option value="NEW">NEW</option>
             <option value="CONTACTED">CONTACTED</option>
             <option value="QUALIFIED">QUALIFIED</option>
+            <option value="DISQUALIFIED">DISQUALIFIED</option>
             <option value="WON">WON</option>
             <option value="LOST">LOST</option>
           </select>
@@ -232,7 +252,7 @@
         <div class="form-group">
           <label>Sales & Engagement Notes</label>
           <textarea
-            [(ngModel)]="lead.notes"
+            [(ngModel)]="adminNote"
             rows="4"
             placeholder="Add general notes on prospect requirements or conversation summaries..."
             class="form-textarea"
@@ -252,7 +272,7 @@
         <h2 class="card-title">Scoring Attribution</h2>
         <div class="score-list">
           <div class="score-item" *ngFor="let sh of scoreHistories">
-            <span class="score-delta">+{{ sh.delta }}</span>
+            <span class="score-delta" [class.negative]="sh.delta < 0">{{ sh.delta > 0 ? '+' : '' }}{{ sh.delta }}</span>
             <div class="score-details">
               <strong>{{ sh.ruleName }}</strong>
               <small>{{ sh.reason }}</small>

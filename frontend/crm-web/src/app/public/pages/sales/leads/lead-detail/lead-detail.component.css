@@ -55,6 +55,7 @@
 .status-pill.NEW { background: #eff6ff; color: #1d4ed8; }
 .status-pill.CONTACTED { background: #fffbeb; color: #b45309; }
 .status-pill.QUALIFIED { background: #f0fdf4; color: #15803d; }
+.status-pill.DISQUALIFIED { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
 .status-pill.WON { background: #ecfdf5; color: #047857; }
 .status-pill.LOST { background: #fef2f2; color: #b91c1c; }
 
@@ -360,6 +361,12 @@
   border-radius: 4px;
 }
 
+.score-delta.negative {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
 .score-details strong {
   display: block;
   color: #0f172a;
@@ -466,4 +473,35 @@
   padding: 16px;
   color: #94a3b8;
   font-size: 12px;
+}
+
+.loading-state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.spinner-circle {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(37, 99, 235, 0.15);
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spinSalesLead 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+
+.loading-text {
+  font-size: 1.1rem;
+  color: #64748b;
+  font-weight: 600;
+  margin: 0;
+}
+
+@keyframes spinSalesLead {
+  to { transform: rotate(360deg); }
 }

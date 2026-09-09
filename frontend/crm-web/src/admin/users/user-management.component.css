@@ -59,7 +59,7 @@
 
 .form-control {
   width: 100%;
-  padding: 10px 14px 10px 38px;
+  padding: 10px 36px 10px 38px;
   border: 1.5px solid #e2e8f0;
   border-radius: 10px;
   font-size: 14px;
@@ -72,6 +72,33 @@
 .form-control:focus {
   border-color: #2563eb;
   background: #ffffff;
+}
+
+.btn-clear-search {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #e2e8f0;
+  color: #64748b;
+  border: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+  z-index: 2;
+}
+
+.btn-clear-search:hover {
+  background: #cbd5e1;
+  color: #0f172a;
 }
 
 .role-filters {

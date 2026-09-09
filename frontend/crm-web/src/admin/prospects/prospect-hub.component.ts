@@ -66,6 +66,11 @@ export class ProspectHubComponent implements OnInit {
     });
   }
 
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.applyFilter();
+  }
+
   openDiscoveryModal(): void {
     this.showDiscoveryModal = true;
   }

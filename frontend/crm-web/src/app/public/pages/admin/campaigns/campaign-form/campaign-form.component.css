@@ -296,28 +296,76 @@
   color: #94a3b8;
 }
 
-.checkbox-option {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  padding: 10px 14px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 13px;
-  color: #1e293b;
-}
 
-.checkbox-option input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-}
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   margin-top: 16px;
+}
+
+/* Status Warning Banners */
+.status-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.status-banner .banner-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.status-banner .banner-content strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.status-banner .banner-content p {
+  margin: 0;
+}
+
+.paused-banner {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+}
+
+.closed-banner {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+}
+
+.badge-paused {
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.card-disabled {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+}
+
+.row-disabled {
+  opacity: 0.45;
+  background-color: #f8fafc !important;
+  cursor: not-allowed;
+}
+
+.text-danger-msg {
+  color: #b45309 !important;
+  font-weight: 500;
 }

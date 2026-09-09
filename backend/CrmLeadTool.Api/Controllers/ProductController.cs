@@ -48,6 +48,7 @@ public class ProductController : ControllerBase
                 Features = p.Features,
                 Specifications = p.Specifications,
                 Status = p.Status,
+                ImageUrl = p.ImageUrl,
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
                 CategoryId = p.CategoryId,
@@ -72,6 +73,7 @@ public class ProductController : ControllerBase
                 Features = p.Features,
                 Specifications = p.Specifications,
                 Status = p.Status,
+                ImageUrl = p.ImageUrl,
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
                 CategoryId = p.CategoryId,
@@ -93,6 +95,11 @@ public class ProductController : ControllerBase
             return BadRequest(new { error = "Product name is required." });
         }
 
+        if (dto.Pricing <= 0)
+        {
+            return BadRequest(new { error = "Product price must be greater than zero (cannot be 0 or negative)." });
+        }
+
         var product = new Product
         {
             Name = dto.Name.Trim(),
@@ -100,7 +107,8 @@ public class ProductController : ControllerBase
             Pricing = dto.Pricing,
             Features = dto.Features,
             Specifications = dto.Specifications,
-            Status = "ACTIVE",
+            Status = string.IsNullOrWhiteSpace(dto.Status) ? "DRAFT" : dto.Status.Trim().ToUpper(),
+            ImageUrl = string.IsNullOrWhiteSpace(dto.ImageUrl) ? null : dto.ImageUrl.Trim(),
             CategoryId = dto.CategoryId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -118,6 +126,16 @@ public class ProductController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateProduct(int id, [FromBody] UpdateProductRequestDto dto)
     {
+        if (string.IsNullOrWhiteSpace(dto.Name))
+        {
+            return BadRequest(new { error = "Product name is required." });
+        }
+
+        if (dto.Pricing <= 0)
+        {
+            return BadRequest(new { error = "Product price must be greater than zero (cannot be 0 or negative)." });
+        }
+
         var product = await _context.Products.FindAsync(id);
         if (product == null) return NotFound(new { error = "Product not found." });
 
@@ -126,7 +144,8 @@ public class ProductController : ControllerBase
         product.Pricing = dto.Pricing;
         product.Features = dto.Features;
         product.Specifications = dto.Specifications;
-        product.Status = dto.Status ?? "ACTIVE";
+        product.Status = string.IsNullOrWhiteSpace(dto.Status) ? product.Status : dto.Status.Trim().ToUpper();
+        product.ImageUrl = string.IsNullOrWhiteSpace(dto.ImageUrl) ? null : dto.ImageUrl.Trim();
         product.CategoryId = dto.CategoryId;
         product.UpdatedAt = DateTime.UtcNow;
 
@@ -136,6 +155,80 @@ public class ProductController : ControllerBase
         await _auditLog.LogAsync(null, userEmail, "UPDATE_PRODUCT", "Product", product.ProductId.ToString(), $"Updated product: {product.Name}");
 
         return Ok(product);
+    }
+
+    [HttpPost("upload-image")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadProductImage([FromForm] IFormFile? file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            if (Request.HasFormContentType && Request.Form.Files.Count > 0)
+            {
+                file = Request.Form.Files[0];
+            }
+        }
+
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(new { error = "No image file was uploaded. Please select a valid image file." });
+        }
+
+        if (file.Length > 15 * 1024 * 1024)
+        {
+            return BadRequest(new { error = "Image file size exceeds the 15MB limit." });
+        }
+
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".svg", ".gif", ".bmp", ".ico", ".avif" };
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (string.IsNullOrEmpty(ext) || !allowedExtensions.Contains(ext))
+        {
+            ext = ".png"; // Default fallback extension if not provided
+        }
+
+        var webRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+        var uploadsDir = Path.Combine(webRoot, "uploads", "products");
+        if (!Directory.Exists(uploadsDir))
+        {
+            Directory.CreateDirectory(uploadsDir);
+        }
+
+        var uniqueFileName = $"prod_{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..8]}{ext}";
+        var filePath = Path.Combine(uploadsDir, uniqueFileName);
+
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        var relativeUrl = $"/uploads/products/{uniqueFileName}";
+        return Ok(new { imageUrl = relativeUrl, message = "Image uploaded successfully." });
+    }
+
+    [HttpGet("image/{fileName}")]
+    public IActionResult GetProductImageFile(string fileName)
+    {
+        var sanitized = Path.GetFileName(fileName);
+        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "products", sanitized);
+        if (!System.IO.File.Exists(filePath))
+        {
+            return NotFound(new { error = "Image not found." });
+        }
+
+        var ext = Path.GetExtension(sanitized).ToLowerInvariant();
+        var contentType = ext switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".webp" => "image/webp",
+            ".svg" => "image/svg+xml",
+            ".gif" => "image/gif",
+            ".avif" => "image/avif",
+            ".bmp" => "image/bmp",
+            _ => "application/octet-stream"
+        };
+
+        return PhysicalFile(filePath, contentType);
     }
 
     [HttpDelete("{id}")]
@@ -152,4 +245,27 @@ public class ProductController : ControllerBase
 
         return Ok(new { message = "Product deleted successfully." });
     }
+
+    [HttpPost("{id}/status")]
+    [HttpPut("{id}/status")]
+    public async Task<IActionResult> UpdateProductStatus(int id, [FromBody] ChangeProductStatusRequestDto dto)
+    {
+        var product = await _context.Products.FindAsync(id);
+        if (product == null) return NotFound(new { error = "Product not found." });
+
+        product.Status = string.IsNullOrWhiteSpace(dto?.Status) ? "ACTIVE" : dto.Status.Trim().ToUpper();
+        product.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        var userEmail = User.FindFirstValue(ClaimTypes.Email) ?? "ADMIN";
+        await _auditLog.LogAsync(null, userEmail, "UPDATE_PRODUCT_STATUS", "Product", product.ProductId.ToString(), $"Changed product '{product.Name}' status to {product.Status}");
+
+        return Ok(product);
+    }
+}
+
+public class ChangeProductStatusRequestDto
+{
+    public string Status { get; set; } = "ACTIVE";
 }

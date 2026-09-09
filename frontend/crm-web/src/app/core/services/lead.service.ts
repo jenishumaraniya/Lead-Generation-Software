@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface Lead {
   leadId: number;
@@ -21,6 +22,7 @@ export interface Lead {
   assignedCategoryName?: string | null;
   isMultiCategory?: boolean;
   productIds?: number[];
+  productQuantities?: { [key: string]: number };
   quantity?: number;
   timeline?: string;
   businessRequirement?: string;
@@ -39,7 +41,7 @@ export interface Lead {
 
 @Injectable({ providedIn: 'root' })
 export class LeadService {
-  private base = 'http://localhost:5234/api/lead';
+  private base = `${environment.apiUrl}/lead`;
 
   constructor(private http: HttpClient) {}
 
@@ -52,7 +54,7 @@ export class LeadService {
     return this.http.get<Lead>(`${this.base}/${id}`);
   }
 
-  updateLead(id: number, data: { status?: string; qualification?: string; score?: number; assignedTo?: number | null; nextFollowUpDate?: string | null; notes?: string }): Observable<any> {
+  updateLead(id: number, data: { status?: string; qualification?: string; score?: number; assignedTo?: number | null; nextFollowUpDate?: string | null; notes?: string | null }): Observable<any> {
     return this.http.put(`${this.base}/${id}`, data);
   }
 

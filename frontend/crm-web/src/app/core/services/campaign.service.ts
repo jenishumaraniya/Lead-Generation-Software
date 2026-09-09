@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class CampaignService {
-  private base = 'http://localhost:5234/api/campaigns';
-  private prospectBase = 'http://localhost:5234/api/prospects';
+  private base = `${environment.apiUrl}/campaigns`;
+  private prospectBase = `${environment.apiUrl}/prospects`;
 
   constructor(private http: HttpClient) {}
 

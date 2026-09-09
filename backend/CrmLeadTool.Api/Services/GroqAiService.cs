@@ -13,20 +13,23 @@ public class GroqAIService
     private readonly AppDbContext _context;
     private readonly ILogger<GroqAIService> _logger;
     private readonly HttpClient _httpClient;
-    private readonly ScoringService _scoringService;   // 👈 NEW
+    private readonly ScoringService _scoringService;
+    private readonly QualificationService _qualificationService;
 
     public GroqAIService(
         IConfiguration config,
         AppDbContext context,
         ILogger<GroqAIService> logger,
         HttpClient httpClient,
-        ScoringService scoringService)   // 👈 NEW
+        ScoringService scoringService,
+        QualificationService qualificationService)
     {
         _config = config;
         _context = context;
         _logger = logger;
         _httpClient = httpClient;
-        _scoringService = scoringService;   // 👈 NEW
+        _scoringService = scoringService;
+        _qualificationService = qualificationService;
     }
 
     public async Task<CombinedAIAnalysis> AnalyzeLeadWithProfileAsync(int leadId)
@@ -43,20 +46,66 @@ public class GroqAIService
         if (lead == null)
             throw new ArgumentException($"Lead with ID {leadId} not found.");
 
+        // 1. Evaluate contact & requirement negative scoring rules (INVALID_CONTACT and IRRELEVANT_REQ)
+        await _scoringService.EvaluateNegativeRulesAsync(leadId);
+
+        // Re-read lead after negative rules evaluation
+        lead = await _context.Leads.FindAsync(leadId) ?? lead;
+
         var prompt = BuildEnhancedPrompt(lead);
         var response = await CallGroqApiAsync(prompt);
         var result = ParseCombinedResponse(response, leadId);
 
+        // 2. Deterministic Scam / Bogus Contact / Absurd Quantity Verification
+        var digits = System.Text.RegularExpressions.Regex.Replace(lead.Phone ?? "", @"\D", "");
+        if (digits.StartsWith("91") && digits.Length > 10) digits = digits.Substring(digits.Length - 10);
+        bool isFakePhone = digits.Length >= 6 && (System.Text.RegularExpressions.Regex.IsMatch(digits, @"^(\d)\1+$") || System.Text.RegularExpressions.Regex.IsMatch(digits, @"(\d)\1{5,}"));
+        
+        var trimmedTitle = (lead.JobTitle ?? "").Trim();
+        bool isBogusRole = System.Text.RegularExpressions.Regex.IsMatch(trimmedTitle, @"^([a-zA-Z])\1+$") ||
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "ccc", "aaa", "bbb", "xxx", "zzz", "asdf", "qwer", "test", "testing", "na", "none", "null" }.Contains(trimmedTitle);
+        
+        int totalQty = lead.Quantity ?? 0;
+        var pQuantities = lead.GetProductQuantities();
+        if (pQuantities.Any()) totalQty = pQuantities.Values.Sum();
+        bool isAbsurdQty = totalQty >= 500;
+
+        if (isFakePhone || isBogusRole || isAbsurdQty)
+        {
+            result.Analysis.Intent = "UNQUALIFIED";
+            result.Analysis.PriorityRecommendation = "LOW";
+            result.Analysis.ConfidenceScore = 15m;
+            result.Analysis.RecommendedNextAction = "DISQUALIFY";
+            result.Analysis.LeadSummary = $"Flagged as Unqualified / Bogus Lead: {(isFakePhone ? $"Fake phone ({lead.Phone}) " : "")}{(isBogusRole ? $"Bogus role ({lead.JobTitle}) " : "")}{(isAbsurdQty ? $"Unrealistic quantity ({totalQty} units) " : "")}".Trim();
+        }
+
         await SaveCombinedAnalysisAsync(result, leadId);
         await UpdateLeadWithAIAsync(leadId, result.Analysis);
 
-        // 👇 NEW: Apply scoring points for AI analysis
+        // 3. Apply positive or negative scoring points for AI analysis dynamically from ScoreRules
+        bool isNegativeAi = 
+            isFakePhone || isBogusRole || isAbsurdQty ||
+            string.Equals(result.Analysis.PriorityRecommendation, "LOW", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(result.Analysis.Intent, "UNQUALIFIED", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(result.Analysis.Intent, "LOW_INTENT", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(result.Analysis.Intent, "NOT_INTERESTED", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(result.Analysis.Intent, "SPAM", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(result.Analysis.Intent, "IRRELEVANT", StringComparison.OrdinalIgnoreCase) ||
+            result.Analysis.ConfidenceScore < 40m;
+
+        string aiEventType = isNegativeAi ? "AI_ANALYSIS_NEGATIVE" : "AI_ANALYSIS";
+        string aiReason = isNegativeAi
+            ? $"AI analysis identified low intent/poor fit ({result.Analysis.Intent}, Priority: {result.Analysis.PriorityRecommendation})"
+            : $"AI analysis confirmed positive commercial intent ({result.Analysis.Intent}, Priority: {result.Analysis.PriorityRecommendation})";
+
         await _scoringService.ApplyScoreEventAsync(
             leadId,
-            "AI_ANALYSIS",
-            "AI lead analysis completed",
-            15   // points to add
+            aiEventType,
+            aiReason
         );
+
+        // 4. Update qualification stage (sets to UNQUALIFIED if negative rules applied)
+        await _qualificationService.EvaluateQualificationAsync(leadId);
 
         return result;
     }
@@ -122,22 +171,39 @@ Verified LinkedIn Data:
 {summaryPart}{skillsPart}{seniorityPart}{signalsPart}";
         }
 
-        var prompt = $@"Analyze this B2B lead for high-converting sales outreach. Return ONLY valid JSON.
+        int promptQty = lead.Quantity ?? 0;
+        var pQuantitiesMap = lead.GetProductQuantities();
+        if (pQuantitiesMap.Any()) promptQty = pQuantitiesMap.Values.Sum();
 
-Lead Details:
+        var prompt = $@"Analyze this B2B inbound lead for commercial credibility, qualification, and sales outreach. Return ONLY valid JSON.
+
+Inbound Lead Details:
 - Name: {fullName}
 - Company: {companyName}
-- Title: {jobTitle}
-- Stated Need / Context: {businessReq}
+- Title / Role: {jobTitle}
+- Email: {lead.Email}
+- Phone: {lead.Phone}
+- Domain: {lead.Domain ?? "None"}
+- Industry: {lead.Industry ?? "None"}
+- Stated Commercial Need: {businessReq}
+- Total Requested Units: {promptQty}
+- Product Quantities JSON: {lead.ProductQuantities ?? "N/A"}
 - Timeline: {timeline}
-- Lead Score: {lead.Score}
+- Current Lead Score: {lead.Score}
 - Recent Activities: {activitySummary}
 {linkedInSection}
 
-Instructions:
-1. Generate a crisp professional profile summary reflecting their actual background.
-2. Formulate 2 personalized, non-generic icebreakers citing their real role/skills/company dynamics.
-3. Identify 2 key operational pain points and 2 high-impact talking points for sales reps.
+MANDATORY CREDIBILITY & SCAM DETECTION INSTRUCTIONS:
+1. Contact Scrutiny:
+   - Check if the phone number is fake, test, or repeating digits (e.g. +91 8888888888, 1234567890).
+   - Check if the job title / role is bogus or nonsensical (e.g. 'CCC', 'AAA', 'test', 'asdf').
+2. Commercial Feasibility Scrutiny:
+   - Check if the requested quantity is absurdly excessive or suspicious for this contact profile (e.g. requesting 10,000 units of enterprise networking hardware worth millions from a generic @gmail.com address, or school/student domain).
+3. If ANY fake contact, bogus role, or absurd/unrealistic quantity signals are detected:
+   - You MUST set ""intent"" to ""UNQUALIFIED"" or ""SPAM"" or ""IRRELEVANT"".
+   - You MUST set ""priorityRecommendation"" to ""LOW"".
+   - You MUST set ""confidenceScore"" to 15.
+   - You MUST set ""leadSummary"" highlighting the exact fake contact or unrealistic quantity red flags.
 
 JSON:
 {{
@@ -149,7 +215,7 @@ JSON:
         ""potentialRole"": ""role""
     }},
     ""analysis"": {{
-        ""intent"": ""BUYING/RESEARCHING/COMPARING/AWARENESS"",
+        ""intent"": ""BUYING/RESEARCHING/COMPARING/AWARENESS/UNQUALIFIED/LOW_INTENT"",
         ""confidenceScore"": 85,
         ""leadSummary"": ""1 sentence summary"",
         ""priorityRecommendation"": ""URGENT/HIGH/MEDIUM/LOW"",
@@ -194,14 +260,16 @@ JSON:
         var json = JsonSerializer.Serialize(payload);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        _httpClient.DefaultRequestHeaders.Clear();
-        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.groq.com/openai/v1/chat/completions")
+        {
+            Content = content
+        };
+        if (!string.IsNullOrWhiteSpace(apiKey))
+        {
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey.Trim());
+        }
 
-        var response = await _httpClient.PostAsync(
-            "https://api.groq.com/openai/v1/chat/completions",
-            content
-        );
-
+        var response = await _httpClient.SendAsync(request);
         var responseBody = await response.Content.ReadAsStringAsync();
 
         if (!response.IsSuccessStatusCode)
@@ -335,6 +403,7 @@ JSON:
         var analysis = result.Analysis;
 
         var existing = await _context.AIAnalyses
+            .Include(a => a.Insights)
             .FirstOrDefaultAsync(a => a.LeadId == leadId);
 
         if (existing != null)
@@ -366,32 +435,45 @@ JSON:
             existing.RawResponse = analysis.RawResponse;
             existing.ModelVersion = analysis.ModelVersion;
             existing.CreatedAt = DateTime.UtcNow;
+
+            // Remove existing insights to replace with fresh ones
+            if (existing.Insights != null && existing.Insights.Any())
+            {
+                _context.AIInsights.RemoveRange(existing.Insights);
+            }
+
+            // Add the new insights connected to the existing analysis
+            if (analysis.Insights != null && analysis.Insights.Any())
+            {
+                foreach (var insight in analysis.Insights)
+                {
+                    insight.AIAnalysisId = existing.AIAnalysisId;
+                    insight.LeadId = leadId;
+                    _context.AIInsights.Add(insight);
+                }
+            }
         }
         else
         {
+            analysis.LeadId = leadId;
             analysis.ProfessionalSummary = result.Profile.ProfessionalSummary;
             analysis.LikelyIndustry = result.Profile.LikelyIndustry;
             analysis.CompanySize = result.Profile.CompanySize;
             analysis.LikelyLocation = result.Profile.LikelyLocation;
             analysis.PotentialRole = result.Profile.PotentialRole;
 
+            if (analysis.Insights != null)
+            {
+                foreach (var insight in analysis.Insights)
+                {
+                    insight.LeadId = leadId;
+                }
+            }
+
             _context.AIAnalyses.Add(analysis);
         }
 
         await _context.SaveChangesAsync();
-
-        var savedAnalysis = await _context.AIAnalyses
-            .FirstOrDefaultAsync(a => a.LeadId == leadId);
-
-        if (savedAnalysis != null && analysis.Insights.Any())
-        {
-            foreach (var insight in analysis.Insights)
-            {
-                insight.AIAnalysisId = savedAnalysis.AIAnalysisId;
-                _context.AIInsights.Add(insight);
-            }
-            await _context.SaveChangesAsync();
-        }
     }
 
     private async Task UpdateLeadWithAIAsync(int leadId, AIAnalysis analysis)

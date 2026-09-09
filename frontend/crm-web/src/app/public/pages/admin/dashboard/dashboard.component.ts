@@ -277,6 +277,7 @@ export class AdminDashboardComponent implements OnInit {
       { label: 'New Inbound', status: 'NEW', color: '#2563eb' },
       { label: 'Contacted', status: 'CONTACTED', color: '#f59e0b' },
       { label: 'Qualified', status: 'QUALIFIED', color: '#10b981' },
+      { label: 'Disqualified', status: 'DISQUALIFIED', color: '#64748b' },
       { label: 'Converted (Won)', status: 'WON', color: '#059669' },
       { label: 'Lost / Closed', status: 'LOST', color: '#ef4444' }
     ];

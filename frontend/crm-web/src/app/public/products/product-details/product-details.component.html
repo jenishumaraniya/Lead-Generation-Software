@@ -1,6 +1,12 @@
 <div class="page">
 
-  @if (product) {
+  @if (loading) {
+    <div class="loading-state-box">
+      <div class="spinner-circle"></div>
+      <p class="loading-text">Loading product details...</p>
+    </div>
+  }
+  @else if (product) {
 
     <main class="details">
 

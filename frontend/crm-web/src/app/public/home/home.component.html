@@ -230,7 +230,7 @@
         <h4>Platform</h4>
         <ul>
           <li><a routerLink="/products">Full Catalog</a></li>
-          <li><a routerLink="/">Enterprise Overview</a></li>
+          <li><a (click)="goToHomePage($event)" href="/" style="cursor: pointer;">Enterprise Overview</a></li>
           <li><a routerLink="/security-compliance">Security &amp; Trust</a></li>
         </ul>
       </div>

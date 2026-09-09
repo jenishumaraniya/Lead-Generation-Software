@@ -6,6 +6,7 @@ import { Category } from '../../../../../core/models/category.model';
 import { CategoryService } from '../../../../../core/services/category.service';
 import { EmployeeService } from '../../../../../core/services/employee.service';
 import { PaginationComponent } from '../../../../../components/pagination/pagination.component';
+import { ConfirmDialogService } from '../../../../../core/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-category-list',
@@ -28,7 +29,7 @@ export class CategoryListComponent implements OnInit {
   sortDirection: 'asc' | 'desc' = 'asc';
 
   currentPage = 1;
-  pageSize = 10;
+  pageSize = 6;
 
   get paginatedCategories(): Category[] {
     const start = (this.currentPage - 1) * this.pageSize;
@@ -51,7 +52,8 @@ export class CategoryListComponent implements OnInit {
 
   constructor(
     private categoryService: CategoryService,
-    private employeeService: EmployeeService
+    private employeeService: EmployeeService,
+    private confirmService: ConfirmDialogService
   ) {}
 
   ngOnInit(): void {
@@ -153,6 +155,11 @@ export class CategoryListComponent implements OnInit {
     this.filteredCategories = list;
   }
 
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.applyFilter();
+  }
+
   toggleSort(column: string): void {
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
@@ -207,21 +214,36 @@ export class CategoryListComponent implements OnInit {
     });
   }
 
-  deleteCategory(cat: any): void {
+  async deleteCategory(cat: any): Promise<void> {
     if (cat.productsCount && cat.productsCount > 0) {
-      alert(`Cannot delete category '${cat.categoryName}' because it contains ${cat.productsCount} associated product(s). Please delete or reassign the products first.`);
+      await this.confirmService.confirm({
+        title: 'Cannot Delete Category',
+        message: `Category '${cat.categoryName}' cannot be deleted because it contains ${cat.productsCount} associated product(s). Please delete or reassign those products first.`,
+        confirmText: 'Understood',
+        cancelText: '',
+        type: 'warning',
+        iconType: 'alert'
+      });
       return;
     }
 
-    if (confirm(`Are you sure you want to delete the category '${cat.categoryName}'?`)) {
+    const confirmed = await this.confirmService.confirm({
+      title: 'Delete Category',
+      message: `Are you sure you want to permanently delete '${cat.categoryName}'?`,
+      confirmText: 'Delete Category',
+      cancelText: 'Cancel',
+      type: 'danger',
+      iconType: 'trash'
+    });
+
+    if (confirmed) {
       this.loading = true;
       this.categoryService.deleteCategory(cat.categoryId).subscribe({
         next: () => {
           this.loadData();
           this.loading = false;
         },
-        error: (err) => {
-          alert(err.error?.error || 'Failed to delete category');
+        error: () => {
           this.loading = false;
         }
       });

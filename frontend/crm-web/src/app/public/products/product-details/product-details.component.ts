@@ -17,6 +17,7 @@ import { getProductImageUrl } from '../../../core/utils/product-image.util';
 export class ProductDetailsComponent implements OnInit {
 
   product?: Product;
+  loading = true;
 
   getProductImage(prod?: any): string {
     return getProductImageUrl(prod || this.product);
@@ -150,8 +151,12 @@ export class ProductDetailsComponent implements OnInit {
           features: product.features && product.features.length > 0 ? product.features : this.getDefaultFeatures(product),
           specifications: product.specifications && product.specifications.length > 0 ? product.specifications : this.getDefaultSpecs(product)
         };
+        this.loading = false;
         this.trackProductView(this.product);
       };
+
+      this.loading = true;
+      this.product = undefined;
 
       if (!id) {
         handleProduct(this.fallbackProducts[0]);

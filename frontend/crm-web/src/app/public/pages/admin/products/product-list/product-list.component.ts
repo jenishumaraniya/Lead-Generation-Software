@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../../../core/services/product.service';
 import { CategoryService, Category } from '../../../../../core/services/category.service';
 import { PaginationComponent } from '../../../../../components/pagination/pagination.component';
+import { getProductImageUrl } from '../../../../../core/utils/product-image.util';
+import { ConfirmDialogService } from '../../../../../core/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-product-list',
@@ -18,9 +20,11 @@ export class ProductListComponent implements OnInit {
   categories: Category[] = [];
   showModal = false;
   isEdit = false;
-  formData: any = { name: '', pricing: 0, description: '', categoryId: null, status: 'ACTIVE' };
+  formData: any = { name: '', pricing: 0, description: '', categoryId: null, status: 'DRAFT', imageUrl: '' };
   editingId: number | null = null;
   loading = false;
+  isUploadingImage = false;
+  imageUploadError = '';
 
   // View & Filters
   viewMode: 'cards' | 'table' = 'cards';
@@ -48,11 +52,21 @@ export class ProductListComponent implements OnInit {
 
   constructor(
     private productService: ProductService,
-    private categoryService: CategoryService
+    private categoryService: CategoryService,
+    private confirmService: ConfirmDialogService
   ) {}
 
   ngOnInit(): void {
     this.loadData();
+  }
+
+  getProductImage(p: any): string {
+    return getProductImageUrl(p);
+  }
+
+  getImagePreviewUrl(url?: string): string {
+    if (!url) return '';
+    return getProductImageUrl({ imageUrl: url });
   }
 
   loadData(): void {
@@ -150,6 +164,11 @@ export class ProductListComponent implements OnInit {
     this.filteredProducts = list;
   }
 
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.applyFilter();
+  }
+
   toggleSort(column: string): void {
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
@@ -164,42 +183,137 @@ export class ProductListComponent implements OnInit {
     this.showModal = true;
     this.isEdit = false;
     this.editingId = null;
+    this.imageUploadError = '';
     this.formData = { 
       name: '', 
-      pricing: 0, 
+      pricing: null, 
       description: '', 
       categoryId: this.categories.length > 0 ? this.categories[0].categoryId : null,
-      status: 'ACTIVE' 
+      status: 'DRAFT',
+      imageUrl: ''
     };
+  }
+
+  async activateProduct(p: any): Promise<void> {
+    const confirmed = await this.confirmService.confirm({
+      title: 'Publish Product',
+      message: `Are you sure you want to publish "${p.name}" to ACTIVE status? It will immediately become live in the public catalog.`,
+      confirmText: 'Publish Live',
+      cancelText: 'Keep Draft',
+      type: 'primary',
+      iconType: 'check'
+    });
+
+    if (!confirmed) {
+      return;
+    }
+    this.loading = true;
+    this.productService.updateProductStatus(p.productId, 'ACTIVE').subscribe({
+      next: () => {
+        this.loadData();
+      },
+      error: () => {
+        // Fallback for full update
+        const payload = {
+          name: p.name,
+          description: p.description,
+          pricing: p.pricing,
+          categoryId: p.categoryId,
+          status: 'ACTIVE',
+          imageUrl: p.imageUrl
+        };
+        this.productService.updateProduct(p.productId, payload).subscribe({
+          next: () => this.loadData(),
+          error: (err) => {
+            alert(err.error?.error || 'Failed to publish product.');
+            this.loading = false;
+          }
+        });
+      }
+    });
   }
 
   editProduct(p: any): void {
     this.isEdit = true;
     this.editingId = p.productId;
+    this.imageUploadError = '';
     this.formData = { 
       name: p.name,
       pricing: p.pricing,
       description: p.description || '',
       categoryId: p.categoryId,
-      status: p.status || 'ACTIVE'
+      status: p.status || 'ACTIVE',
+      imageUrl: p.imageUrl || ''
     };
     this.showModal = true;
   }
 
   closeModal(): void {
     this.showModal = false;
+    this.imageUploadError = '';
+  }
+
+  onImageFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+
+    // 1. Instant local preview using FileReader
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      if (e.target?.result) {
+        this.formData.imageUrl = e.target.result;
+      }
+    };
+    reader.readAsDataURL(file);
+
+    this.isUploadingImage = true;
+    this.imageUploadError = '';
+
+    // 2. Upload file to server
+    this.productService.uploadProductImage(file).subscribe({
+      next: (res) => {
+        this.isUploadingImage = false;
+        if (res?.imageUrl) {
+          this.formData.imageUrl = res.imageUrl;
+        }
+        input.value = '';
+      },
+      error: (err) => {
+        this.isUploadingImage = false;
+        // If server upload fails (e.g. backend restart pending), keep the base64 preview so saving still works!
+        this.imageUploadError = err.error?.error || 'Server upload notice: Using local image encoding.';
+        input.value = '';
+      }
+    });
+  }
+
+  clearImage(): void {
+    this.formData.imageUrl = '';
+    this.imageUploadError = '';
   }
 
   saveProduct(): void {
-    if (!this.formData.name.trim()) return;
+    if (!this.formData.name || !this.formData.name.trim()) {
+      alert('Product name is required.');
+      return;
+    }
+
+    const price = Number(this.formData.pricing);
+    if (this.formData.pricing === null || this.formData.pricing === undefined || this.formData.pricing === '' || isNaN(price) || price <= 0) {
+      alert('Product price must be greater than zero (cannot be 0 or negative).');
+      return;
+    }
+
     this.loading = true;
 
     const payload = {
       name: this.formData.name.trim(),
       description: this.formData.description,
-      pricing: Number(this.formData.pricing),
+      pricing: price,
       categoryId: this.formData.categoryId ? Number(this.formData.categoryId) : null,
-      status: this.formData.status
+      status: this.formData.status || (this.isEdit ? 'ACTIVE' : 'DRAFT'),
+      imageUrl: this.formData.imageUrl ? this.formData.imageUrl.trim() : null
     };
 
     const obs = this.isEdit
@@ -211,20 +325,30 @@ export class ProductListComponent implements OnInit {
         this.loadData();
         this.closeModal();
       },
-      error: () => {
-        alert('Failed to save product');
+      error: (err) => {
+        const errorMsg = err.error?.error || 'Failed to save product';
+        alert(errorMsg);
         this.loading = false;
       }
     });
   }
 
-  deleteProduct(id: number): void {
-    if (confirm('Are you sure you want to delete this product?')) {
+  async deleteProduct(id: number): Promise<void> {
+    const prod = this.products.find(p => p.productId === id);
+    const confirmed = await this.confirmService.confirm({
+      title: 'Delete Product',
+      message: `Are you sure you want to permanently delete "${prod?.name || 'this product'}"? This action cannot be undone.`,
+      confirmText: 'Delete Product',
+      cancelText: 'Cancel',
+      type: 'danger',
+      iconType: 'trash'
+    });
+
+    if (confirmed) {
       this.loading = true;
       this.productService.deleteProduct(id).subscribe({
         next: () => this.loadData(),
         error: () => {
-          alert('Delete failed');
           this.loading = false;
         }
       });

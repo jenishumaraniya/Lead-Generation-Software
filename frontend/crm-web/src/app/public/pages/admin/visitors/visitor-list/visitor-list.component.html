@@ -1,0 +1,328 @@
+<div class="page-container">
+  <!-- Header Bar -->
+  <div class="header-bar">
+    <div>
+      <h1 class="page-title">Visitor Tracking &amp; Inbound Intelligence</h1>
+      <p class="page-subtitle">
+        Monitor real-time anonymous sessions, product interest signals, and prospect conversion journeys
+      </p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-refresh" type="button" (click)="refresh()" [disabled]="refreshing || loading">
+        <span class="refresh-icon" [class.spinning]="refreshing">⟳</span>
+        {{ refreshing ? 'Updating...' : 'Live Refresh' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Notification -->
+  <div class="error-banner" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- KPI Overview Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">TOTAL VISITORS</div>
+      <div class="kpi-value">{{ stats.totalVisitors | number }}</div>
+      <div class="kpi-sub">Unique anonymous IDs tracked</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">ACTIVE TODAY</div>
+      <div class="kpi-value active-val">{{ stats.activeToday | number }}</div>
+      <div class="kpi-sub">Browsed catalog in last 24h</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">TOTAL ACTIVITIES</div>
+      <div class="kpi-value info-val">{{ stats.totalActivities | number }}</div>
+      <div class="kpi-sub">Views, clicks &amp; inquiries</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">INTEREST CLICKS</div>
+      <div class="kpi-value interest-val">{{ stats.interestClicks | number }}</div>
+      <div class="kpi-sub">"I'm Interested" intent clicks</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">CONVERTED LEADS</div>
+      <div class="kpi-value pos-val">{{ stats.convertedCount | number }}</div>
+      <div class="kpi-sub">{{ stats.conversionRate }}% conversion rate</div>
+    </div>
+  </div>
+
+  <!-- Filter & Search Controls -->
+  <div class="filter-controls">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        placeholder="Search by Anonymous ID, lead name, company, or product..."
+        class="search-input"
+      />
+      <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''">✕</button>
+    </div>
+
+    <div class="filter-group">
+      <select [(ngModel)]="statusFilter" class="category-select">
+        <option value="ALL">All Inbound Visitors</option>
+        <option value="CONVERTED">Converted to Leads Only</option>
+        <option value="HIGH_INTENT">High Intent (Clicks / Multi-views)</option>
+        <option value="ACTIVE_TODAY">Active Today</option>
+        <option value="ANONYMOUS">Anonymous Prospects Only</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading && !refreshing">
+    <div class="spinner"></div>
+    <p>Loading real-time visitor activity...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading && filteredVisitors.length === 0">
+    <div class="empty-icon">🌐</div>
+    <h3>No visitors found</h3>
+    <p *ngIf="searchQuery || statusFilter !== 'ALL'">
+      Try adjusting your search criteria or active filters.
+    </p>
+    <p *ngIf="!searchQuery && statusFilter === 'ALL'">
+      No website visitors recorded yet. Visitors will automatically appear here as they browse your product catalog.
+    </p>
+  </div>
+
+  <!-- Visitors Data Table -->
+  <div class="table-container" *ngIf="!loading && filteredVisitors.length > 0">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Visitor ID</th>
+          <th>Conversion Status</th>
+          <th>Last Active</th>
+          <th>Engagement</th>
+          <th>Latest Activity</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let v of filteredVisitors" class="table-row">
+          <!-- Visitor ID & Identicon -->
+          <td class="visitor-id-cell">
+            <div class="identicon" [style.background-color]="getIdenticonColor(v.anonymousId)">
+              {{ getInitials(v.anonymousId) }}
+            </div>
+            <div class="id-details">
+              <div class="id-row">
+                <span class="anon-id" [title]="v.anonymousId">{{ v.anonymousId }}</span>
+                <button
+                  type="button"
+                  class="copy-btn"
+                  (click)="copyAnonymousId(v.anonymousId, $event)"
+                  [title]="'Copy Anonymous ID'"
+                >
+                  {{ copySuccessId === v.anonymousId ? '✓ Copied' : '📋' }}
+                </button>
+              </div>
+              <span class="first-seen">First seen: {{ formatDate(v.firstSeenAt) }}</span>
+            </div>
+          </td>
+
+          <!-- Conversion Status -->
+          <td>
+            <div *ngIf="v.isConverted && v.lead" class="converted-pill-wrap">
+              <a
+                [routerLink]="['/admin/leads', v.lead.leadId]"
+                class="converted-badge"
+                title="Click to view full Lead details in Pipeline"
+              >
+                <span class="check-icon">✓</span>
+                <span class="lead-name">{{ v.lead.fullName || 'Converted Lead' }}</span>
+                <span class="lead-score-pill" *ngIf="v.lead.score">⭐ {{ v.lead.score }} pts</span>
+              </a>
+              <div class="company-text" *ngIf="v.lead.companyName">
+                {{ v.lead.companyName }}
+              </div>
+            </div>
+
+            <div *ngIf="!v.isConverted">
+              <span *ngIf="v.interestClicksCount > 0" class="badge-intent">
+                🔥 High Intent ({{ v.interestClicksCount }} clicks)
+              </span>
+              <span *ngIf="v.interestClicksCount === 0 && v.totalActivities >= 3" class="badge-engaged">
+                Active Browser ({{ v.totalActivities }} actions)
+              </span>
+              <span *ngIf="v.interestClicksCount === 0 && v.totalActivities < 3" class="badge-anon">
+                Anonymous Prospect
+              </span>
+            </div>
+          </td>
+
+          <!-- Last Active Time -->
+          <td>
+            <div class="time-ago">{{ timeAgo(v.lastSeenAt) }}</div>
+            <div class="exact-time">{{ formatDate(v.lastSeenAt) }}</div>
+          </td>
+
+          <!-- Engagement Stats -->
+          <td>
+            <div class="engagement-chips">
+              <span class="chip-events" title="Total activity events">
+                {{ v.totalActivities }} {{ v.totalActivities === 1 ? 'event' : 'events' }}
+              </span>
+              <span *ngIf="v.interestClicksCount > 0" class="chip-intent" title="Interested clicks">
+                {{ v.interestClicksCount }} interest
+              </span>
+              <span *ngIf="v.productViewsCount > 0" class="chip-views" title="Product views">
+                {{ v.productViewsCount }} views
+              </span>
+            </div>
+          </td>
+
+          <!-- Latest Activity Event -->
+          <td>
+            <div class="last-activity-wrap" *ngIf="v.lastActivityType">
+              <span class="activity-badge" [ngClass]="getActivityBadgeClass(v.lastActivityType)">
+                {{ formatActivityLabel(v.lastActivityType) }}
+              </span>
+              <div class="last-product" *ngIf="v.lastProductName" [title]="v.lastProductName">
+                {{ v.lastProductName }}
+              </div>
+              <div class="last-url" *ngIf="!v.lastProductName && v.lastPageUrl">
+                {{ v.lastPageUrl }}
+              </div>
+            </div>
+            <span *ngIf="!v.lastActivityType" class="text-muted">—</span>
+          </td>
+
+          <!-- Actions -->
+          <td style="text-align: right;">
+            <button
+              type="button"
+              class="btn-journey"
+              (click)="openJourney(v)"
+              title="Inspect chronological user journey & touchpoints"
+            >
+              View Journey ➔
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Slide-Over Visitor Journey Drawer -->
+  <div class="drawer-overlay" *ngIf="isDrawerOpen" (click)="closeDrawer()">
+    <div class="drawer-panel" (click)="$event.stopPropagation()">
+      <!-- Drawer Header -->
+      <div class="drawer-header">
+        <div class="drawer-title-wrap">
+          <div class="drawer-identicon" [style.background-color]="getIdenticonColor(selectedVisitor?.anonymousId)">
+            {{ getInitials(selectedVisitor?.anonymousId) }}
+          </div>
+          <div>
+            <h2 class="drawer-title">Visitor Journey</h2>
+            <div class="drawer-subtitle">
+              <span>ID: <strong>{{ selectedVisitor?.anonymousId }}</strong></span>
+              <span class="dot">•</span>
+              <span>Consent: <strong>{{ selectedVisitor?.consentStatus || 'ACCEPTED' }}</strong></span>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="drawer-close" (click)="closeDrawer()">✕</button>
+      </div>
+
+      <!-- Drawer Content -->
+      <div class="drawer-content">
+        <!-- Converted Lead Info Card -->
+        <div *ngIf="selectedVisitor?.isConverted && selectedVisitor?.lead" class="lead-highlight-box">
+          <div class="lh-header">
+            <span class="lh-badge">✓ CONVERTED TO QUALIFIED LEAD</span>
+            <a
+              [routerLink]="['/admin/leads', selectedVisitor.lead.leadId]"
+              class="lh-view-btn"
+              (click)="closeDrawer()"
+            >
+              Open Lead #{{ selectedVisitor.lead.leadId }} ➔
+            </a>
+          </div>
+          <div class="lh-grid">
+            <div class="lh-item">
+              <label>Contact Name</label>
+              <div class="lh-val font-semibold">{{ selectedVisitor.lead.fullName }}</div>
+            </div>
+            <div class="lh-item">
+              <label>Company</label>
+              <div class="lh-val">{{ selectedVisitor.lead.companyName || '—' }}</div>
+            </div>
+            <div class="lh-item">
+              <label>Email Address</label>
+              <div class="lh-val">{{ selectedVisitor.lead.email }}</div>
+            </div>
+            <div class="lh-item">
+              <label>Pipeline Status</label>
+              <div class="lh-val">{{ selectedVisitor.lead.status }} ({{ selectedVisitor.lead.score || 0 }} pts)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Drawer Loading -->
+        <div class="drawer-loading" *ngIf="drawerLoading">
+          <div class="spinner"></div>
+          <p>Loading full interaction timeline...</p>
+        </div>
+
+        <!-- Timeline Section -->
+        <div *ngIf="!drawerLoading" class="timeline-container">
+          <h3 class="timeline-heading">
+            Chronological Touchpoint Stream ({{ selectedVisitor?.activities?.length || 0 }} Events)
+          </h3>
+
+          <div *ngIf="!selectedVisitor?.activities || selectedVisitor.activities.length === 0" class="no-activities">
+            No specific event logs recorded for this session.
+          </div>
+
+          <div class="timeline-list" *ngIf="selectedVisitor?.activities && selectedVisitor.activities.length > 0">
+            <div *ngFor="let act of selectedVisitor.activities" class="timeline-item">
+              <div class="timeline-marker" [ngClass]="getActivityBadgeClass(act.activityType)"></div>
+              <div class="timeline-card">
+                <div class="tc-header">
+                  <span class="tc-badge" [ngClass]="getActivityBadgeClass(act.activityType)">
+                    {{ formatActivityLabel(act.activityType) }}
+                  </span>
+                  <span class="tc-time">{{ formatDate(act.timestamp) }} ({{ timeAgo(act.timestamp) }})</span>
+                </div>
+
+                <!-- Product Details if tied to an item -->
+                <div *ngIf="act.productName" class="tc-product-box">
+                  <div class="tcp-icon">📦</div>
+                  <div class="tcp-info">
+                    <span class="tcp-title">{{ act.productName }}</span>
+                    <span class="tcp-price" *ngIf="act.productPrice">₹{{ act.productPrice | number }}</span>
+                  </div>
+                </div>
+
+                <!-- Page URL -->
+                <div class="tc-url" *ngIf="act.pageUrl">
+                  <span class="tc-label">Page:</span> <code>{{ act.pageUrl }}</code>
+                </div>
+
+                <!-- Metadata if present -->
+                <div class="tc-meta" *ngIf="act.metadata">
+                  <span class="tc-label">Context:</span> {{ act.metadata }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drawer Footer -->
+      <div class="drawer-footer">
+        <span class="text-sm text-slate-500">
+          First visited: {{ formatDate(selectedVisitor?.firstSeenAt) }}
+        </span>
+        <button type="button" class="btn-secondary" (click)="closeDrawer()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

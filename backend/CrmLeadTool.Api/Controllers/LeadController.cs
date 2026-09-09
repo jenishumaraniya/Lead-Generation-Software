@@ -16,17 +16,20 @@ public class LeadController : ControllerBase
     private readonly LeadService _leadService;
     private readonly QualificationService _qualificationService;
     private readonly ScoringService _scoringService;
+    private readonly NotificationService _notificationService;
     private readonly AppDbContext _context;
 
     public LeadController(
         LeadService leadService,
         QualificationService qualificationService,
         ScoringService scoringService,
+        NotificationService notificationService,
         AppDbContext context)
     {
         _leadService = leadService;
         _qualificationService = qualificationService;
         _scoringService = scoringService;
+        _notificationService = notificationService;
         _context = context;
     }
 
@@ -195,6 +198,22 @@ public class LeadController : ControllerBase
         _context.LeadActivities.Add(act);
         lead.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        if (targetUserId.HasValue)
+        {
+            try
+            {
+                await _notificationService.CreateNotificationAsync(
+                    $"Lead Assigned: {lead.FullName}",
+                    $"You have been assigned to lead '{lead.FullName}' ({lead.CompanyName}) by {adminEmail}.",
+                    "LEAD_ASSIGNED",
+                    targetRole: "SALES_REP",
+                    userId: targetUserId.Value,
+                    leadId: id
+                );
+            }
+            catch {}
+        }
 
         return Ok(new { 
             message = user != null ? $"Lead assigned to {user.FullName}" : "Lead unassigned", 

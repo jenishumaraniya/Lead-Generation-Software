@@ -56,6 +56,21 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  goToHomePage(event?: Event): void {
+    if (event) event.preventDefault();
+    this.router.navigate(['/']).then(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  exploreProducts(categoryId?: number): void {
+    if (categoryId) {
+      this.router.navigate(['/products'], { queryParams: { categoryId } });
+    } else {
+      this.router.navigate(['/products']);
+    }
+  }
+
   ngAfterViewInit(): void {
     this.initCanvas();
   }
@@ -309,14 +324,6 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.animationFrameId = requestAnimationFrame(this.animate);
   };
-
-  exploreProducts(categoryId?: number): void {
-    if (categoryId) {
-      this.router.navigate(['/products'], { queryParams: { categoryId } });
-    } else {
-      this.router.navigate(['/products']);
-    }
-  }
 
   getCategoryType(name: string): string {
     const n = (name || '').toLowerCase();

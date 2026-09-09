@@ -179,7 +179,7 @@
 
 .search-box input {
   width: 100%;
-  padding: 10px 14px 10px 36px;
+  padding: 10px 36px 10px 36px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   font-size: 14px;
@@ -192,6 +192,32 @@
   border-color: #2563eb;
   outline: none;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.btn-clear-search {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+  z-index: 10;
+}
+
+.btn-clear-search:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+  border-color: #94a3b8;
 }
 
 .filter-actions {
@@ -521,29 +547,43 @@
 }
 
 /* ======================================================== */
-/* MODALS                                                   */
-/* ======================================================== */
 .modal-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(15, 23, 42, 0.4);
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: modalFadeIn 0.22s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-card {
   background: #ffffff;
   width: 100%;
-  max-width: 440px;
-  border-radius: 12px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  max-width: 480px;
+  border-radius: 18px;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(15, 23, 42, 0.08);
   overflow: hidden;
+  animation: modalPopUp 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPopUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .modal-header {

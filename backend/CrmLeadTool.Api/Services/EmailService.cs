@@ -45,6 +45,19 @@ public class EmailService
         if (recipient == null)
             throw new ArgumentException("Campaign recipient not found.");
 
+        if (recipient.Campaign == null)
+            throw new InvalidOperationException("Campaign not found.");
+
+        var now = DateTime.UtcNow;
+        bool isCurrentlyActive = recipient.Campaign.Status == "ACTIVE"
+            && (!recipient.Campaign.ScheduleStartDate.HasValue || recipient.Campaign.ScheduleStartDate.Value <= now)
+            && (!recipient.Campaign.ScheduleEndDate.HasValue || recipient.Campaign.ScheduleEndDate.Value >= now);
+
+        if (!isCurrentlyActive)
+        {
+            throw new InvalidOperationException($"Cannot send campaign email: Campaign '{recipient.Campaign.Name}' is not ACTIVE right now (current status: {recipient.Campaign.Status}). Emails are strictly sent only when the campaign is ACTIVE.");
+        }
+
         var isSuppressed = await _context.Suppressions.AnyAsync(s => s.Email.ToLower() == recipient.Prospect.Email.ToLower() && s.IsActive);
         if (isSuppressed)
             throw new InvalidOperationException($"Recipient {recipient.Prospect.Email} is suppressed.");

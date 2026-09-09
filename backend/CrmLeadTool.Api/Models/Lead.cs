@@ -23,6 +23,7 @@ public class Lead
     public string Phone { get; set; } = string.Empty;
     public string ProductIds { get; set; } = "[]";
     public int? Quantity { get; set; }
+    public string? ProductQuantities { get; set; }
     public string Timeline { get; set; } = string.Empty;
     public string BusinessRequirement { get; set; } = string.Empty;
     public string? Source { get; set; }
@@ -58,5 +59,23 @@ public class Lead
     public void SetProductIdList(int[] productIds)
     {
         ProductIds = JsonSerializer.Serialize(productIds);
+    }
+
+    public Dictionary<string, int> GetProductQuantities()
+    {
+        if (string.IsNullOrEmpty(ProductQuantities)) return new Dictionary<string, int>();
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, int>>(ProductQuantities) ?? new Dictionary<string, int>();
+        }
+        catch
+        {
+            return new Dictionary<string, int>();
+        }
+    }
+
+    public void SetProductQuantities(Dictionary<string, int>? quantities)
+    {
+        ProductQuantities = quantities != null ? JsonSerializer.Serialize(quantities) : null;
     }
 }
